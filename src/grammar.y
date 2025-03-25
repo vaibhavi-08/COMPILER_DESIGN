@@ -38,7 +38,7 @@ extern int yylex();
 %token STRUCT UNION ENUM ELLIPSIS
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
-%token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL
+%token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 
 %start translation_unit
 %%
@@ -48,7 +48,11 @@ primary_expression
 	| CONSTANT
 	| STRING_LITERAL
 	| '(' expression ')'
+    | NEW class_name '(' argument_list_opt ')'
 	;
+class_name
+    : IDENTIFIER
+    ;
 
 postfix_expression
 	: primary_expression
@@ -65,7 +69,15 @@ argument_expression_list
 	: assignment_expression
 	| argument_expression_list ',' assignment_expression
 	;
+argument_list_opt
+    : /* empty */
+    | argument_list
+    ;
 
+argument_list
+    : assignment_expression
+    | argument_list ',' assignment_expression
+    ;
 unary_expression
 	: postfix_expression
 	| INC_OP unary_expression
@@ -223,6 +235,7 @@ type_specifier
 	| SIGNED
 	| UNSIGNED
 	| struct_or_union_specifier
+    | class_specifier
 	| enum_specifier
 	| TYPE_NAME
 	;
@@ -264,6 +277,61 @@ struct_declarator
 	| ':' constant_expression
 	| declarator ':' constant_expression
 	;
+class_specifier
+    : CLASS IDENTIFIER class_body
+    | CLASS IDENTIFIER inheritance_specifier class_body
+    ;
+
+inheritance_specifier
+    : ':' base_class_list
+    ;
+
+base_class_list
+    : base_class
+    | base_class_list ',' base_class
+    ;
+
+base_class
+    : access_specifier IDENTIFIER
+    | IDENTIFIER
+    ;
+
+access_specifier
+    : PUBLIC
+    | PRIVATE
+    | PROTECTED
+    ;
+
+class_body
+    : '{' class_member_declaration_list '}'
+    | '{' '}'
+    ;
+
+class_member_declaration_list
+    : class_member_declaration
+    | class_member_declaration_list class_member_declaration
+	| constructor_declaration
+    ;
+
+constructor_declaration
+    : IDENTIFIER '(' parameter_list_opt ')' compound_statement
+    ;
+
+parameter_list_opt
+    : parameter_list
+    | /* empty */
+    ;
+
+class_member_declaration
+    : access_specifier ':'
+    | member_declaration
+    | constructor_declaration
+    ;
+
+member_declaration
+    : declaration
+    | function_definition
+    ;
 
 enum_specifier
 	: ENUM '{' enumerator_list '}'
@@ -448,11 +516,40 @@ function_definition
 #include <stdio.h>
 
 extern char yytext[];
-extern int column;
+extern int yyparse();
+extern FILE *yyin;
+extern FILE *yyout;
+// Define the global variables here
+bool iserror = false;
+int line_num = 1;
+vector<pair<string, int>> error;
+unordered_map<string, string> symtab;
+vector<string> program;
 
-yyerror(s)
-char *s;
-{
-	fflush(stdout);
-	printf("\n%*s\n%*s\n", column, "^", column, s);
+void yyerror(const char *s) {
+    fflush(stdout);
+	
+}
+int main(int argc, char *argv[]){
+    FILE *fh;
+	FILE *fo;
+
+	if (argc != 4){
+		std::cout << "Incorrect usage. Usage : ./bin/parser <file>.c -o <file>.dot";
+	}
+	if ((fh = fopen(argv[1], "r"))){
+		yyin = fh;
+	}
+	else{
+		std::cout << "Input file does not exist!";
+		exit(0);
+	}
+    int abc=yyparse();
+    if(abc){
+        cout << "parsing failed!" << endl;
+    }
+    else{
+        cout << "parsing successful" << endl;
+    }
+    return 0;
 }

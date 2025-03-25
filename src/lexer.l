@@ -10,7 +10,7 @@ IS                  (u|U)?(L|LL|l|ll)?
 #include <string>
 #include <unordered_map>
 #include <vector>
-
+#include "grammar.tab.h"
 using namespace std;
 
 extern unordered_map<string, string> symtab;

@@ -444,6 +444,12 @@ statement
 	| selection_statement
 	| iteration_statement
 	| jump_statement
+	| object_statement
+	;
+
+object_statement
+    : class_name pointer IDENTIFIER '=' NEW class_name '(' argument_list_opt ')'
+	| class_name IDENTIFIER '(' argument_list_opt ')'
 	;
 
 labeled_statement

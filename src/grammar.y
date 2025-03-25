@@ -48,8 +48,8 @@ primary_expression
 	| CONSTANT
 	| STRING_LITERAL
 	| '(' expression ')'
-    | NEW class_name '(' argument_list_opt ')'
 	;
+
 class_name
     : IDENTIFIER
     ;
@@ -195,7 +195,8 @@ constant_expression
 declaration
 	: declaration_specifiers ';'
 	| declaration_specifiers init_declarator_list ';'
-	;
+
+
 
 declaration_specifiers
 	: storage_class_specifier
@@ -331,6 +332,7 @@ class_member_declaration
 member_declaration
     : declaration
     | function_definition
+
     ;
 
 enum_specifier
@@ -444,12 +446,15 @@ statement
 	| selection_statement
 	| iteration_statement
 	| jump_statement
-	| object_statement
+	| delete_statement
+
 	;
 
-object_statement
-    : class_name pointer IDENTIFIER '=' NEW class_name '(' argument_list_opt ')'
-	| class_name IDENTIFIER '(' argument_list_opt ')'
+
+
+delete_statement
+	: DELETE IDENTIFIER
+	| DELETE '[' ']' IDENTIFIER
 	;
 
 labeled_statement
@@ -488,9 +493,11 @@ selection_statement
 
 iteration_statement
 	: WHILE '(' expression ')' statement
+	| UNTIL '(' expression ')' statement
 	| DO statement WHILE '(' expression ')' ';'
 	| FOR '(' expression_statement expression_statement ')' statement
 	| FOR '(' expression_statement expression_statement expression ')' statement
+	| DO statement UNTIL '(' expression ')' ';'
 	;
 
 jump_statement

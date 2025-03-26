@@ -195,9 +195,13 @@ constant_expression
 declaration
 	: declaration_specifiers ';'
 	| declaration_specifiers init_declarator_list ';'
+	| typedef_specifier init_declarator_list ';'
+	;
 
-
-
+typedef_specifier
+	:IDENTIFIER
+	;
+	
 declaration_specifiers
 	: storage_class_specifier
 	| storage_class_specifier declaration_specifiers

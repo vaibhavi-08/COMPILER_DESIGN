@@ -497,7 +497,6 @@ iteration_statement
 	| DO statement WHILE '(' expression ')' ';'
 	| FOR '(' expression_statement expression_statement ')' statement
 	| FOR '(' expression_statement expression_statement expression ')' statement
-	| DO statement UNTIL '(' expression ')' ';'
 	;
 
 jump_statement
@@ -554,7 +553,7 @@ int main(int argc, char *argv[]){
 		yyin = fh;
 	}
 	else{
-		std::cout << "Input file does not exist!";
+		std::cout << "Input file does not exist!" << endl;
 		exit(0);
 	}
     int abc=yyparse();

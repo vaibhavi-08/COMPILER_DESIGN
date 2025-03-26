@@ -279,8 +279,9 @@ struct_declarator
 	| declarator ':' constant_expression
 	;
 class_specifier
-    : CLASS IDENTIFIER class_body
-    | CLASS IDENTIFIER inheritance_specifier class_body
+    : CLASS class_name class_body
+    | CLASS class_name inheritance_specifier class_body
+	| CLASS class_name
     ;
 
 inheritance_specifier
@@ -315,7 +316,7 @@ class_member_declaration_list
     ;
 
 constructor_declaration
-    : IDENTIFIER '(' parameter_list_opt ')' compound_statement
+    : class_name'(' parameter_list_opt ')' compound_statement
     ;
 
 parameter_list_opt
@@ -432,6 +433,7 @@ initializer
 	: assignment_expression
 	| '{' initializer_list '}'
 	| '{' initializer_list ',' '}'
+	| NEW class_name '(' argument_list_opt ')'
 	;
 
 initializer_list

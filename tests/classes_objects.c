@@ -15,6 +15,5 @@ class football : public game{
 int main(){
     int x;
     int y;
-    //game mygame(x,y);
-    game* alpha=new game(x,y);
+
 }

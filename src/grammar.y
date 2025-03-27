@@ -40,6 +40,7 @@ extern int yylex();
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 
+
 %start translation_unit
 %%
 
@@ -193,22 +194,22 @@ constant_expression
 	;
 
 declaration
-	: declaration_specifiers ';'
-	| declaration_specifiers init_declarator_list ';'
-	| typedef_specifier init_declarator_list ';'
+	: declaration_specifiers ';' /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
+	| declaration_specifiers init_declarator_list ';' /* create object as above but add both fields*/
+	| typedef_specifier init_declarator_list ';'/* same as above */
 	;
 
 typedef_specifier
 	:IDENTIFIER
 	;
-	
+
 declaration_specifiers
-	: storage_class_specifier
-	| storage_class_specifier declaration_specifiers
-	| type_specifier
-	| type_specifier declaration_specifiers
-	| type_qualifier
-	| type_qualifier declaration_specifiers
+	: storage_class_specifier /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
+	| storage_class_specifier declaration_specifiers /* add storage_class_specifier to $2*/
+	| type_specifier /* create declaration specifier object . add type specifier to it . pass it above. */
+	| type_specifier declaration_specifiers /* add type_specifier to $2 */
+	| type_qualifier /* create declaration_specifiers object . add type qualifier to it . pass it above. */
+	| type_qualifier declaration_specifiers /* add type_qualifier to $2 */
 	;
 
 init_declarator_list
@@ -222,15 +223,15 @@ init_declarator
 	;
 
 storage_class_specifier
-	: TYPEDEF
-	| EXTERN
-	| STATIC
-	| AUTO
-	| REGISTER
+	: TYPEDEF /* pass $1 to $$ */
+	| EXTERN /* same */
+	| STATIC /* same */
+	| AUTO /* same */
+	| REGISTER /* same */
 	;
 
 type_specifier
-	: VOID
+	: VOID /* just pass */
 	| CHAR
 	| SHORT
 	| INT
@@ -246,30 +247,30 @@ type_specifier
 	;
 
 struct_or_union_specifier
-	: struct_or_union IDENTIFIER '{' struct_declaration_list '}'
-	| struct_or_union '{' struct_declaration_list '}'
-	| struct_or_union IDENTIFIER
+	: struct_or_union IDENTIFIER '{' struct_declaration_list '}' /* make a struct_or_union_specifier object. enter all info. make local symtab. */
+	| struct_or_union '{' struct_declaration_list '}' 
+	| struct_or_union IDENTIFIER {/* whether this identifier is declared before use */}
 	;
 
 struct_or_union
-	: STRUCT
+	: STRUCT /*just pass */
 	| UNION
 	;
 
 struct_declaration_list
-	: struct_declaration
-	| struct_declaration_list struct_declaration
+	: struct_declaration /* create struct declaration list object . add struct decl to it. */
+	| struct_declaration_list struct_declaration /* add struct decl. to already made object. */
 	;
 
 struct_declaration
-	: specifier_qualifier_list struct_declarator_list ';'
+	: specifier_qualifier_list struct_declarator_list ';' /* store type. store this declarators temporary in struct_declaration class */
 	;
 
 specifier_qualifier_list
-	: type_specifier specifier_qualifier_list
-	| type_specifier
-	| type_qualifier specifier_qualifier_list
-	| type_qualifier
+	: type_specifier specifier_qualifier_list  /* add type_specifier to specifier_qualifier_list object already created */
+	| type_specifier /* create object of specifier_qualifier_list . add type_specifier to it */
+	| type_qualifier specifier_qualifier_list  /* same as above rule */
+	| type_qualifier /* same as above rule */
 	;
 
 struct_declarator_list
@@ -283,9 +284,9 @@ struct_declarator
 	| declarator ':' constant_expression
 	;
 class_specifier
-    : CLASS class_name class_body
-    | CLASS class_name inheritance_specifier class_body
-	| CLASS class_name
+    : CLASS class_name class_body /*  make class_specifier object and add all info. make  local symb table using class body */
+    | CLASS class_name inheritance_specifier class_body /* make object add all info . make local symtab. add base classes also to local symtab */
+	| CLASS class_name /* check whether variable already declared */
     ;
 
 inheritance_specifier
@@ -357,8 +358,8 @@ enumerator
 	;
 
 type_qualifier
-	: CONST
-	| VOLATILE
+	: CONST /* just pass */
+	| VOLATILE /* just pass */
 	;
 
 declarator
@@ -513,21 +514,21 @@ jump_statement
 	| RETURN expression ';'
 	;
 
-translation_unit
-	: external_declaration
-	| translation_unit external_declaration
+translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
+	: external_declaration {/*  create node for external declaration with pointer to $1. add the node of external declaration to children of translation_unit*/}
+	| translation_unit external_declaration {/*same as above*/}
 	;
 
-external_declaration
-	: function_definition
-	| declaration
+external_declaration /* (type:node*) storing pointers to function_definition and declaration */
+	: function_definition  /* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
+	| declaration /* add this declaration to global symbol table. assign this pointer to declaration object*/
 	;
 
-function_definition
-	: declaration_specifiers declarator declaration_list compound_statement
-	| declaration_specifiers declarator compound_statement
-	| declarator declaration_list compound_statement
-	| declarator compound_statement
+function_definition /*(specific_class <- non_tem <- node ) */
+	: declaration_specifiers declarator declaration_list compound_statement /* create function definition object.parameter. make its local symbol table. assign type. assign size. */
+	| declaration_specifiers declarator compound_statement /* same as above */
+	| declarator declaration_list compound_statement /*same as above */
+	| declarator compound_statement /* same as above */
 	;
 
 %%

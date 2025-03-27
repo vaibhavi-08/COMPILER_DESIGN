@@ -7,6 +7,9 @@ class game{
         z=k;
         y=j;
     }
+    int print(){
+
+    }
 };
 class football : public game{
     int z;
@@ -19,5 +22,7 @@ int main(){
     class game *g1= new game();
     class game g2={x,y};
     class game g3;
+    g1->print();
+    g2.print();
 
 }

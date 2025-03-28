@@ -1,3 +1,13 @@
+%code requires {
+    // Forward declarations
+    class Node;
+    class Function_Definition;
+    class Declaration_Specifiers;
+    class Declarator;
+    class Declaration_List;
+    class Compound_Statement;
+}
+
 %{
 #include <stdio.h>
 #include <iostream>
@@ -546,7 +556,12 @@ function_definition /*(function_definition <- node ) */
 
 %%
 #include <stdio.h>
-
+#include <bits/stdc++.h>
+#include <classes_NT.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+using namespace std;
 extern char yytext[];
 extern int yyparse();
 extern FILE *yyin;

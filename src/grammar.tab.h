@@ -44,6 +44,18 @@
 #if YYDEBUG
 extern int yydebug;
 #endif
+/* "%code requires" blocks.  */
+#line 1 "grammar.y"
+
+    // Forward declarations
+    class Node;
+    class Function_Definition;
+    class Declaration_Specifiers;
+    class Declarator;
+    class Declaration_List;
+    class Compound_Statement;
+
+#line 59 "grammar.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -131,7 +143,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 29 "grammar.y"
+#line 39 "grammar.y"
 
 	Node* node;
 	Function_Definition* fun_def;
@@ -140,7 +152,7 @@ union YYSTYPE
 	Declaration_List* dec_list;
 	Compound_Statement* comp_stmt;
 
-#line 144 "grammar.tab.h"
+#line 156 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

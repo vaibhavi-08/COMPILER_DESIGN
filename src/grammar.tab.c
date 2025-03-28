@@ -67,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 1 "grammar.y"
+#line 11 "grammar.y"
 
 #include <stdio.h>
 #include <iostream>
@@ -692,31 +692,31 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,    62,    62,    63,    64,    65,    69,    73,    74,    75,
-      76,    77,    78,    79,    80,    84,    85,    88,    89,    93,
-      94,    97,    98,    99,   100,   101,   102,   106,   107,   108,
-     109,   110,   111,   115,   116,   120,   121,   122,   123,   127,
-     128,   129,   133,   134,   135,   139,   140,   141,   142,   143,
-     147,   148,   149,   153,   154,   158,   159,   163,   164,   168,
-     169,   173,   174,   178,   179,   183,   184,   188,   189,   190,
-     191,   192,   193,   194,   195,   196,   197,   198,   202,   203,
-     207,   211,   212,   213,   217,   221,   222,   223,   224,   225,
-     226,   230,   231,   235,   236,   240,   241,   242,   243,   244,
-     248,   249,   250,   251,   252,   253,   254,   255,   256,   257,
-     258,   259,   260,   264,   265,   266,   270,   271,   275,   276,
-     280,   284,   285,   286,   287,   291,   292,   296,   297,   298,
-     301,   302,   303,   307,   311,   312,   316,   317,   321,   322,
-     323,   327,   328,   332,   333,   337,   341,   342,   346,   347,
-     348,   352,   353,   358,   359,   360,   364,   365,   369,   370,
-     374,   375,   379,   380,   384,   385,   386,   387,   388,   389,
-     390,   394,   395,   396,   397,   401,   402,   407,   408,   412,
-     413,   417,   418,   419,   423,   424,   428,   429,   433,   434,
-     435,   439,   440,   441,   442,   443,   444,   445,   446,   447,
-     451,   452,   453,   454,   458,   459,   463,   464,   465,   466,
-     467,   468,   469,   476,   477,   481,   482,   483,   487,   488,
-     489,   490,   494,   495,   499,   500,   504,   505,   509,   510,
-     511,   515,   516,   517,   518,   519,   523,   524,   525,   526,
-     527,   531,   532,   536,   537,   541,   542,   543,   544
+       0,    72,    72,    73,    74,    75,    79,    83,    84,    85,
+      86,    87,    88,    89,    90,    94,    95,    98,    99,   103,
+     104,   107,   108,   109,   110,   111,   112,   116,   117,   118,
+     119,   120,   121,   125,   126,   130,   131,   132,   133,   137,
+     138,   139,   143,   144,   145,   149,   150,   151,   152,   153,
+     157,   158,   159,   163,   164,   168,   169,   173,   174,   178,
+     179,   183,   184,   188,   189,   193,   194,   198,   199,   200,
+     201,   202,   203,   204,   205,   206,   207,   208,   212,   213,
+     217,   221,   222,   223,   227,   231,   232,   233,   234,   235,
+     236,   240,   241,   245,   246,   250,   251,   252,   253,   254,
+     258,   259,   260,   261,   262,   263,   264,   265,   266,   267,
+     268,   269,   270,   274,   275,   276,   280,   281,   285,   286,
+     290,   294,   295,   296,   297,   301,   302,   306,   307,   308,
+     311,   312,   313,   317,   321,   322,   326,   327,   331,   332,
+     333,   337,   338,   342,   343,   347,   351,   352,   356,   357,
+     358,   362,   363,   368,   369,   370,   374,   375,   379,   380,
+     384,   385,   389,   390,   394,   395,   396,   397,   398,   399,
+     400,   404,   405,   406,   407,   411,   412,   417,   418,   422,
+     423,   427,   428,   429,   433,   434,   438,   439,   443,   444,
+     445,   449,   450,   451,   452,   453,   454,   455,   456,   457,
+     461,   462,   463,   464,   468,   469,   473,   474,   475,   476,
+     477,   478,   479,   486,   487,   491,   492,   493,   497,   498,
+     499,   500,   504,   505,   509,   510,   514,   515,   519,   520,
+     521,   525,   526,   527,   528,   529,   533,   534,   535,   536,
+     537,   541,   542,   546,   547,   551,   552,   553,   554
 };
 #endif
 
@@ -1825,55 +1825,55 @@ yyreduce:
   switch (yyn)
     {
   case 115: /* struct_or_union_specifier: struct_or_union IDENTIFIER  */
-#line 266 "grammar.y"
+#line 276 "grammar.y"
                                      {/* whether this identifier is declared before use */}
 #line 1831 "grammar.tab.c"
     break;
 
   case 241: /* translation_unit: external_declaration  */
-#line 531 "grammar.y"
+#line 541 "grammar.y"
                                {Node* ext=create_node();ext->add_child((yyvsp[0].node));root->add_child(ext);}
 #line 1837 "grammar.tab.c"
     break;
 
   case 242: /* translation_unit: translation_unit external_declaration  */
-#line 532 "grammar.y"
+#line 542 "grammar.y"
                                                 {Node* ext=create_node();ext->add_child((yyvsp[0].node));root->add_child(ext);}
 #line 1843 "grammar.tab.c"
     break;
 
   case 243: /* external_declaration: function_definition  */
-#line 536 "grammar.y"
+#line 546 "grammar.y"
                                {/*add_to_gst($1)*/;(yyval.node)=(yyvsp[0].fun_def); /*add name off this function in vector<string> in gst*/}
 #line 1849 "grammar.tab.c"
     break;
 
   case 244: /* external_declaration: declaration  */
-#line 537 "grammar.y"
+#line 547 "grammar.y"
                       {/*add_to_gst($1)*/;(yyval.node)=(yyvsp[0].node);/*if it is class struct or union add its name to vector<string>*/}
 #line 1855 "grammar.tab.c"
     break;
 
   case 245: /* function_definition: declaration_specifiers declarator declaration_list compound_statement  */
-#line 541 "grammar.y"
+#line 551 "grammar.y"
                                                                                 {/*$$=create_func_def($1,$2,$3,$4);*/}
 #line 1861 "grammar.tab.c"
     break;
 
   case 246: /* function_definition: declaration_specifiers declarator compound_statement  */
-#line 542 "grammar.y"
+#line 552 "grammar.y"
                                                                {/*$$=create_func_def($1,$2,nullptr,$3);*/}
 #line 1867 "grammar.tab.c"
     break;
 
   case 247: /* function_definition: declarator declaration_list compound_statement  */
-#line 543 "grammar.y"
+#line 553 "grammar.y"
                                                          {/*$$=create_func_def(nullptr,$1,$2,$3);*/}
 #line 1873 "grammar.tab.c"
     break;
 
   case 248: /* function_definition: declarator compound_statement  */
-#line 544 "grammar.y"
+#line 554 "grammar.y"
                                         {/*$$=create_func_def(nullptr,$1,nullptr,$2);*/}
 #line 1879 "grammar.tab.c"
     break;
@@ -2072,10 +2072,15 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 547 "grammar.y"
+#line 557 "grammar.y"
 
 #include <stdio.h>
-
+#include <bits/stdc++.h>
+#include <classes_NT.h>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+using namespace std;
 extern char yytext[];
 extern int yyparse();
 extern FILE *yyin;

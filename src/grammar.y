@@ -7,6 +7,8 @@
     class Declaration_List;
     class Compound_Statement;
 	class Declaration;
+	class Init_Declarator_List;
+	class Typedef_Specifier;
 }
 
 %{
@@ -45,6 +47,8 @@ Node* root;
 	Declarator* dec;
 	Declaration_List* dec_list;
 	Compound_Statement* comp_stmt;
+	Init_Declarator_List* init_dec_list;
+	Typedef_Specifier* typedef_spec;
 }
 %token IDENTIFIER CONSTANT STRING_LITERAL SIZEOF
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
@@ -65,6 +69,8 @@ Node* root;
 %type <dec> declarator
 %type <dec_list> declaration_list
 %type <comp_stmt> comp_stmt
+%type <init_dec_list> init_declarator_list
+%type <typedef_spec> typedef_specifier
 
 
 %start translation_unit
@@ -218,9 +224,9 @@ expression
 constant_expression
 	: conditional_expression
 	;
-
+/* stack dekho and level name vali fied bharo iski */
 declaration
-	: declaration_specifiers ';' /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
+	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
 	| declaration_specifiers init_declarator_list ';' /* create object as above but add both fields*/
 	| typedef_specifier init_declarator_list ';'/* same as above . check whether typedef specifier is there in typedef table. */
 	;
@@ -389,7 +395,7 @@ type_qualifier
 
 declarator
 	: pointer direct_declarator
-	| direct_declarator
+	| direct_declarator /* check if is a function . if yes then add its name to stack */
 	;
 
 direct_declarator
@@ -397,7 +403,7 @@ direct_declarator
 	| '(' declarator ')'
 	| direct_declarator '[' constant_expression ']'
 	| direct_declarator '[' ']'
-	| direct_declarator '(' parameter_type_list ')'
+	| direct_declarator '(' parameter_type_list ')' /* add parameters to current params list */
 	| direct_declarator '(' identifier_list ')'
 	| direct_declarator '(' ')'
 	;
@@ -545,15 +551,15 @@ translation_unit /* (type:node*) nothing much just keep pointers to all external
 	;
 
 external_declaration /* (type:node*) storing pointers to function_definition and declaration */
-	: function_definition  {add_to_gst($1,gst);$$=$1; /*add name off this function in vector<string> in gst*/}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
-	| declaration {add_to_gst($1,gst);$$=$1;/*if it is class struct or union add its name to vector<string>*/}/* add this declaration to global symbol table. assign this pointer to declaration object*/
+	: function_definition  {add_to_gst($1,gst);$$=$1;}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
+	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 
 function_definition /*(function_definition <- node ) */
-	: declaration_specifiers declarator declaration_list compound_statement {/*$$=create_func_def($1,$2,$3,$4);*/} /* create function definition object.parameter. assign type. assign size. */
-	| declaration_specifiers declarator compound_statement {/*$$=create_func_def($1,$2,nullptr,$3);*/}/*same as above */
-	| declarator declaration_list compound_statement {/*$$=create_func_def(nullptr,$1,$2,$3);*/} /*same as above */
-	| declarator compound_statement {/*$$=create_func_def(nullptr,$1,nullptr,$2);*/}/* same as above */
+	: declaration_specifiers declarator declaration_list compound_statement {$$=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();} /* create function definition object.parameter. assign type. assign size. */
+	| declaration_specifiers declarator compound_statement {$$=create_func_def($1,$2,nullptr,$3);lvl_name.pop();}/*same as above */
+	| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above */
+	| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}/* same as above */
 	;
 
 %%
@@ -595,6 +601,8 @@ int main(int argc, char *argv[]){
 	}
 	Node* root= new Node();
 	Global_Symbol_Table* gst=new Global_Symbol_Table();
+	unordered_map<string,string> current_params_list;
+	stack<string> lvl_name;
     int abc=yyparse();
     if(abc){
         cout << "parsing failed!" << endl;

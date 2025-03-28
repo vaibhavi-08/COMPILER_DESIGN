@@ -32,6 +32,7 @@ class Global_Symbol_Table{
     public:
     vector<Local_Symbol_Table*> children;
     unordered_map<string,Symbol_Info*> gst;
+    Global_Symbol_Table();
 };
 class Local_Symbol_Table{
     public:
@@ -40,6 +41,8 @@ class Local_Symbol_Table{
     bool ispargst;
     Global_Symbol_Table* gparent;
     Local_Symbol_Table* lparent;
+    Local_Symbol_Table();
+
 };
 class Node{
     public:

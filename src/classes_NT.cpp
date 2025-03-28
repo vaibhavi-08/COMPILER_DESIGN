@@ -54,6 +54,19 @@ Declaration::Declaration(Declaration_Specifiers* ds,Init_Declarator_List* idl,Ty
     this->typedef_spec=ts;
 }
 
+Global_Symbol_Table::Global_Symbol_Table() {
+    this->children = {};
+    this->gst = {};
+}
+
+Local_Symbol_Table::Local_Symbol_Table() {
+    this->children = {};
+    this->lst = {};
+    this->ispargst = false;
+    this->gparent = nullptr;
+    this->lparent = nullptr;
+}
+
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
     Function_Definition* fd=new Function_Definition(ds,dc,dl,cs);
     fd->type=create_type(ds,dc);

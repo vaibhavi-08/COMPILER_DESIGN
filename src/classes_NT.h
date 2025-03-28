@@ -11,11 +11,16 @@ class Declaration_Specifiers;
 class Declarator;
 class Declaration_List;
 class Compound_Statement;
+class Declaration;
 Node* create_node();
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
+void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
+void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
 struct Symbol_Info{
+    string name;
     string type;//return type of function
     int size;
+    string level_name;
     int level;
     string scope;
     bool isfunction;// indicate if symbol is function 
@@ -25,12 +30,12 @@ class Global_Symbol_Table{
     public:
     vector<Local_Symbol_Table*> children;
     vector<string> func_or_structname_acc_to_children_added;
-    unordered_map<string,Symbol_Info> gst;
+    unordered_map<string,Symbol_Info*> gst;
 };
 class Local_Symbol_Table{
     public:
     vector<Local_Symbol_Table*> children;
-    unordered_map<string,Symbol_Info> lst;
+    unordered_map<string,Symbol_Info*> lst;
     bool ispargst;
     Global_Symbol_Table* gparent;
     Local_Symbol_Table* lparent;
@@ -47,10 +52,25 @@ class Function_Definition : public Node{
     Declarator* decl;
     Declaration_List* decl_list;
     Compound_Statement* cs;
+    string name;
     string type;
     int size;
+    string level_name; 
+    int level; // level in any function or struct;
+    string scope; //global/local
     vector<string> parameters;
+    vector<pair<string,string>> params_with_name;
     Function_Definition(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
+};
+class Declaration : public Node{
+    public:
+    string name;
+    string type;
+    int size;
+    string level_name;
+    int level;
+    string scope;
+    
 };
 class Declaration_Specifiers : public Node{
 

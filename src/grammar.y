@@ -6,6 +6,7 @@
     class Declarator;
     class Declaration_List;
     class Compound_Statement;
+	class Declaration;
 }
 
 %{
@@ -39,6 +40,7 @@ Node* root;
 %union{
 	Node* node;
 	Function_Definition* fun_def;
+	Declaration* declaration;
 	Declaration_Specifiers* dec_spec;
 	Declarator* dec;
 	Declaration_List* dec_list;
@@ -57,7 +59,7 @@ Node* root;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 %type <node> translation_unit external_declaration
-%type <node> declaration
+%type <declaration> declaration
 %type <fun_def> function_definition
 %type <dec_spec> declaration_specifiers
 %type <dec> declarator
@@ -543,8 +545,8 @@ translation_unit /* (type:node*) nothing much just keep pointers to all external
 	;
 
 external_declaration /* (type:node*) storing pointers to function_definition and declaration */
-	: function_definition  {/*add_to_gst($1)*/;$$=$1; /*add name off this function in vector<string> in gst*/}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
-	| declaration {/*add_to_gst($1)*/;$$=$1;/*if it is class struct or union add its name to vector<string>*/}/* add this declaration to global symbol table. assign this pointer to declaration object*/
+	: function_definition  {add_to_gst($1,gst);$$=$1; /*add name off this function in vector<string> in gst*/}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
+	| declaration {add_to_gst($1,gst);$$=$1;/*if it is class struct or union add its name to vector<string>*/}/* add this declaration to global symbol table. assign this pointer to declaration object*/
 	;
 
 function_definition /*(function_definition <- node ) */
@@ -592,6 +594,7 @@ int main(int argc, char *argv[]){
 		exit(0);
 	}
 	Node* root= new Node();
+	Global_Symbol_Table* gst=new Global_Symbol_Table();
     int abc=yyparse();
     if(abc){
         cout << "parsing failed!" << endl;

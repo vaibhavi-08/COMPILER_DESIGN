@@ -131,9 +131,9 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 27 "grammar.y"
+#line 29 "grammar.y"
 
-
+	Node* node;
 
 #line 139 "grammar.tab.h"
 

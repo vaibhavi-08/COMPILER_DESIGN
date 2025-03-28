@@ -8,6 +8,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstring> // Required for strdup
+#include <classes_NT.h>
 
 void yyerror(const char *s);
 
@@ -21,11 +22,17 @@ extern vector<pair<string, int>> error;
 extern int line_num;
 extern bool iserror;
 extern int yylex();
+Node* root;
 
 
 %}
 %union{
-
+	Node* node;
+	Function_Definition* fun_def;
+	Declaration_Specifiers* dec_spec;
+	Declarator* dec;
+	Declaration_List* dec_list;
+	Compound_Statement* comp_stmt;
 }
 %token IDENTIFIER CONSTANT STRING_LITERAL SIZEOF
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
@@ -39,6 +46,12 @@ extern int yylex();
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
+%type <node> translation_unit external_declaration
+%type <fun_def> function_definition
+%type <dec_spec> declaration_specifiers
+%type <dec> declarator
+%type <dec_list> declaration_list
+%type <comp_stmt> comp_stmt
 
 
 %start translation_unit
@@ -52,7 +65,7 @@ primary_expression
 	;
 
 class_name
-    : IDENTIFIER
+    : IDENTIFIER /* pass */
     ;
 
 postfix_expression
@@ -196,11 +209,11 @@ constant_expression
 declaration
 	: declaration_specifiers ';' /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
 	| declaration_specifiers init_declarator_list ';' /* create object as above but add both fields*/
-	| typedef_specifier init_declarator_list ';'/* same as above */
+	| typedef_specifier init_declarator_list ';'/* same as above . check whether typedef specifier is there in typedef table. */
 	;
 
 typedef_specifier
-	:IDENTIFIER
+	:IDENTIFIER /*pass */
 	;
 
 declaration_specifiers
@@ -247,8 +260,8 @@ type_specifier
 	;
 
 struct_or_union_specifier
-	: struct_or_union IDENTIFIER '{' struct_declaration_list '}' /* make a struct_or_union_specifier object. enter all info. make local symtab. */
-	| struct_or_union '{' struct_declaration_list '}' 
+	: struct_or_union IDENTIFIER '{' struct_declaration_list '}' /* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| struct_or_union '{' struct_declaration_list '}' /* same as above */
 	| struct_or_union IDENTIFIER {/* whether this identifier is declared before use */}
 	;
 
@@ -258,12 +271,12 @@ struct_or_union
 	;
 
 struct_declaration_list
-	: struct_declaration /* create struct declaration list object . add struct decl to it. */
-	| struct_declaration_list struct_declaration /* add struct decl. to already made object. */
+	: struct_declaration /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
+	| struct_declaration_list struct_declaration /* add struct decl. to already made object.  add struct declaration to current table*/
 	;
 
 struct_declaration
-	: specifier_qualifier_list struct_declarator_list ';' /* store type. store this declarators temporary in struct_declaration class */
+	: specifier_qualifier_list struct_declarator_list ';' /* create type. */
 	;
 
 specifier_qualifier_list
@@ -274,54 +287,53 @@ specifier_qualifier_list
 	;
 
 struct_declarator_list
-	: struct_declarator
-	| struct_declarator_list ',' struct_declarator
+	: struct_declarator  /* create struct declarator list object . add struct declarator to it . */
+	| struct_declarator_list ',' struct_declarator /* add struct declarator to existing list */
 	;
 
 struct_declarator
-	: declarator
-	| ':' constant_expression
-	| declarator ':' constant_expression
+	: declarator /* pass this above */
+	| ':' constant_expression /* will find out what this is for later */
+	| declarator ':' constant_expression /* will find out what this is for later */
 	;
 class_specifier
-    : CLASS class_name class_body /*  make class_specifier object and add all info. make  local symb table using class body */
-    | CLASS class_name inheritance_specifier class_body /* make object add all info . make local symtab. add base classes also to local symtab */
+    : CLASS class_name class_body /*  make class_specifier object and add all info.  */
+    | CLASS class_name inheritance_specifier class_body /* make object add all info . add base classes also in class_specifier */
 	| CLASS class_name /* check whether variable already declared */
     ;
 
 inheritance_specifier
-    : ':' base_class_list
+    : ':' base_class_list /* pass */
     ;
 
 base_class_list
-    : base_class
-    | base_class_list ',' base_class
+    : base_class /* make base_class_list object and add base class*/ 
+    | base_class_list ',' base_class /* add base class to existing list */
     ;
 
 base_class
-    : access_specifier IDENTIFIER
-    | IDENTIFIER
+    : access_specifier IDENTIFIER   /*  make base class object. add info */
+    | IDENTIFIER /* make base class object. add info with access specifier as default */
     ;
 
 access_specifier
-    : PUBLIC
+    : PUBLIC /* pass */
     | PRIVATE
     | PROTECTED
     ;
 
 class_body
-    : '{' class_member_declaration_list '}'
-    | '{' '}'
+    : '{' class_member_declaration_list '}' /*come to parent table from current table. pass above*/ 
+    | '{' '}'/* pass empty class member declaration list object */
     ;
 
 class_member_declaration_list
-    : class_member_declaration
-    | class_member_declaration_list class_member_declaration
-	| constructor_declaration
+    : class_member_declaration  /* make obj class_member_declaration_list . add class_member_declaration. */
+    | class_member_declaration_list class_member_declaration /* add class_member_declaration to existing obj */
     ;
 
 constructor_declaration
-    : class_name'(' parameter_list_opt ')' compound_statement
+    : class_name'(' parameter_list_opt ')' compound_statement /* make a constructor declaration with class name and parameter list and body */
     ;
 
 parameter_list_opt
@@ -330,13 +342,13 @@ parameter_list_opt
     ;
 
 class_member_declaration
-    : access_specifier ':'
-    | member_declaration
-    | constructor_declaration
+    : access_specifier ':' /* make class_member_declaration obj and add access specifier to it . pass */
+    | member_declaration /* make class_member_declaration obj and add member decl to it . pass */
+    | constructor_declaration /* make class_member_declaration obj and add constructor_declaration to it . pass */
     ;
 
 member_declaration
-    : declaration
+    : declaration 
     | function_definition
 
     ;
@@ -515,20 +527,20 @@ jump_statement
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
-	: external_declaration {/*  create node for external declaration with pointer to $1. add the node of external declaration to children of translation_unit*/}
-	| translation_unit external_declaration {/*same as above*/}
+	: external_declaration {Node* ext=create_node();ext->add_child($1);root->add_child(ext);}
+	| translation_unit external_declaration {Node* ext=create_node();ext->add_child($2);root->add_child(ext);}
 	;
 
 external_declaration /* (type:node*) storing pointers to function_definition and declaration */
-	: function_definition  /* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
-	| declaration /* add this declaration to global symbol table. assign this pointer to declaration object*/
+	: function_definition  {add_to_gst($1);$$=$1; /*add name off this function in vector<string> in gst*/}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
+	| declaration {add_to_gst($1);/*if it is class struct or union add its name to vector<string>*/}/* add this declaration to global symbol table. assign this pointer to declaration object*/
 	;
 
-function_definition /*(specific_class <- non_tem <- node ) */
-	: declaration_specifiers declarator declaration_list compound_statement /* create function definition object.parameter. make its local symbol table. assign type. assign size. */
-	| declaration_specifiers declarator compound_statement /* same as above */
-	| declarator declaration_list compound_statement /*same as above */
-	| declarator compound_statement /* same as above */
+function_definition /*(function_definition <- node ) */
+	: declaration_specifiers declarator declaration_list compound_statement {$$=create_func_def($1,$2,$3,$4);} /* create function definition object.parameter. assign type. assign size. */
+	| declaration_specifiers declarator compound_statement {$$=create_func_def($1,$2,nullptr,$3);}/*same as above */
+	| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);} /*same as above */
+	| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);}/* same as above */
 	;
 
 %%
@@ -563,6 +575,7 @@ int main(int argc, char *argv[]){
 		std::cout << "Input file does not exist!" << endl;
 		exit(0);
 	}
+	Node* root= new Node();
     int abc=yyparse();
     if(abc){
         cout << "parsing failed!" << endl;

@@ -2,6 +2,12 @@
 #define CLASSES_NT_H
 #include <bits/stdc++.h>
 using namespace std;
+extern Global_Symbol_Table* gst;
+extern unordered_map<string,string> current_params_list;
+extern stack<string> lvl_name;
+extern Local_Symbol_Table* current_table;
+extern int current_level;
+class Node;
 class Local_Symbol_Table;
 class Global_Symbol_Table;
 class Symbol_Info;
@@ -14,6 +20,10 @@ class Compound_Statement;
 class Init_Declarator_List;
 class Typedef_Specifier;
 class Declaration;
+class Type_Specifier;
+class Struct_or_Union_Specifier;
+class Class_Specifier;
+class Enum_Specifier;
 Node* create_node();
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
@@ -76,14 +86,18 @@ class Declaration : public Node{
     Typedef_Specifier* typedef_spec;
     Declaration(Declaration_Specifiers* ds,Init_Declarator_List* idl,Typedef_Specifier* ts);
 };
-class Typedef_Specifier: public Node{
+// class Typedef_Specifier: public Node{
 
-};
+// };
 class Init_Declarator_List: public Node{
 
 };
 class Declaration_Specifiers : public Node{
-
+    public:
+    vector<string> scs;
+    vector<Type_Specifier*> ts;
+    vector<string> tq;
+    Declaration_Specifiers();
 };
 class Declarator : public Node{
 
@@ -92,6 +106,23 @@ class Declaration_List : public Node{
 
 };
 class Compound_Statement : public Node{
+
+};
+class Type_Specifier: public Node{
+    public:
+    string string_type;
+    Struct_or_Union_Specifier* struct_union_type;
+    Class_Specifier* class_type;
+	Enum_Specifier* enum_type;
+    Type_Specifier(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
+};
+class Struct_or_Union_Specifier{
+
+} ;
+class Class_Specifier{
+
+};
+class Enum_Specifier{
 
 };
 // class Primary_expresssion{
@@ -181,12 +212,7 @@ class Compound_Statement : public Node{
 // class Init_Declarator{
 
 // };
-// class Storage_Class_Specifier{
 
-// };
-// class Type_Specifier{
-
-// };
 
 // class Struct_or_Union_Specifier{
 

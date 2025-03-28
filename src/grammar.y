@@ -9,6 +9,11 @@
 	class Declaration;
 	class Init_Declarator_List;
 	class Typedef_Specifier;
+	class Type_Specifier;
+	class Struct_or_Union_Specifier;
+	class Class_Specifier;
+	class Enum_Specifier;
+	
 }
 
 %{
@@ -49,6 +54,11 @@ Node* root;
 	Compound_Statement* comp_stmt;
 	Init_Declarator_List* init_dec_list;
 	Typedef_Specifier* typedef_spec;
+	Type_Specifier* type_spec;
+	Struct_or_Union_Specifier* str_union;
+	Class_Specifier* class_spec;
+	Enum_Specifier* enum_spec;
+	string str;
 }
 %token IDENTIFIER CONSTANT STRING_LITERAL SIZEOF
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
@@ -71,7 +81,12 @@ Node* root;
 %type <comp_stmt> comp_stmt
 %type <init_dec_list> init_declarator_list
 %type <typedef_spec> typedef_specifier
-
+%type <str> storage_class_specifier
+%type<type_spec> type_specifier
+%type<class_spec> class_specifier
+%type<str_union> struct_or_union_specifier
+%type<enum_spec> enum_specifier
+%type <str> type_qualifier
 
 %start translation_unit
 %%
@@ -225,23 +240,25 @@ constant_expression
 	: conditional_expression
 	;
 /* stack dekho and level name vali fied bharo iski */
+/* fix error notebook ka 1 */
+/*check whether type is correct*/
 declaration
 	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
-	| declaration_specifiers init_declarator_list ';' /* create object as above but add both fields*/
-	| typedef_specifier init_declarator_list ';'/* same as above . check whether typedef specifier is there in typedef table. */
+	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);}/* create object as above but add both fields*/
+/* thik karna hai action	| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}/* same as above . check whether typedef specifier is there in typedef table. */*/
 	;
 
-typedef_specifier
-	:IDENTIFIER /*pass */
+/*typedef_specifier
+	:IDENTIFIER /*pass */*/
 	;
 
 declaration_specifiers
-	: storage_class_specifier /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
-	| storage_class_specifier declaration_specifiers /* add storage_class_specifier to $2*/
-	| type_specifier /* create declaration specifier object . add type specifier to it . pass it above. */
-	| type_specifier declaration_specifiers /* add type_specifier to $2 */
-	| type_qualifier /* create declaration_specifiers object . add type qualifier to it . pass it above. */
-	| type_qualifier declaration_specifiers /* add type_qualifier to $2 */
+	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back($1);$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
+	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);}/* add storage_class_specifier to $2*/
+	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);}/* create declaration specifier object . add type specifier to it . pass it above. */
+	| type_specifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->ts.push_back($1);}/* add type_specifier to $2 */
+	| type_qualifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back($1);}/* create declaration_specifiers object . add type qualifier to it . pass it above. */
+	| type_qualifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->tq.push_back($1);}/* add type_qualifier to $2 */
 	;
 
 init_declarator_list
@@ -255,27 +272,27 @@ init_declarator
 	;
 
 storage_class_specifier
-	: TYPEDEF /* pass $1 to $$ */
-	| EXTERN /* same */
-	| STATIC /* same */
-	| AUTO /* same */
-	| REGISTER /* same */
+	:/* TYPEDEF /* pass $1 to $$ */ */
+	| EXTERN {$$="EXTERN";}
+	| STATIC {$$="STATIC";}
+	| AUTO {$$="AUTO";}
+	| REGISTER {$$="REGISTER";}
 	;
 
 type_specifier
-	: VOID /* just pass */
-	| CHAR
-	| SHORT
-	| INT
-	| LONG
-	| FLOAT
-	| DOUBLE
-	| SIGNED
-	| UNSIGNED
-	| struct_or_union_specifier
-    | class_specifier
-	| enum_specifier
-	| TYPE_NAME
+	: VOID /* just pass */ {$$=create_ts_obj("VOID",nullptr,nullptr,nullptr);}
+	| CHAR	{$$=create_ts_obj("CHAR",nullptr,nullptr,nullptr);}
+	| SHORT {$$=create_ts_obj("SHORT",nullptr,nullptr,nullptr);}
+	| INT {$$=create_ts_obj("INT",nullptr,nullptr,nullptr);}
+	| LONG {$$=create_ts_obj("LONG",nullptr,nullptr,nullptr);}
+	| FLOAT {$$=create_ts_obj("FLOAT",nullptr,nullptr,nullptr);}
+	| DOUBLE {$$=create_ts_obj("DOUBLE",nullptr,nullptr,nullptr);}
+	| SIGNED {$$=create_ts_obj("SIGNED",nullptr,nullptr,nullptr);}
+	| UNSIGNED {$$=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);}
+	| struct_or_union_specifier {$$=create_ts_obj("",$1,nullptr,nullptr);}
+    | class_specifier {$$=create_ts_obj("",nullptr,$1,nullptr);}
+	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$2);}
+	/*| TYPE_NAME {$$=create_ts_obj("TYPE_NAME",nullptr,nullptr,nullptr);}*/
 	;
 
 struct_or_union_specifier
@@ -389,8 +406,8 @@ enumerator
 	;
 
 type_qualifier
-	: CONST /* just pass */
-	| VOLATILE /* just pass */
+	: CONST  {$$="CONST";}/* just pass */
+	| VOLATILE {$$="VOLATILE";}/* just pass */
 	;
 
 declarator
@@ -556,7 +573,7 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	;
 
 function_definition /*(function_definition <- node ) */
-	: declaration_specifiers declarator declaration_list compound_statement {$$=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();} /* create function definition object.parameter. assign type. assign size. */
+	: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();} /* create function definition object.parameter. assign type. assign size. */
 	| declaration_specifiers declarator compound_statement {$$=create_func_def($1,$2,nullptr,$3);lvl_name.pop();}/*same as above */
 	| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above */
 	| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}/* same as above */
@@ -600,9 +617,11 @@ int main(int argc, char *argv[]){
 		exit(0);
 	}
 	Node* root= new Node();
-	Global_Symbol_Table* gst=new Global_Symbol_Table();
-	unordered_map<string,string> current_params_list;
-	stack<string> lvl_name;
+	gst=new Global_Symbol_Table();
+	current_params_list.clear();
+	lvl_name.clear();
+	current_table=nullptr;
+	Current_level=0;
     int abc=yyparse();
     if(abc){
         cout << "parsing failed!" << endl;

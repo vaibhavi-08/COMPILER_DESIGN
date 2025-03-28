@@ -70,7 +70,7 @@ class Declaration : public Node{
     string level_name;
     int level;
     string scope;
-    
+    Declaration();
 };
 class Declaration_Specifiers : public Node{
 

@@ -32,11 +32,25 @@ Function_Definition:: Function_Definition(Declaration_Specifiers* ds,Declarator*
     this->decl=dc;
     this->decl_list=dl;
     this->cs=cs;
+    this->name="";
     this->type="";
     this->size=0;
+    this->level_name="";
+    this->level=0;
+    this->scope="global";//we have given default scope as global
     this->parameters={};
-    this->name="";
+    this->params_with_name ={};
 }
+
+Declaration::Declaration() {
+    this->name = "";         
+    this->type = "";          
+    this->size = 0;  
+    this->level_name = ""; 
+    this->level = 0;     
+    this->scope = "global"; // assigning default scope
+}
+
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
     Function_Definition* fd=new Function_Definition(ds,dc,dl,cs);
     fd->type=create_type(ds);

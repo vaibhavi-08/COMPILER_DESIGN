@@ -134,8 +134,13 @@ union YYSTYPE
 #line 29 "grammar.y"
 
 	Node* node;
+	Function_Definition* fun_def;
+	Declaration_Specifiers* dec_spec;
+	Declarator* dec;
+	Declaration_List* dec_list;
+	Compound_Statement* comp_stmt;
 
-#line 139 "grammar.tab.h"
+#line 144 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

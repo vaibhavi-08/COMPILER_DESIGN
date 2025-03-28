@@ -634,7 +634,6 @@ char *yytext;
 #include <unordered_map>
 #include <vector>
 #include <grammar.tab.h>
-#include <classes_NT.h>
 using namespace std;
 
 extern unordered_map<string, string> symtab;
@@ -647,8 +646,8 @@ extern int yylex();
 extern int line_num;
 extern bool iserror;
 
+#line 650 "lex.yy.c"
 #line 651 "lex.yy.c"
-#line 652 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -865,9 +864,9 @@ YY_DECL
 		}
 
 	{
-#line 28 "lexer.l"
+#line 27 "lexer.l"
 
-#line 871 "lex.yy.c"
+#line 870 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -926,514 +925,514 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 29 "lexer.l"
+#line 28 "lexer.l"
 { comment();if(iserror){error.emplace_back("unterminated comment",line_num);}count();}
 	YY_BREAK
 case 2:
 /* rule 2 can match eol */
 YY_RULE_SETUP
-#line 30 "lexer.l"
+#line 29 "lexer.l"
 { /* do nothing */  count();}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 31 "lexer.l"
+#line 30 "lexer.l"
 { symtab[yytext]="AUTO";program.emplace_back(yytext);count(); return AUTO;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 32 "lexer.l"
+#line 31 "lexer.l"
 { symtab[yytext]="BREAK";program.emplace_back(yytext);count(); return BREAK;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 33 "lexer.l"
+#line 32 "lexer.l"
 { symtab[yytext]="CASE";program.emplace_back(yytext);count(); return CASE;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 34 "lexer.l"
+#line 33 "lexer.l"
 { symtab[yytext]="CHAR";program.emplace_back(yytext);count(); return CHAR;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 35 "lexer.l"
+#line 34 "lexer.l"
 { symtab[yytext]="CONST";program.emplace_back(yytext);count(); return CONST;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 36 "lexer.l"
+#line 35 "lexer.l"
 { symtab[yytext]="CONTINUE";program.emplace_back(yytext);count(); return CONTINUE;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 37 "lexer.l"
+#line 36 "lexer.l"
 { symtab[yytext]="DEFAULT";program.emplace_back(yytext);count(); return DEFAULT;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 38 "lexer.l"
+#line 37 "lexer.l"
 { symtab[yytext]="DO";program.emplace_back(yytext);count(); return DO;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 39 "lexer.l"
+#line 38 "lexer.l"
 { symtab[yytext]="DOUBLE";program.emplace_back(yytext);count(); return DOUBLE;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 40 "lexer.l"
+#line 39 "lexer.l"
 { symtab[yytext]="ELSE";program.emplace_back(yytext);count(); return ELSE;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 41 "lexer.l"
+#line 40 "lexer.l"
 { symtab[yytext]="ENUM";program.emplace_back(yytext);count(); return ENUM;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 42 "lexer.l"
+#line 41 "lexer.l"
 { symtab[yytext]="EXTERN";program.emplace_back(yytext);count(); return EXTERN;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 43 "lexer.l"
+#line 42 "lexer.l"
 { symtab[yytext]="FLOAT";program.emplace_back(yytext);count(); return FLOAT;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 44 "lexer.l"
+#line 43 "lexer.l"
 { symtab[yytext]="FOR";program.emplace_back(yytext);count(); return FOR;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 45 "lexer.l"
+#line 44 "lexer.l"
 { symtab[yytext]="GOTO";program.emplace_back(yytext);count(); return GOTO;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 46 "lexer.l"
+#line 45 "lexer.l"
 { symtab[yytext]="IF";program.emplace_back(yytext);count(); return IF;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 47 "lexer.l"
+#line 46 "lexer.l"
 { symtab[yytext]="INT";program.emplace_back(yytext);count(); return INT;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 48 "lexer.l"
+#line 47 "lexer.l"
 { symtab[yytext]="LONG";program.emplace_back(yytext);count(); return LONG;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 49 "lexer.l"
+#line 48 "lexer.l"
 { symtab[yytext]="REGISTER";program.emplace_back(yytext);count(); return REGISTER;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 50 "lexer.l"
+#line 49 "lexer.l"
 { symtab[yytext]="RETURN";program.emplace_back(yytext);count(); return RETURN;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 51 "lexer.l"
+#line 50 "lexer.l"
 { symtab[yytext]="SHORT";program.emplace_back(yytext);count(); return SHORT;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 52 "lexer.l"
+#line 51 "lexer.l"
 { symtab[yytext]="SIGNED";program.emplace_back(yytext);count(); return SIGNED;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 53 "lexer.l"
+#line 52 "lexer.l"
 { symtab[yytext]="SIZEOF";program.emplace_back(yytext);count(); return SIZEOF;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 54 "lexer.l"
+#line 53 "lexer.l"
 { symtab[yytext]="STATIC";program.emplace_back(yytext);count(); return STATIC;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 55 "lexer.l"
+#line 54 "lexer.l"
 { symtab[yytext]="STRUCT";program.emplace_back(yytext);count(); return STRUCT;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 56 "lexer.l"
+#line 55 "lexer.l"
 { symtab[yytext]="SWITCH";program.emplace_back(yytext);count(); return SWITCH;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 57 "lexer.l"
+#line 56 "lexer.l"
 { symtab[yytext]="TYPEDEF";program.emplace_back(yytext);count(); return TYPEDEF;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 58 "lexer.l"
+#line 57 "lexer.l"
 { symtab[yytext]="UNION";program.emplace_back(yytext);count(); return UNION;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 59 "lexer.l"
+#line 58 "lexer.l"
 { symtab[yytext]="UNSIGNED";program.emplace_back(yytext);count(); return UNSIGNED;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 60 "lexer.l"
+#line 59 "lexer.l"
 { symtab[yytext]="VOID";program.emplace_back(yytext);count(); return VOID;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 61 "lexer.l"
+#line 60 "lexer.l"
 { symtab[yytext]="BOOL";program.emplace_back(yytext);count(); return BOOL;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 62 "lexer.l"
+#line 61 "lexer.l"
 { symtab[yytext]="CLASS";program.emplace_back(yytext);count(); return CLASS;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 63 "lexer.l"
+#line 62 "lexer.l"
 { symtab[yytext]="DELETE";program.emplace_back(yytext);count(); return DELETE;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 64 "lexer.l"
+#line 63 "lexer.l"
 { symtab[yytext]="NEW";program.emplace_back(yytext);count(); return NEW;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 65 "lexer.l"
+#line 64 "lexer.l"
 { symtab[yytext]="PRIVATE";program.emplace_back(yytext);count(); return PRIVATE;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 66 "lexer.l"
+#line 65 "lexer.l"
 { symtab[yytext]="PUBLIC";program.emplace_back(yytext);count(); return PUBLIC;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 67 "lexer.l"
+#line 66 "lexer.l"
 { symtab[yytext]="PROTECTED";program.emplace_back(yytext);count(); return PROTECTED;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 68 "lexer.l"
+#line 67 "lexer.l"
 { symtab[yytext]="THIS";program.emplace_back(yytext);count(); return THIS;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 69 "lexer.l"
+#line 68 "lexer.l"
 { symtab[yytext]="UNTIL";program.emplace_back(yytext);count(); return UNTIL;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 70 "lexer.l"
+#line 69 "lexer.l"
 { symtab[yytext]="TRUE";program.emplace_back(yytext);count(); return TRUE;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 71 "lexer.l"
+#line 70 "lexer.l"
 { symtab[yytext]="FALSE";program.emplace_back(yytext);count(); return FALSE;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 72 "lexer.l"
+#line 71 "lexer.l"
 { symtab[yytext]="VOLATILE";program.emplace_back(yytext);count(); return VOLATILE;}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 73 "lexer.l"
+#line 72 "lexer.l"
 { symtab[yytext]="WHILE";program.emplace_back(yytext);count(); return WHILE;}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 75 "lexer.l"
+#line 74 "lexer.l"
 { symtab[yytext]="IDENTIFIER";program.emplace_back(yytext);count(); return IDENTIFIER;}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 76 "lexer.l"
+#line 75 "lexer.l"
 { symtab[yytext]="CONSTANT HEX";program.emplace_back(yytext);count();  return CONSTANT;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 77 "lexer.l"
+#line 76 "lexer.l"
 { symtab[yytext]="INTEGER";program.emplace_back(yytext);count();return CONSTANT;}
 	YY_BREAK
 case 49:
 /* rule 49 can match eol */
 YY_RULE_SETUP
-#line 78 "lexer.l"
+#line 77 "lexer.l"
 { symtab[yytext]="CONSTANT CHAR";program.emplace_back(yytext);count();  return CONSTANT;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 79 "lexer.l"
+#line 78 "lexer.l"
 { symtab[yytext]="CONSTANT EXP";program.emplace_back(yytext);count(); return CONSTANT;}
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 80 "lexer.l"
+#line 79 "lexer.l"
 { symtab[yytext]="CONSTANT FLOAT";program.emplace_back(yytext);count(); return CONSTANT;}
 	YY_BREAK
 case 52:
 /* rule 52 can match eol */
 YY_RULE_SETUP
-#line 81 "lexer.l"
+#line 80 "lexer.l"
 { symtab[yytext]="STRING LITERAL";program.emplace_back(yytext);count();return STRING_LITERAL;}
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 82 "lexer.l"
+#line 81 "lexer.l"
 { symtab[yytext]="ELLIPSIS";program.emplace_back(yytext);count(); return ELLIPSIS;}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 83 "lexer.l"
+#line 82 "lexer.l"
 { symtab[yytext]="RIGHT_ASSIGN";program.emplace_back(yytext);count(); return RIGHT_ASSIGN;}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 84 "lexer.l"
+#line 83 "lexer.l"
 { symtab[yytext]="LEFT_ASSIGN";program.emplace_back(yytext);count(); return LEFT_ASSIGN;}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 85 "lexer.l"
+#line 84 "lexer.l"
 { symtab[yytext]="ADD_ASSIGN";program.emplace_back(yytext);count(); return ADD_ASSIGN;}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 86 "lexer.l"
+#line 85 "lexer.l"
 { symtab[yytext]="SUB_ASSIGN";program.emplace_back(yytext);count(); return SUB_ASSIGN;}
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 87 "lexer.l"
+#line 86 "lexer.l"
 { symtab[yytext]="MUL_ASSIGN";program.emplace_back(yytext);count(); return MUL_ASSIGN;}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 88 "lexer.l"
+#line 87 "lexer.l"
 { symtab[yytext]="DIV_ASSIGN";program.emplace_back(yytext);count(); return DIV_ASSIGN;}
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 89 "lexer.l"
+#line 88 "lexer.l"
 { symtab[yytext]="MOD_ASSIGN";program.emplace_back(yytext);count(); return MOD_ASSIGN;}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 90 "lexer.l"
+#line 89 "lexer.l"
 { symtab[yytext]="AND_ASSIGN";program.emplace_back(yytext);count(); return AND_ASSIGN;}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 91 "lexer.l"
+#line 90 "lexer.l"
 { symtab[yytext]="XOR_ASSIGN";program.emplace_back(yytext);count(); return XOR_ASSIGN;}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 92 "lexer.l"
+#line 91 "lexer.l"
 { symtab[yytext]="OR_ASSIGN";program.emplace_back(yytext);count(); return OR_ASSIGN;}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 93 "lexer.l"
+#line 92 "lexer.l"
 { symtab[yytext]="RIGHT_OP";program.emplace_back(yytext);count(); return RIGHT_OP;}
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 94 "lexer.l"
+#line 93 "lexer.l"
 { symtab[yytext]="LEFT_OP";program.emplace_back(yytext);count(); return LEFT_OP;}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 95 "lexer.l"
+#line 94 "lexer.l"
 { symtab[yytext]="INC_OP";program.emplace_back(yytext);count(); return INC_OP;}
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 96 "lexer.l"
+#line 95 "lexer.l"
 { symtab[yytext]="DEC_OP";program.emplace_back(yytext);count(); return DEC_OP;}
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 97 "lexer.l"
+#line 96 "lexer.l"
 { symtab[yytext]="PTR_OP";program.emplace_back(yytext);count(); return PTR_OP;}
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 98 "lexer.l"
+#line 97 "lexer.l"
 { symtab[yytext]="AND_OP";program.emplace_back(yytext);count(); return AND_OP;}
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 99 "lexer.l"
+#line 98 "lexer.l"
 { symtab[yytext]="OR_OP";program.emplace_back(yytext);count(); return OR_OP;}
 	YY_BREAK
 case 71:
 YY_RULE_SETUP
-#line 100 "lexer.l"
+#line 99 "lexer.l"
 { symtab[yytext]="LE_OP";program.emplace_back(yytext);count(); return LE_OP;}
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 101 "lexer.l"
+#line 100 "lexer.l"
 { symtab[yytext]="GE_OP";program.emplace_back(yytext);count(); return GE_OP;}
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 102 "lexer.l"
+#line 101 "lexer.l"
 { symtab[yytext]="EQ_OP";program.emplace_back(yytext);count(); return EQ_OP;}
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 103 "lexer.l"
+#line 102 "lexer.l"
 { symtab[yytext]="NE_OP";program.emplace_back(yytext);count(); return NE_OP;}
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 104 "lexer.l"
+#line 103 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return ';';}
 	YY_BREAK
 case 76:
 YY_RULE_SETUP
-#line 105 "lexer.l"
+#line 104 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return '{';}
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 106 "lexer.l"
+#line 105 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return '}';}
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 107 "lexer.l"
+#line 106 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return ',';}
 	YY_BREAK
 case 79:
 YY_RULE_SETUP
-#line 108 "lexer.l"
+#line 107 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return ':';}
 	YY_BREAK
 case 80:
 YY_RULE_SETUP
-#line 109 "lexer.l"
+#line 108 "lexer.l"
 { symtab[yytext]="ASSIGN";program.emplace_back(yytext);count(); return '=';}
 	YY_BREAK
 case 81:
 YY_RULE_SETUP
-#line 110 "lexer.l"
+#line 109 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return '(';}
 	YY_BREAK
 case 82:
 YY_RULE_SETUP
-#line 111 "lexer.l"
+#line 110 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return ')';}
 	YY_BREAK
 case 83:
 YY_RULE_SETUP
-#line 112 "lexer.l"
+#line 111 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return '[';}
 	YY_BREAK
 case 84:
 YY_RULE_SETUP
-#line 113 "lexer.l"
+#line 112 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return ']';}
 	YY_BREAK
 case 85:
 YY_RULE_SETUP
-#line 114 "lexer.l"
+#line 113 "lexer.l"
 { symtab[yytext]="SEPERATOR";program.emplace_back(yytext);count(); return '.';}
 	YY_BREAK
 case 86:
 YY_RULE_SETUP
-#line 115 "lexer.l"
+#line 114 "lexer.l"
 { symtab[yytext]="BITWISE_AND";program.emplace_back(yytext);count(); return '&';}
 	YY_BREAK
 case 87:
 YY_RULE_SETUP
-#line 116 "lexer.l"
+#line 115 "lexer.l"
 { symtab[yytext]="NOT";program.emplace_back(yytext);count(); return '!';}
 	YY_BREAK
 case 88:
 YY_RULE_SETUP
-#line 117 "lexer.l"
+#line 116 "lexer.l"
 { symtab[yytext]="BITWISE_NOT";program.emplace_back(yytext);count(); return '!';}
 	YY_BREAK
 case 89:
 YY_RULE_SETUP
-#line 118 "lexer.l"
+#line 117 "lexer.l"
 { symtab[yytext]="MINUS";program.emplace_back(yytext);count(); return '-';}
 	YY_BREAK
 case 90:
 YY_RULE_SETUP
-#line 119 "lexer.l"
+#line 118 "lexer.l"
 { symtab[yytext]="PLUS";program.emplace_back(yytext);count(); return '+';}
 	YY_BREAK
 case 91:
 YY_RULE_SETUP
-#line 120 "lexer.l"
+#line 119 "lexer.l"
 { symtab[yytext]="MUL";program.emplace_back(yytext);count(); return '*';}
 	YY_BREAK
 case 92:
 YY_RULE_SETUP
-#line 121 "lexer.l"
+#line 120 "lexer.l"
 { symtab[yytext]="DIV";program.emplace_back(yytext);count(); return '/';}
 	YY_BREAK
 case 93:
 YY_RULE_SETUP
-#line 122 "lexer.l"
+#line 121 "lexer.l"
 { symtab[yytext]="MOD";program.emplace_back(yytext);count(); return '%';}
 	YY_BREAK
 case 94:
 YY_RULE_SETUP
-#line 123 "lexer.l"
+#line 122 "lexer.l"
 { symtab[yytext]="LESSTHAN";program.emplace_back(yytext);count(); return '<';}
 	YY_BREAK
 case 95:
 YY_RULE_SETUP
-#line 124 "lexer.l"
+#line 123 "lexer.l"
 { symtab[yytext]="GREATERTHAN";program.emplace_back(yytext);count(); return '>';}
 	YY_BREAK
 case 96:
 YY_RULE_SETUP
-#line 125 "lexer.l"
+#line 124 "lexer.l"
 { symtab[yytext]="XOR";program.emplace_back(yytext);count(); return '^';}
 	YY_BREAK
 case 97:
 YY_RULE_SETUP
-#line 126 "lexer.l"
+#line 125 "lexer.l"
 { symtab[yytext]="OR";program.emplace_back(yytext);count(); return '|';}
 	YY_BREAK
 case 98:
 YY_RULE_SETUP
-#line 127 "lexer.l"
+#line 126 "lexer.l"
 { symtab[yytext]="QUESTION MARK";program.emplace_back(yytext);count(); return '?';}
 	YY_BREAK
 case 99:
 /* rule 99 can match eol */
 YY_RULE_SETUP
-#line 128 "lexer.l"
+#line 127 "lexer.l"
 { /* DO NOTHING*/ count();}
 	YY_BREAK
 case 100:
 YY_RULE_SETUP
-#line 129 "lexer.l"
+#line 128 "lexer.l"
 { iserror=true;error.emplace_back(yytext,line_num);count();}
 	YY_BREAK
 case 101:
 YY_RULE_SETUP
-#line 130 "lexer.l"
+#line 129 "lexer.l"
 ECHO;
 	YY_BREAK
-#line 1437 "lex.yy.c"
+#line 1436 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2438,7 +2437,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 130 "lexer.l"
+#line 129 "lexer.l"
 
 void comment()
 {

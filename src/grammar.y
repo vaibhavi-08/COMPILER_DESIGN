@@ -47,6 +47,7 @@ Node* root;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 %type <node> translation_unit external_declaration
+%type <node> declaration
 %type <fun_def> function_definition
 %type <dec_spec> declaration_specifiers
 %type <dec> declarator
@@ -532,15 +533,15 @@ translation_unit /* (type:node*) nothing much just keep pointers to all external
 	;
 
 external_declaration /* (type:node*) storing pointers to function_definition and declaration */
-	: function_definition  {add_to_gst($1);$$=$1; /*add name off this function in vector<string> in gst*/}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
-	| declaration {add_to_gst($1);/*if it is class struct or union add its name to vector<string>*/}/* add this declaration to global symbol table. assign this pointer to declaration object*/
+	: function_definition  {/*add_to_gst($1)*/;$$=$1; /*add name off this function in vector<string> in gst*/}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
+	| declaration {/*add_to_gst($1)*/;$$=$1;/*if it is class struct or union add its name to vector<string>*/}/* add this declaration to global symbol table. assign this pointer to declaration object*/
 	;
 
 function_definition /*(function_definition <- node ) */
-	: declaration_specifiers declarator declaration_list compound_statement {$$=create_func_def($1,$2,$3,$4);} /* create function definition object.parameter. assign type. assign size. */
-	| declaration_specifiers declarator compound_statement {$$=create_func_def($1,$2,nullptr,$3);}/*same as above */
-	| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);} /*same as above */
-	| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);}/* same as above */
+	: declaration_specifiers declarator declaration_list compound_statement {/*$$=create_func_def($1,$2,$3,$4);*/} /* create function definition object.parameter. assign type. assign size. */
+	| declaration_specifiers declarator compound_statement {/*$$=create_func_def($1,$2,nullptr,$3);*/}/*same as above */
+	| declarator declaration_list compound_statement {/*$$=create_func_def(nullptr,$1,$2,$3);*/} /*same as above */
+	| declarator compound_statement {/*$$=create_func_def(nullptr,$1,nullptr,$2);*/}/* same as above */
 	;
 
 %%

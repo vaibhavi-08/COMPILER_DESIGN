@@ -11,7 +11,6 @@ IS                  (u|U)?(L|LL|l|ll)?
 #include <unordered_map>
 #include <vector>
 #include <grammar.tab.h>
-#include <classes_NT.h>
 using namespace std;
 
 extern unordered_map<string, string> symtab;

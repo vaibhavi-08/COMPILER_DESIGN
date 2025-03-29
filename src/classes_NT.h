@@ -24,6 +24,9 @@ class Type_Specifier;
 class Struct_or_Union_Specifier;
 class Class_Specifier;
 class Enum_Specifier;
+class Struct_Declaration_List;
+class Struct_Declaration;
+void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
 bool check_if_declared(Local_Symbol_Table* current_table,string& var_name,string& var_type);
 Node* create_node();
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
@@ -132,6 +135,20 @@ class Class_Specifier{
 class Enum_Specifier{
 
 };
+class Struct_Declaration_List: public Node{
+    public:
+    vector<Struct_Declaration*> sdl;
+    Struct_Declaration_List();
+};
+class Struct_Declaration: public Node{
+    Specifier_Qualifier_List* sql;
+    Struct_Declarator_List* sdl;
+    vector<pair<string,string>> name_type_list;
+    string scope;
+    string level;
+    string level_name; 
+    Struct_Declaration(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
+}
 // class Primary_expresssion{
 
 // };

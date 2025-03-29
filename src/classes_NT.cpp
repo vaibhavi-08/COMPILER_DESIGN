@@ -48,6 +48,24 @@ void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
     }
     gst->gst[symbol->name]=x;
 }
+Local_Symbol_Table* next_table(Local_Symbol_Table* current_table){
+    bool checkgst=false;
+    if(current_table==nullptr)checkgst=true;
+    Local_Symbol_Table* new_table=new Local_Symbol_Table(checkgst,current_table);
+    current_table->children.push_back(new_table);
+    return new_table;
+}
+void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd){
+    for(auto i:sd->name_type_list){
+        Symbol_Info info={i.first,i.second,sd->level_name,sd->level,sd->scope};
+        Symbol_Info* x=&info;
+        if(current_table->lst.find(i.first)!=current_table->lst.end()){
+            cout << "error :" << "redeclaration of " << i.first << endl;
+            exit(1);
+        }
+        current_table->lst[i.first]=x;
+    }
+}
 Node* create_node(){
     Node* node = new Node();
     return node;
@@ -100,19 +118,6 @@ Local_Symbol_Table* Local_Symbol_Table :: get_parent(){
     }
 }
 
-Struct_or_Union_Specifier::Struct_or_Union_Specifier(string& sou, string& name, Struct_Declaration_List* sdl) {
-    this->str_or_union = sou;    
-    this->name = name;           
-    this->strdec_list = sdl;   
-}
-
-Type_Specifier::Type_Specifier(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
-    this->string_type = str;               
-    this->struct_union_type = struct_union_type; 
-    this->class_type = class_type;           
-    this->enum_type = enum_type;       
-}
-
 Declaration_Specifiers::Declaration_Specifiers() {
     this->scs = {};   
     this->ts = {};    
@@ -150,6 +155,26 @@ Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarat
     }
     return d;
 }
+Struct_or_Union_Specifier::Struct_or_Union_Specifier(string& sou, string& name, Struct_Declaration_List* sdl) {
+    this->str_or_union = sou;    
+    this->name = name;           
+    this->strdec_list = sdl;   
+}
+
+Type_Specifier::Type_Specifier(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
+    this->string_type = str;               
+    this->struct_union_type = struct_union_type; 
+    this->class_type = class_type;           
+    this->enum_type = enum_type;       
+}
+Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl){
+    Struct_Declaration* sd=new Struct_Declaration(sql,sdl);
+    sd->level=current_level-lvl_name.size()+1;
+    sd->level_name=get_level_name();
+    if(current_level==0)sd->scope="global";
+    else sd->scope="local";
+    return sd;
+}
 Declaration_Specifiers* create_decl_spec_object(){
     Declaration_Specifiers* ds=new Declaration_Specifiers();
     return ds;
@@ -162,3 +187,4 @@ Struct_or_Union_Specifier* create_struct_union_spec_obj(string& sou,string& name
     Struct_or_Union_Specifier* sus =new Struct_or_Union_Specifier(sou,name,sdl);
     return sus;
 }
+

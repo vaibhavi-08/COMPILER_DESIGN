@@ -13,6 +13,8 @@
 	class Struct_or_Union_Specifier;
 	class Class_Specifier;
 	class Enum_Specifier;
+	class Struct_Declaration_List;
+	class Struct_Declaration;
 	
 }
 
@@ -58,6 +60,8 @@ Node* root;
 	Struct_or_Union_Specifier* str_union;
 	Class_Specifier* class_spec;
 	Enum_Specifier* enum_spec;
+	Struct_Declaration_List* stuc_dec_list;
+	Struct_Declaration * struc_dec;
 	string str;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL 
@@ -89,7 +93,8 @@ Node* root;
 %type<enum_spec> enum_specifier
 %type <str> type_qualifier
 %type <str> struct_id union_id struct union
-
+%type <struc_dec_list> struct_declaration_list
+%type <struc_dec> struct_declaration
 %start translation_unit
 %%
 
@@ -320,12 +325,12 @@ union
 	;
 
 struct_declaration_list
-	: struct_declaration /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
-	| struct_declaration_list struct_declaration /* add struct decl. to already made object.  add struct declaration to current table*/
+	: struct_declaration {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
+	| struct_declaration_list struct_declaration {Struct_Declaration_List* x=$1;x->sdl.push_back($2);$$=x;add_to_local_table(current_table,$2);} /* add struct decl. to already made object.  add struct declaration to current table*/
 	;
 
 struct_declaration
-	: specifier_qualifier_list struct_declarator_list ';' /* create type. */
+	: specifier_qualifier_list struct_declarator_list ';' {$$=create_struct_dec_obj($1,$2);} /* create type. */ 
 	;
 
 specifier_qualifier_list

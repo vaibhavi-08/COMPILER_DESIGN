@@ -15,7 +15,10 @@
 	class Enum_Specifier;
 	class Struct_Declaration_List;
 	class Struct_Declaration;
-	
+	class Global_Symbol_Table;
+	class Local_Symbol_Table;
+	class Specifier_Qualifier_List;
+	class Struct_Declarator_List;
 }
 
 %{
@@ -73,7 +76,7 @@ Node* root;
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID
-%token <str> STRUCT UNION ENUM ELLIPSIS
+%token STRUCT UNION ENUM ELLIPSIS
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
@@ -85,7 +88,6 @@ Node* root;
 %type <dec_list> declaration_list
 %type <comp_stmt> comp_stmt
 %type <init_dec_list> init_declarator_list
-%type <typedef_spec> typedef_specifier
 %type <str> storage_class_specifier
 %type<type_spec> type_specifier
 %type<class_spec> class_specifier
@@ -95,6 +97,7 @@ Node* root;
 %type <str> struct_id union_id struct union
 %type <struc_dec_list> struct_declaration_list
 %type <struc_dec> struct_declaration
+%type <node> specifier_qualifier_list struct_declarator_list compound_statement
 %start translation_unit
 %%
 
@@ -252,12 +255,12 @@ constant_expression
 declaration
 	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
 	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);}/* create object as above but add both fields*/
-/* thik karna hai action	| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}/* same as above . check whether typedef specifier is there in typedef table. */*/
+/* thik karna hai action*/	/*| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}*//* same as above . check whether typedef specifier is there in typedef table. */
 	;
 
 /*typedef_specifier
-	:IDENTIFIER /*pass */*/
-	;
+	:IDENTIFIER 
+	;*/
 
 declaration_specifiers
 	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back($1);$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
@@ -279,7 +282,7 @@ init_declarator
 	;
 
 storage_class_specifier
-	:/* TYPEDEF /* pass $1 to $$ */ */
+	:/* TYPEDEF */
 	| EXTERN {$$="EXTERN";}
 	| STATIC {$$="STATIC";}
 	| AUTO {$$="AUTO";}
@@ -298,7 +301,7 @@ type_specifier
 	| UNSIGNED {$$=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);}
 	| struct_or_union_specifier {$$=create_ts_obj("",$1,nullptr,nullptr);}
     | class_specifier {$$=create_ts_obj("",nullptr,$1,nullptr);}
-	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$2);}
+	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$1);}
 	/*| TYPE_NAME {$$=create_ts_obj("TYPE_NAME",nullptr,nullptr,nullptr);}*/
 	;
 
@@ -330,7 +333,7 @@ struct_declaration_list
 	;
 
 struct_declaration
-	: specifier_qualifier_list struct_declarator_list ';' {$$=create_struct_dec_obj($1,$2);} /* create type. */ 
+	: specifier_qualifier_list struct_declarator_list ';'{$$=create_struct_dec_obj($1,$2);} /* create type. */ 
 	;
 
 specifier_qualifier_list

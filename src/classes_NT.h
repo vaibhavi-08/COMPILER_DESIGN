@@ -148,7 +148,7 @@ class Struct_Declaration: public Node{
     string level;
     string level_name; 
     Struct_Declaration(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
-}
+};
 // class Primary_expresssion{
 
 // };

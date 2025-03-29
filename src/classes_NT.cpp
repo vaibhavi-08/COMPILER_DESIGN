@@ -7,13 +7,33 @@ std::unordered_map<std::string, std::string> current_params_list; // Definition
 std::stack<std::string> lvl_name; // Definition
 Local_Symbol_Table* current_table = nullptr; // Definition
 int current_level = 0; 
+void check_if_declared(Local_Symbol_Table* current_table,string& var_name,string& var_type){
+    Local_Symbol_Table* x=current_table;
+    bool check=false;
+    while(x!=nullptr){
+        auto y=(x->lst).find(var_name);
+        if(y!=nullptr){
+            if((y->second)->type==var_type){
+                check=true;
+                break;
+            }
+        }
+        else{
+            x=x->parent;
+        }
+    }
+    if(!check){
+        cout << "error: " << var_type << " " << var_name << " not declared!" << endl;
+        exit(1);
+    }
+};
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
     for(auto i:symbol->name_type_list){
         Symbol_Info info={i.first,i.second,symbol->level_name,symbol->level,symbol->scope,false,{}};
         Symbol_Info* x=&info;
         if(gst->gst.find(i.first)!=gst->gst.end()){
             cout << "error :" << "redeclaration of " << i.first << endl;
-            return; 
+            exit(1);
         }
         gst->gst[i.first]=x;
     }
@@ -24,7 +44,7 @@ void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
     Symbol_Info* x=&info;
     if(gst->gst.find(symbol->name)!=gst->gst.end()){
         cout << "error :" << "redeclaration of function " << symbol->name << endl;
-        return; 
+        exit(1);
     }
     gst->gst[symbol->name]=x;
 }
@@ -65,14 +85,20 @@ Global_Symbol_Table::Global_Symbol_Table() {
     this->gst = {};
 }
 
-Local_Symbol_Table::Local_Symbol_Table() {
+Local_Symbol_Table::Local_Symbol_Table(bool ispargst,Local_Symbol_Table* parent) {
     this->children = {};
     this->lst = {};
-    this->ispargst = false;
-    this->gparent = nullptr;
-    this->lparent = nullptr;
+    this->ispargst = ispargst ;
+    this->parent = parent;
 }
-
+Local_Symbol_Table* Local_Symbol_Table :: get_parent(){
+    if(this->ispargst){
+        return nullptr;
+    }
+    else{
+        return this->parent;
+    }
+}
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
     Function_Definition* fd=new Function_Definition(ds,dc,dl,cs);
     fd->type=create_type(ds,dc);
@@ -80,7 +106,7 @@ Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,De
     fd->name=get_name(dc);
     fd->level=0;
     fd->level_name=get_level_name(lvl_name);//stack se
-    if(current_table==nullptr){
+    if(current_level==0){
         fd->scope="global";
     }
     else{
@@ -96,7 +122,7 @@ Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarat
     d->name_type_list=create_name_type_list(ds,init_dl);
     d->level_name=get_level_name(lvl_name);
     d->level=current_level-lvl_name.size()+1;
-    if(current_table==nullptr){
+    if(current_level==0){
         d->scope="global";
     }
     else{
@@ -111,4 +137,8 @@ Declaration_Specifiers* create_decl_spec_object(){
 Type_Specifier* create_ts_obj(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
     Type_Specifier* ts=new Type_Specifier(str,struct_union_type, class_type, enum_type);
     return ts;
+}
+Struct_or_Union_Specifier* create_struct_union_spec_obj(string& sou,string& name,Struct_Declaration_List* sdl){
+    Struct_or_Union_Specifier* sus =new Struct_or_Union_Specifier(sou,name,sdl);
+    return sus;
 }

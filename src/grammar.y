@@ -60,7 +60,8 @@ Node* root;
 	Enum_Specifier* enum_spec;
 	string str;
 }
-%token IDENTIFIER CONSTANT STRING_LITERAL SIZEOF
+%token <str> IDENTIFIER CONSTANT STRING_LITERAL 
+%token SIZEOF
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
@@ -68,7 +69,7 @@ Node* root;
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID
-%token STRUCT UNION ENUM ELLIPSIS
+%token <str> STRUCT UNION ENUM ELLIPSIS
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
@@ -87,6 +88,7 @@ Node* root;
 %type<str_union> struct_or_union_specifier
 %type<enum_spec> enum_specifier
 %type <str> type_qualifier
+%type <str> struct_id union_id struct union
 
 %start translation_unit
 %%
@@ -296,14 +298,25 @@ type_specifier
 	;
 
 struct_or_union_specifier
-	: struct_or_union IDENTIFIER '{' struct_declaration_list '}' /* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	| struct_or_union '{' struct_declaration_list '}' /* same as above */
-	| struct_or_union IDENTIFIER {/* whether this identifier is declared before use */}
+	: struct struct_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();}/* same as above */
+	| struct IDENTIFIER {check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
+	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();} /* same as above */
+	| union IDENTIFIER {check_if_declared(current_table,$2,"union");$$=create_struct_union_spec_obj($1,$2,nullptr);/* whether this identifier is declared before use */}
 	;
 
-struct_or_union
-	: STRUCT /*just pass */
-	| UNION
+struct_id 
+	: IDENTIFIER {lvl_name.push_back("struct "+$1);$$=$1;}
+	;
+union_id
+	: IDENTIFIER {lvl_name.push_back("union "+$1);$$=$1;}
+	;
+struct
+	: STRUCT /*just pass */ {$$="STRUCT";}
+	;
+union
+	: UNION {$$="UNION";}
 	;
 
 struct_declaration_list

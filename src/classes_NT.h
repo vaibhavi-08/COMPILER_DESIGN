@@ -24,11 +24,14 @@ class Type_Specifier;
 class Struct_or_Union_Specifier;
 class Class_Specifier;
 class Enum_Specifier;
+bool check_if_declared(Local_Symbol_Table* current_table,string& var_name,string& var_type);
 Node* create_node();
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
+Struct_or_Union_Specifier* create_struct_union_spec_obj(string& sou,string& name,Struct_Declaration_List* sdl);
+Type_Specifier* create_ts_obj(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 struct Symbol_Info{
     string name;
     string type;//return type of function
@@ -49,8 +52,7 @@ class Local_Symbol_Table{
     vector<Local_Symbol_Table*> children;
     unordered_map<string,Symbol_Info*> lst;
     bool ispargst;
-    Global_Symbol_Table* gparent;
-    Local_Symbol_Table* lparent;
+    Local_Symbol_Table* parent;
     Local_Symbol_Table();
 
 };
@@ -116,7 +118,12 @@ class Type_Specifier: public Node{
 	Enum_Specifier* enum_type;
     Type_Specifier(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 };
-class Struct_or_Union_Specifier{
+class Struct_or_Union_Specifier: public Node{
+    public:
+    string str_or_union;
+    string name;
+    Struct_Declaration_List* strdec_list;
+    Struct_or_Union_Specifier(string& sou,string& name,Struct_Declaration_List* sdl);
 
 } ;
 class Class_Specifier{

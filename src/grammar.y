@@ -19,6 +19,11 @@
 	class Local_Symbol_Table;
 	class Specifier_Qualifier_List;
 	class Struct_Declarator_List;
+	class Struct_Declarator;
+	class Class_Specifier;
+	class Base_Class;
+	class Base_Class_List;
+	class Inheritance_Specifier;
 }
 
 %{
@@ -65,6 +70,13 @@ Node* root;
 	Enum_Specifier* enum_spec;
 	Struct_Declaration_List* struc_dec_list;
 	Struct_Declaration * struc_dec;
+	Specifier_Qualifier_List* sql;
+	Struct_Declarator_List* sdl;
+	Struct_Declarator* sd;
+	Class_Specifier* class_spec;
+	Base_Class* bc;
+	Base_Class_List* bcl;
+	Inheritance_Specifier* inh_spec;
 	char* str;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL 
@@ -88,7 +100,7 @@ Node* root;
 %type <dec_list> declaration_list
 %type <comp_stmt> comp_stmt
 %type <init_dec_list> init_declarator_list
-%type <str> storage_class_specifier
+%type <str> storage_class_specifier class_name access_specifier
 %type<type_spec> type_specifier
 %type<class_spec> class_specifier
 %type<str_union> struct_or_union_specifier
@@ -97,7 +109,13 @@ Node* root;
 %type <str> struct_id union_id struct union
 %type <struc_dec_list> struct_declaration_list
 %type <struc_dec> struct_declaration
-%type <node> specifier_qualifier_list struct_declarator_list compound_statement
+%type <sql> specifier_qualifier_list 
+%type <sdl> struct_declarator_list 
+%type <sd> struct_declarator
+%type <class_spec> class_specifier
+%type <bc> base_class
+%type <bcl> base_class_list
+%type <inh_spec> inheritance_specifier
 %start translation_unit
 %%
 
@@ -109,7 +127,7 @@ primary_expression
 	;
 
 class_name
-    : IDENTIFIER /* pass */
+    : IDENTIFIER /* pass */ ($$=$1;lvl_name.push("class"+$1);)
     ;
 
 postfix_expression
@@ -306,11 +324,11 @@ type_specifier
 	;
 
 struct_or_union_specifier
-	: struct struct_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();}/* same as above */
+	: struct struct_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* same as above */
 	| struct IDENTIFIER {check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
-	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();} /* same as above */
+	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();} /* same as above */
 	| union IDENTIFIER {check_if_declared(current_table,$2,"union");$$=create_struct_union_spec_obj($1,$2,nullptr);/* whether this identifier is declared before use */}
 	;
 
@@ -337,56 +355,57 @@ struct_declaration
 	;
 
 specifier_qualifier_list
-	: type_specifier specifier_qualifier_list  /* add type_specifier to specifier_qualifier_list object already created */
-	| type_specifier /* create object of specifier_qualifier_list . add type_specifier to it */
-	| type_qualifier specifier_qualifier_list  /* same as above rule */
-	| type_qualifier /* same as above rule */
+	: type_specifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->ts.push_back($1);} /* add type_specifier to specifier_qualifier_list object already created */
+	| type_specifier {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back($1);}/* create object of specifier_qualifier_list . add type_specifier to it */
+	| type_qualifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->tq.push_back($1);}  /* same as above rule */
+	| type_qualifier {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->tq.push_back($1);} /* same as above rule */
 	;
 
 struct_declarator_list
-	: struct_declarator  /* create struct declarator list object . add struct declarator to it . */
-	| struct_declarator_list ',' struct_declarator /* add struct declarator to existing list */
+	: struct_declarator  {Struct_Declarator_List* x=new Struct_Declarator_List();x->sd.push_back($1);}/* create struct declarator list object . add struct declarator to it . */
+	| struct_declarator_list ',' struct_declarator  {Struct_Declarator_List* x=$1;x->sd.push_back($2);}/* add struct declarator to existing list */
 	;
 
 struct_declarator
-	: declarator /* pass this above */
-	| ':' constant_expression /* will find out what this is for later */
-	| declarator ':' constant_expression /* will find out what this is for later */
+	: declarator /* pass this above */ {$$=create_struct_declarator_obj($1,nullptr);}
+	| ':' constant_expression {$$=create_struct_declarator_obj(nullptr,$2);}/* will find out what this is for later */
+	| declarator ':' constant_expression  {$$=create_struct_declarator_obj($1,$3);} /* will find out what this is for later */
 	;
+
 class_specifier
-    : CLASS class_name class_body /*  make class_specifier object and add all info.  */
-    | CLASS class_name inheritance_specifier class_body /* make object add all info . add base classes also in class_specifier */
-	| CLASS class_name /* check whether variable already declared */
+    : CLASS class_name class_body  {$$=new Class_Specifier($2,nullptr,$3);} /*  make class_specifier object and add all info.  */
+    | CLASS class_name inheritance_specifier class_body {$$=new Class_Specifier($2,$3,$4);}/* make object add all info . add base classes also in class_specifier */
+	| CLASS class_name {$$=new Class_Specifier($2,nullptr,nullptr);check_if_declared(current_table,$2,"class");}/* check whether variable already declared */
     ;
 
 inheritance_specifier
-    : ':' base_class_list /* pass */
+    : ':' base_class_list /* pass */ {$$=new Inheritance_Specifier($2);}
     ;
 
 base_class_list
-    : base_class /* make base_class_list object and add base class*/ 
-    | base_class_list ',' base_class /* add base class to existing list */
+    : base_class /* make base_class_list object and add base class*/ {Base_Class_List* x=new Base_Class_List();x->bc.push_back($1);}
+    | base_class_list ',' base_class {Base_Class_List* x=$1;x->bc.push_back($3);}/* add base class to existing list */
     ;
 
 base_class
-    : access_specifier IDENTIFIER   /*  make base class object. add info */
-    | IDENTIFIER /* make base class object. add info with access specifier as default */
+    : access_specifier IDENTIFIER   /*  make base class object. add info */ {check_if_declared(current_table,$2,"class");$$=new Base_Class($1,$2);}
+    | IDENTIFIER {check_if_declared(current_table,$2,"class");$$=new Base_Class("",$2);}/* make base class object. add info with access specifier as default */
     ;
 
 access_specifier
-    : PUBLIC /* pass */
-    | PRIVATE
-    | PROTECTED
+    : PUBLIC /* pass */ {$$="PUBLIC";}
+    | PRIVATE {$$="PRIVATE";}
+    | PROTECTED {$$="PROTECTED";}
     ;
 
 class_body
-    : '{' class_member_declaration_list '}' /*come to parent table from current table. pass above*/ 
-    | '{' '}'/* pass empty class member declaration list object */
+    : '{' class_member_declaration_list '}' {$$=$1; current_level--;current_table=current_table->get_parent();lvl_name.pop();}/*come to parent table from current table. pass above*/ 
+    | '{' '}' {lvl_name.pop();}/* pass empty class member declaration list object */
     ;
 
 class_member_declaration_list
-    : class_member_declaration  /* make obj class_member_declaration_list . add class_member_declaration. */
-    | class_member_declaration_list class_member_declaration /* add class_member_declaration to existing obj */
+    : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table(current_table);}  /* make obj class_member_declaration_list . add class_member_declaration. */
+    | class_member_declaration_list class_member_declaration {Class_Member_Declaration_List* x=$1;x->cd.push_back($1);}/* add class_member_declaration to existing obj */
     ;
 
 constructor_declaration
@@ -399,7 +418,7 @@ parameter_list_opt
     ;
 
 class_member_declaration
-    : access_specifier ':' /* make class_member_declaration obj and add access specifier to it . pass */
+    : access_specifier ':' {access_spec_stk.push($1);} /* make class_member_declaration obj and add access specifier to it . pass */
     | member_declaration /* make class_member_declaration obj and add member decl to it . pass */
     | constructor_declaration /* make class_member_declaration obj and add constructor_declaration to it . pass */
     ;

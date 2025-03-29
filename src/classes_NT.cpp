@@ -6,6 +6,7 @@ Global_Symbol_Table* gst = nullptr; // Definition
 std::unordered_map<std::string, std::string> current_params_list; // Definition
 std::stack<std::string> lvl_name; // Definition
 Local_Symbol_Table* current_table = nullptr; // Definition
+stack<string> access_spec_stk;
 int current_level = 0; 
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type){
     Local_Symbol_Table* x=current_table;
@@ -196,5 +197,9 @@ Type_Specifier* create_ts_obj(const string& str,Struct_or_Union_Specifier* struc
 Struct_or_Union_Specifier* create_struct_union_spec_obj(const string& sou,const string& name,Struct_Declaration_List* sdl){
     Struct_or_Union_Specifier* sus =new Struct_or_Union_Specifier(sou,name,sdl);
     return sus;
+}
+Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expression* ce){
+    Struct_Declarator* d=new Struct_Declarator(d,ce);
+    return d;
 }
 

@@ -21,11 +21,19 @@ class Class_Specifier;
 class Enum_Specifier;
 class Struct_Declaration_List;
 class Struct_Declaration;
+class Specifier_Qualifier_List;
+class Struct_Declarator_List;
+class Struct_Declarator;
+class Class_Specifier;
+class Base_Class;
+class Base_Class_List;
+class Inheritance_Specifier;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,string> current_params_list;
 extern stack<string> lvl_name;
 extern Local_Symbol_Table* current_table;
 extern int current_level;
+extern stack<string> access_spec_stk;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
@@ -34,9 +42,11 @@ void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
-Struct_or_Union_Specifier* create_struct_union_spec_obj(const string& sou,const string& name,Struct_Declaration_List* sdl);
+Struct_or_Union_Specifier* create_struct_union_spec_obj(string& sou,string& name,Struct_Declaration_List* sdl);
+Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
-Type_Specifier* create_ts_obj(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
+Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expression* ce);
+Type_Specifier* create_ts_obj(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 struct Symbol_Info{
     string name;
     string type;//return type of function
@@ -58,6 +68,7 @@ class Local_Symbol_Table{
     unordered_map<string,Symbol_Info*> lst;
     bool ispargst;
     Local_Symbol_Table* parent;
+    string access;
     Local_Symbol_Table(bool ispargst, Local_Symbol_Table* parent);
     Local_Symbol_Table* get_parent();
 
@@ -152,6 +163,92 @@ class Struct_Declaration: public Node{
     int level;
     string level_name; 
     Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl);
+};
+class Specifier_Qualifier_List: public Node{
+    public:
+    vector<Type_Specifier*> ts;
+    vector<string> tq;
+    Specifier_Qualifier_List();
+
+};
+class Struct_Declarator_List:public Node{
+    public:
+    vector<Struct_Declarator*> sd;
+    Struct_Declaration_List();
+};
+class Struct_Declarator: public Node{
+    public:
+    Declarator* d;
+    Constant_Expression* ce;
+    Struct_Declarator(Declarator* d,Constant_Expression* ce);
+
+};
+class Class_Specifier : public Node{
+    public:
+    string class_name;
+    Inheritence_Specifier* is;
+    Class_Body* cb;
+    Class_Specifier(string& class_name,Inheritence_Specifier* is,Class_Body* cb);
+};
+class Base_Class :public Node{
+    public:
+    string asp;
+    string id;
+    Base_Class(string& asp,string& id);
+};
+class Base_Class_List{
+    public:
+    vector<Base_Class*> bc;
+    Base_Class_List()
+};
+class Inheritance_Specifier{
+    public:
+    Base_Class_List* bcl;
+    Inheritance_Specifier(Base_Class_List* bcl);
+
+};
+class Specifier_Qualifier_List: public Node{
+    public:
+    vector<Type_Specifier*> ts;
+    vector<string> tq;
+    Specifier_Qualifier_List();
+
+};
+class Struct_Declarator_List:public Node{
+    public:
+    vector<Struct_Declarator*> sd;
+    Struct_Declaration_List();
+};
+class Struct_Declarator: public Node{
+    public:
+    Declarator* d;
+    Constant_Expression* ce;
+    Struct_Declarator(Declarator* d,Constant_Expression* ce);
+
+};
+class Class_Specifier : public Node{
+    public:
+    string class_name;
+    Inheritence_Specifier* is;
+    Class_Body* cb;
+    Class_Specifier(string& class_name,Inheritence_Specifier* is,Class_Body* cb);
+};
+class Base_Class :public Node{
+    public:
+    string asp;
+    string id;
+    Base_Class(string& asp,string& id);
+};
+class Base_Class_List{
+    public:
+    vector<Base_Class*> bc;
+    Base_Class_List()
+};
+class Inheritance_Specifier{
+    public:
+    Base_Class_List* bcl;
+    Inheritance_Specifier(Base_Class_List* bcl);
+
 };
 // class Primary_expresssion{
 

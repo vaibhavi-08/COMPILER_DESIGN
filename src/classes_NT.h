@@ -2,14 +2,9 @@
 #define CLASSES_NT_H
 #include <bits/stdc++.h>
 using namespace std;
-extern Global_Symbol_Table* gst;
-extern unordered_map<string,string> current_params_list;
-extern stack<string> lvl_name;
-extern Local_Symbol_Table* current_table;
-extern int current_level;
-class Node;
 class Local_Symbol_Table;
 class Global_Symbol_Table;
+class Node;
 class Symbol_Info;
 class Node;
 class Function_Definition;
@@ -26,15 +21,22 @@ class Class_Specifier;
 class Enum_Specifier;
 class Struct_Declaration_List;
 class Struct_Declaration;
+extern Global_Symbol_Table* gst;
+extern unordered_map<string,string> current_params_list;
+extern stack<string> lvl_name;
+extern Local_Symbol_Table* current_table;
+extern int current_level;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
-bool check_if_declared(Local_Symbol_Table* current_table,string& var_name,string& var_type);
+void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
-Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
+Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
+Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
-Struct_or_Union_Specifier* create_struct_union_spec_obj(string& sou,string& name,Struct_Declaration_List* sdl);
-Type_Specifier* create_ts_obj(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
+Struct_or_Union_Specifier* create_struct_union_spec_obj(const string& sou,const string& name,Struct_Declaration_List* sdl);
+Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
+Type_Specifier* create_ts_obj(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 struct Symbol_Info{
     string name;
     string type;//return type of function
@@ -56,7 +58,8 @@ class Local_Symbol_Table{
     unordered_map<string,Symbol_Info*> lst;
     bool ispargst;
     Local_Symbol_Table* parent;
-    Local_Symbol_Table();
+    Local_Symbol_Table(bool ispargst, Local_Symbol_Table* parent);
+    Local_Symbol_Table* get_parent();
 
 };
 class Node{
@@ -119,14 +122,14 @@ class Type_Specifier: public Node{
     Struct_or_Union_Specifier* struct_union_type;
     Class_Specifier* class_type;
 	Enum_Specifier* enum_type;
-    Type_Specifier(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
+    Type_Specifier(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 };
 class Struct_or_Union_Specifier: public Node{
     public:
     string str_or_union;
     string name;
     Struct_Declaration_List* strdec_list;
-    Struct_or_Union_Specifier(string& sou,string& name,Struct_Declaration_List* sdl);
+    Struct_or_Union_Specifier(const string& sou,const string& name,Struct_Declaration_List* sdl);
 
 } ;
 class Class_Specifier{
@@ -141,13 +144,14 @@ class Struct_Declaration_List: public Node{
     Struct_Declaration_List();
 };
 class Struct_Declaration: public Node{
+    public:
     Specifier_Qualifier_List* sql;
     Struct_Declarator_List* sdl;
     vector<pair<string,string>> name_type_list;
     string scope;
-    string level;
+    int level;
     string level_name; 
-    Struct_Declaration(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
+    Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl);
 };
 // class Primary_expresssion{
 
@@ -246,17 +250,17 @@ class Struct_Declaration: public Node{
 
 // };
 
-// class Struct_Declaration_List{
+class Struct_Declaration_List{
 
-// };
+};
 
 // class Struct_Declaration{
 
 // };
 
-// class Specifier_Qualifier_List{
+class Specifier_Qualifier_List{
 
-// };
+};
 
 // class Struct_Declarator{
 

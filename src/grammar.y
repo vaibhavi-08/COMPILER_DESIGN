@@ -63,9 +63,9 @@ Node* root;
 	Struct_or_Union_Specifier* str_union;
 	Class_Specifier* class_spec;
 	Enum_Specifier* enum_spec;
-	Struct_Declaration_List* stuc_dec_list;
+	Struct_Declaration_List* struc_dec_list;
 	Struct_Declaration * struc_dec;
-	string str;
+	char* str;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL 
 %token SIZEOF
@@ -315,10 +315,10 @@ struct_or_union_specifier
 	;
 
 struct_id 
-	: IDENTIFIER {lvl_name.push_back("struct "+$1);$$=$1;}
+	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;}
 	;
 union_id
-	: IDENTIFIER {lvl_name.push_back("union "+$1);$$=$1;}
+	: IDENTIFIER {lvl_name.push("union " + std::string($1));$$=$1;}
 	;
 struct
 	: STRUCT /*just pass */ {$$="STRUCT";}
@@ -640,9 +640,11 @@ int main(int argc, char *argv[]){
 	Node* root= new Node();
 	gst=new Global_Symbol_Table();
 	current_params_list.clear();
-	lvl_name.clear();
+	while (!lvl_name.empty()){
+    lvl_name.pop();
+	}
 	current_table=nullptr;
-	Current_level=0;
+	current_level=0;
     int abc=yyparse();
     if(abc){
         cout << "parsing failed!" << endl;

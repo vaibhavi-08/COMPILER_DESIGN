@@ -1152,39 +1152,39 @@ YY_RULE_SETUP
 case 46:
 YY_RULE_SETUP
 #line 74 "lexer.l"
-{ symtab[yytext]="IDENTIFIER";program.emplace_back(yytext);count(); yylval.str = string(yytext); return IDENTIFIER;}
+{ symtab[yytext]="IDENTIFIER";program.emplace_back(yytext);count(); yylval.str = strdup(yytext); return IDENTIFIER;}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
 #line 75 "lexer.l"
-{ symtab[yytext]="CONSTANT HEX";program.emplace_back(yytext);count();yylval.str = string(yytext);  return CONSTANT;}
+{ symtab[yytext]="CONSTANT HEX";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONSTANT;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
 #line 76 "lexer.l"
-{ symtab[yytext]="INTEGER";program.emplace_back(yytext);count();yylval.str = string(yytext); return CONSTANT;}
+{ symtab[yytext]="INTEGER";program.emplace_back(yytext);count();yylval.str = strdup(yytext); return CONSTANT;}
 	YY_BREAK
 case 49:
 /* rule 49 can match eol */
 YY_RULE_SETUP
 #line 77 "lexer.l"
-{ symtab[yytext]="CONSTANT CHAR";program.emplace_back(yytext);count();yylval.str = string(yytext);  return CONSTANT;}
+{ symtab[yytext]="CONSTANT CHAR";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONSTANT;}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
 #line 78 "lexer.l"
-{ symtab[yytext]="CONSTANT EXP";program.emplace_back(yytext);count(); yylval.str = string(yytext); return CONSTANT;}
+{ symtab[yytext]="CONSTANT EXP";program.emplace_back(yytext);count(); yylval.str = strdup(yytext); return CONSTANT;}
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
 #line 79 "lexer.l"
-{ symtab[yytext]="CONSTANT FLOAT";program.emplace_back(yytext);count();yylval.str = string(yytext);  return CONSTANT;}
+{ symtab[yytext]="CONSTANT FLOAT";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONSTANT;}
 	YY_BREAK
 case 52:
 /* rule 52 can match eol */
 YY_RULE_SETUP
 #line 80 "lexer.l"
-{ symtab[yytext]="STRING LITERAL";program.emplace_back(yytext);count();yylval.str = string(yytext);return STRING_LITERAL;}
+{ symtab[yytext]="STRING LITERAL";program.emplace_back(yytext);count();yylval.str = strdup(yytext);return STRING_LITERAL;}
 	YY_BREAK
 case 53:
 YY_RULE_SETUP

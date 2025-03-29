@@ -2003,13 +2003,13 @@ yyreduce:
 
   case 116: /* struct_id: IDENTIFIER  */
 #line 318 "grammar.y"
-                     {lvl_name.push_back("struct "+(yyvsp[0].str));(yyval.str)=(yyvsp[0].str);}
+                     {lvl_name.push("struct " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);}
 #line 2008 "grammar.tab.c"
     break;
 
   case 117: /* union_id: IDENTIFIER  */
 #line 321 "grammar.y"
-                     {lvl_name.push_back("union "+(yyvsp[0].str));(yyval.str)=(yyvsp[0].str);}
+                     {lvl_name.push("union " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);}
 #line 2014 "grammar.tab.c"
     break;
 
@@ -2338,9 +2338,11 @@ int main(int argc, char *argv[]){
 	Node* root= new Node();
 	gst=new Global_Symbol_Table();
 	current_params_list.clear();
-	lvl_name.clear();
+	while (!lvl_name.empty()){
+    lvl_name.pop();
+	}
 	current_table=nullptr;
-	Current_level=0;
+	current_level=0;
     int abc=yyparse();
     if(abc){
         cout << "parsing failed!" << endl;

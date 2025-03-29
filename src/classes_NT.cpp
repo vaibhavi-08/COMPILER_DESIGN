@@ -7,7 +7,7 @@ std::unordered_map<std::string, std::string> current_params_list; // Definition
 std::stack<std::string> lvl_name; // Definition
 Local_Symbol_Table* current_table = nullptr; // Definition
 int current_level = 0; 
-void check_if_declared(Local_Symbol_Table* current_table,string& var_name,string& var_type){
+void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type){
     Local_Symbol_Table* x=current_table;
     bool check=false;
     while(x!=nullptr){
@@ -26,7 +26,7 @@ void check_if_declared(Local_Symbol_Table* current_table,string& var_name,string
         cout << "error: " << var_type << " " << var_name << " not declared!" << endl;
         exit(1);
     }
-};
+}
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
     for(auto i:symbol->name_type_list){
         Symbol_Info info={i.first,i.second,symbol->level_name,symbol->level,symbol->scope,false,{}};
@@ -124,7 +124,7 @@ Declaration_Specifiers::Declaration_Specifiers() {
     this->tq = {}; 
 }
 
-Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
+Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
     Function_Definition* fd=new Function_Definition(ds,dc,dl,cs);
     fd->type=create_type(ds,dc);
     fd->parameters=get_func_params(dc);
@@ -155,18 +155,28 @@ Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarat
     }
     return d;
 }
-Struct_or_Union_Specifier::Struct_or_Union_Specifier(string& sou, string& name, Struct_Declaration_List* sdl) {
+Struct_or_Union_Specifier::Struct_or_Union_Specifier(const string& sou,const string& name, Struct_Declaration_List* sdl) {
     this->str_or_union = sou;    
     this->name = name;           
     this->strdec_list = sdl;   
 }
 
-Type_Specifier::Type_Specifier(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
+Type_Specifier::Type_Specifier(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
     this->string_type = str;               
     this->struct_union_type = struct_union_type; 
     this->class_type = class_type;           
     this->enum_type = enum_type;       
 }
+
+Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
+    this->sql = sql;                   
+    this->sdl = sdl;                  
+    this->name_type_list = {};         
+    this->scope = "";                  
+    this->level = 0;                  
+    this->level_name = "";         
+}
+
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl){
     Struct_Declaration* sd=new Struct_Declaration(sql,sdl);
     sd->level=current_level-lvl_name.size()+1;
@@ -179,11 +189,11 @@ Declaration_Specifiers* create_decl_spec_object(){
     Declaration_Specifiers* ds=new Declaration_Specifiers();
     return ds;
 }
-Type_Specifier* create_ts_obj(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
+Type_Specifier* create_ts_obj(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
     Type_Specifier* ts=new Type_Specifier(str,struct_union_type, class_type, enum_type);
     return ts;
 }
-Struct_or_Union_Specifier* create_struct_union_spec_obj(string& sou,string& name,Struct_Declaration_List* sdl){
+Struct_or_Union_Specifier* create_struct_union_spec_obj(const string& sou,const string& name,Struct_Declaration_List* sdl){
     Struct_or_Union_Specifier* sus =new Struct_or_Union_Specifier(sou,name,sdl);
     return sus;
 }

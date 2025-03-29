@@ -171,9 +171,9 @@ union YYSTYPE
 	Struct_or_Union_Specifier* str_union;
 	Class_Specifier* class_spec;
 	Enum_Specifier* enum_spec;
-	Struct_Declaration_List* stuc_dec_list;
+	Struct_Declaration_List* struc_dec_list;
 	Struct_Declaration * struc_dec;
-	string str;
+	char* str;
 
 #line 179 "grammar.tab.h"
 

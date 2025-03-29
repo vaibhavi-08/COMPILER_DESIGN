@@ -99,6 +99,26 @@ Local_Symbol_Table* Local_Symbol_Table :: get_parent(){
         return this->parent;
     }
 }
+
+Struct_or_Union_Specifier::Struct_or_Union_Specifier(string& sou, string& name, Struct_Declaration_List* sdl) {
+    this->str_or_union = sou;    
+    this->name = name;           
+    this->strdec_list = sdl;   
+}
+
+Type_Specifier::Type_Specifier(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
+    this->string_type = str;               
+    this->struct_union_type = struct_union_type; 
+    this->class_type = class_type;           
+    this->enum_type = enum_type;       
+}
+
+Declaration_Specifiers::Declaration_Specifiers() {
+    this->scs = {};   
+    this->ts = {};    
+    this->tq = {}; 
+}
+
 Function_Definition* create_fun_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
     Function_Definition* fd=new Function_Definition(ds,dc,dl,cs);
     fd->type=create_type(ds,dc);

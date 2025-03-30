@@ -36,6 +36,9 @@ class Enumerator_List;
 class Enumerator;
 class Function_Declaration;
 class Init_Declarator;
+class Class_Member_Declaration_List;
+class Class_Member_Declaration;
+class Parameter_List;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,string> current_params_list;
 extern stack<string> lvl_name;
@@ -110,7 +113,7 @@ class Function_Declaration: public Node{
     Declaration_Specifiers* ds;
     Declarator* d;
     Function_Declaration(Declaration_Specifiers* ds,Declarator* d);
-}
+};
 class Declaration : public Node{
     public:
     vector<pair<string,string>> name_type_list;
@@ -130,12 +133,12 @@ class Init_Declarator_List: public Node{
     vector<Init_Declarator*> idl;
     Init_Declarator_List();
 };
-class Init_Declarator: public Node{
-    public :
-    Declarator* d;
-    Initializer* i;
-    Init_Declarator(Declarator* d,Initializer* i);
-}
+class Init_Declarator : public Node {
+    public:
+        Declarator* d;
+        Initializer* i;  
+        Init_Declarator(Declarator* d, Initializer* i);
+};
 class Declaration_Specifiers : public Node{
     public:
     vector<string> scs;
@@ -169,9 +172,6 @@ class Struct_or_Union_Specifier: public Node{
     Struct_or_Union_Specifier(const string& sou,const string& name,Struct_Declaration_List* sdl);
 
 } ;
-class Enum_Specifier{
-
-};
 class Struct_Declaration_List: public Node{
     public:
     vector<Struct_Declaration*> sdl;
@@ -240,7 +240,7 @@ class Class_Member_Declaration:public Node{
     Member_Declaration* md;
     Constructor_Declaration* cd;
     Class_Member_Declaration(Member_Declaration* md,Constructor_Declaration* cd);
-}
+};
 class Member_Declaration: public Node{
     public:
     Declaration* d;
@@ -251,30 +251,16 @@ class Constructor_Declaration: public Node{
     public:
     string class_name;
     Parameter_List* params;
-    vector<string> pvec/*=get_const_params(this->params) do this in constructor*/
+    vector<string> pvec;/*=get_const_params(this->params) do this in constructor*/
     Compound_Statement* cs;
-    Constructor_Declaration(string& class_name,Parameter_List* params,Compound_Statement* cs);
+    Constructor_Declaration(const std::string& class_name,Parameter_List* params,Compound_Statement* cs);
 };
-// enum_specifier
-// 	: ENUM '{' enumerator_list '}' {$$=Enum_Specifier("",$3);}
-// 	| ENUM IDENTIFIER '{' enumerator_list '}' {$$=Enum_Specifier($2,$4);}
-// 	| ENUM IDENTIFIER {$$=Enum_Specifier($2,nullptr);check_if_declared(current_table,$2,"enum");}
-// 	;
 
-// enumerator_list
-// 	: enumerator {Enumerator_List* x=new Enumerator_List();x->e.push_back($1);}
-// 	| enumerator_list ',' enumerator {Enumerator_List* x=$1;x->e.push_back($3);}
-// 	;
-
-// enumerator
-// 	: IDENTIFIER {$$=new Enumerator($1);}
-// 	| IDENTIFIER '=' constant_expression {$$=new Enumerator($1,$3);}
-// 	;
 class Enum_Specifier:public Node{
     public:
     string id;
     Enumerator_List* enuml;
-    Enum_Specifier(string& id,Enumerator_List* enuml);
+    Enum_Specifier(const std::string& id, Enumerator_List* enuml);
 };
 class Enumerator_List:public Node{
     public:
@@ -285,7 +271,7 @@ class Enumerator:public Node{
     public:
     string id;
     Constant_Expression* ce;
-    Enumerator(string id,Constant_Expression* ce);
+    Enumerator(const std::string& id, Constant_Expression* ce);
 };
 // class Primary_expresssion{
 

@@ -67,7 +67,7 @@ void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
         bool isenum=false;
         if(i.second=="enum"){
             isenum=true;
-            z=symbol->dec_spec->ts.front()->enum_type->el;
+            z=symbol->dec_spec->ts.front()->enum_type->enuml;
         }
         Symbol_Info info={i.first,i.second,symbol->level_name,symbol->level,symbol->scope,"-",false,{},isenum,z};
         Symbol_Info* x=&info;
@@ -116,7 +116,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         bool isenum=false;
         if(i.second=="enum"){
             isenum=true;
-            z=symbol->dec_spec->ts.front()->enum_type->el;
+            z=d->dec_spec->ts.front()->enum_type->enuml;
         }
         Symbol_Info info={i.first,i.second,d->level_name,d->level,d->scope,access,false,{},isenum,z};
         Symbol_Info* x=&info;
@@ -128,6 +128,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
     }
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Constructor_Declaration* cd){
+    string access="PRIVATE";
     if(!access_spec_stk.empty()){
         access=access_spec_stk.top();
     }
@@ -145,18 +146,23 @@ void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* f
     if(!access_spec_stk.empty()){
         access=access_spec_stk.top();
     }
-    Symbol_Info info={fd>name,fd->type,fd->level_name,fd->level,fd->scope,access,true,fd->parameters,false,nullptr};
+    Symbol_Info info={fd->name,fd->type,fd->level_name,fd->level,fd->scope,access,true,fd->parameters,false,nullptr};
     Symbol_Info* x=&info;
     if(current_table->lst.find(fd->name)!=current_table->lst.end()){
         cout << "error :" << "redeclaration of function " << fd->name << endl;
         exit(1);
     }
-    current_table->lst[symbol->name]=x;
+    current_table->lst[fd->name]=x;
 }
 Node* create_node(){
     Node* node = new Node();
     return node;
 }
+Init_Declarator_List::Init_Declarator_List() {
+    this->idl={};
+}
+
+
 void Node::add_child(Node* child){
     this->children.push_back(child);
 }
@@ -252,6 +258,10 @@ Type_Specifier::Type_Specifier(const string& str,Struct_or_Union_Specifier* stru
     this->enum_type = enum_type;       
 }
 
+Enum_Specifier::Enum_Specifier(const std::string& id, Enumerator_List* enuml)
+    : id(id), enuml(enuml) { 
+}
+
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
     this->sql = sql;                   
     this->sdl = sdl;                  
@@ -263,6 +273,10 @@ Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Dec
 
 Struct_Declarator_List::Struct_Declarator_List() {
    this->sd={};
+}
+
+Enumerator::Enumerator(const std::string& id, Constant_Expression* ce)
+    : id(id), ce(ce) { 
 }
 
 Struct_Declarator::Struct_Declarator(Declarator* d, Constant_Expression* ce){
@@ -278,9 +292,16 @@ Base_Class_List::Base_Class_List() {
     this->bc={};
 }
 
-// Implementation (.cpp file)
+Constructor_Declaration::Constructor_Declaration(
+    const std::string& class_name, 
+    Parameter_List* params, 
+    Compound_Statement* cs
+) : class_name(class_name), params(params), cs(cs) {
+}
+
+
 Base_Class::Base_Class(const std::string& asp, const std::string& id)
-    : asp(asp), id(id) {  // Use const references to accept temporary strings
+    : asp(asp), id(id) {  
 }
 
 
@@ -318,8 +339,8 @@ Struct_or_Union_Specifier* create_struct_union_spec_obj(const string& sou,const 
     return sus;
 }
 Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expression* ce){
-    Struct_Declarator* d=new Struct_Declarator(d,ce);
-    return d;
+    Struct_Declarator* sd=new Struct_Declarator(d,ce);
+    return sd;
 }
 Init_Declarator:: Init_Declarator(Declarator* d,Initializer* i){
     this->d=d;

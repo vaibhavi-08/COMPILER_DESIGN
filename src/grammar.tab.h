@@ -73,8 +73,17 @@ extern int yydebug;
 	class Base_Class;
 	class Base_Class_List;
 	class Inheritance_Specifier;
+	class Member_Declaration;
+	class Constructor_Declaration;
+	class Enum_Specifier;
+	class Enumerator_List;
+	class Enumerator;
+	class Function_Declaration;
+	class Init_Declarator;
+	class parameter_List;
 
-#line 78 "grammar.tab.h"
+
+#line 87 "grammar.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -162,7 +171,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 58 "grammar.y"
+#line 67 "grammar.y"
 
 	Node* node;
 	Function_Definition* fun_def;
@@ -185,11 +194,17 @@ union YYSTYPE
 	Base_Class* bc;
 	Base_Class_List* bcl;
 	Inheritance_Specifier* inh_spec;
+	Member_Declaration* memd;
+	Constructor_Declaration* constrdec;
+	Enumerator_List* enuml;
+	Enumerator* enumer;
+	Function_Declaration* func_decl;
+	Init_Declarator* init_dec;
 	char* str;
 	Class_Member_Declaration* class_mem_dec;
 	Class_Member_Declaration_List* class_mem_dec_list;
 
-#line 193 "grammar.tab.h"
+#line 208 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

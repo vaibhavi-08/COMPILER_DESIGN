@@ -32,6 +32,7 @@
 	class Enumerator;
 	class Function_Declaration;
 	class Init_Declarator;
+	class parameter_List;
 
 }
 
@@ -87,9 +88,8 @@ Node* root;
 	Inheritance_Specifier* inh_spec;
 	Member_Declaration* memd;
 	Constructor_Declaration* constrdec;
-	Enum_Specifier* enum_spec;
 	Enumerator_List* enuml;
-	Enumerator* enum;
+	Enumerator* enumer;
 	Function_Declaration* func_decl;
 	Init_Declarator* init_dec;
 	char* str;
@@ -121,7 +121,6 @@ Node* root;
 %type<type_spec> type_specifier
 %type<class_spec> class_specifier
 %type<str_union> struct_or_union_specifier
-%type<enum_spec> enum_specifier
 %type <str> type_qualifier
 %type <str> struct_id union_id struct union
 %type <struc_dec_list> struct_declaration_list
@@ -133,15 +132,15 @@ Node* root;
 %type <bcl> base_class_list
 %type <inh_spec> inheritance_specifier
 %type <node> constant_expression compound_statement
-%type <class_mem_dec_list> class_member_declaration_list
-%type <class_mem_dec> class_body class_member_declaration
+%type <class_mem_dec_list> class_body class_member_declaration_list
+%type <class_mem_dec> class_member_declaration
 %type <memd> member_declaration
-%type <constrdec> constructor_declaration
+%type <constrdec> constructor_declaration parameter_list
 %type <enum_spec> enum_specifier
 %type <enuml> enumerator_list
-%type <enum> enumerator
+%type <enumer> enumerator
 %type <func_decl> function_declaration
-%type <init_dec> init_declarator
+%type <init_dec> init_declarator initializer
 %start translation_unit
 %%
 
@@ -317,7 +316,7 @@ declaration_specifiers
 
 init_declarator_list
 	: init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;}
-	| init_declarator_list ',' init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;}
+	| init_declarator_list ',' init_declarator { $1->idl.push_back($3); $$ = $1;}
 	;
 
 init_declarator
@@ -431,12 +430,13 @@ class_body
 
 class_member_declaration_list
     : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table(current_table);}  /* make obj class_member_declaration_list . add class_member_declaration. */
-    | class_member_declaration_list class_member_declaration {Class_Member_Declaration_List* x=$1;x->cd.push_back($1);}/* add class_member_declaration to existing obj */
+    | class_member_declaration_list class_member_declaration { $1->cd.push_back($2);
+    $$ = $1;}/* add class_member_declaration to existing obj */
     ;
 
 constructor_declaration
-    : class_name'(' parameter_list ')' compound_statement {current_params_list.clear();add_params_to_map($3);$$=new Constructor_Declaration($1,$3,$5);} /* make a constructor declaration with class name and parameter list and body */
-	| class_name '(' ')' compound_statement {current_params_list.clear();$$=new Constructor_Declaration($1,nullptr,$4);}
+    : class_name'(' parameter_list ')' compound_statement {current_params_list.clear();add_params_to_map($3);$$=new Constructor_Declaration(std::string($1),$3,$5);} /* make a constructor declaration with class name and parameter list and body */
+	| class_name '(' ')' compound_statement {current_params_list.clear();$$=new Constructor_Declaration(std::string($1),nullptr,$4);}
     ;
 
 
@@ -452,9 +452,9 @@ member_declaration
     ;
 
 enum_specifier
-	: ENUM '{' enumerator_list '}' {$$=Enum_Specifier("",$3);}
-	| ENUM IDENTIFIER '{' enumerator_list '}' {$$=Enum_Specifier($2,$4);}
-	| ENUM IDENTIFIER {$$=Enum_Specifier($2,nullptr);check_if_declared(current_table,$2,"enum");}
+	: ENUM '{' enumerator_list '}' {$$=new Enum_Specifier(std::string(""),$3);}
+	| ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);}
+	| ENUM IDENTIFIER {$$=new Enum_Specifier(std::string($2),nullptr);check_if_declared(current_table,std::string($2),"enum");}
 	;
 
 enumerator_list
@@ -463,8 +463,8 @@ enumerator_list
 	;
 
 enumerator
-	: IDENTIFIER {$$=new Enumerator($1);}
-	| IDENTIFIER '=' constant_expression {$$=new Enumerator($1,$3);}
+	: IDENTIFIER {$$=new Enumerator(std::string($1),nullptr);}
+	| IDENTIFIER '=' constant_expression {$$=new Enumerator(std::string($1),$3);}
 	;
 
 type_qualifier

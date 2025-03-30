@@ -25,6 +25,86 @@ string get_level_name(){
     }
     return ans;
 }
+string create_type(Declaration_Specifiers* ds,Declarator* d)string create_type(Declaration_Specifiers* ds,Declarator* d){
+    string type="";
+    bool isconst=false;
+    bool isvolatile=false;
+    for(auto i : ds->tq){
+        if(i=="CONST")isconst=true;
+        else isvolatile=true;
+    }
+    if(isconst){
+        type+="CONST ";
+    }
+    if(isvolatile){
+        type+="VOLATILE ";
+    }
+    if(ds->scs.size()==1){
+        type+=ds->scs[0];
+        type+=" ";
+    }
+    else if(ds->scs.size()!=0){
+        cout << "incorrect storage class specs in type of " << d->id << endl;
+        exit(1);
+    }
+    vector<Type_Specifier*> z=ds->ts;
+    reverse(z.begin(),z.end());
+    if(z.size()==3){
+        if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type="LONG"&&z[2]->string_type="LONG"){
+            return type + "UNSIGNED LONG LONG";
+        }
+        else{
+            cout << "incorrect type specs in type of " << d->id << endl;
+            exit(1);
+        }
+    }
+    else if(z.size()==2){
+        if(z[0]->string_type="UNSIGNED"&&z[1].string_type="CHAR"){
+            type += " UNSIGNED CHAR";
+        }
+        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="SHORT"){
+            type +=" UNSIGNED SHORT";
+        }
+        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="INT"){
+            type+=" UNSIGNED INT";
+        }
+        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="LONG"){
+            type+=" UNSIGNED LONG";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="CHAR"){
+            type+=" SIGNED CHAR";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="SHORT"){
+            type+=" SIGNED SHORT";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="INT"){
+            type+=" SIGNED INT";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="LONG"){
+            type+=" SIGNED LONG";
+        }
+        else{
+            cout << "incorrect type specs in type of " << d->id << endl;
+            exit(1);
+        }
+    }
+    else if(z.size()==1){
+        type+=z->string_type;
+    }
+    else if(z.size()>3) {
+        cout << "incorrect type specs in type of " << d->id << endl;
+        exit(1);
+    }
+    Pointer* y=d->p;
+    while(y!=nullptr){
+        type+='*';
+        y=y->p;
+    }
+    return type;
+     
+
+
+}
 
 vector<string> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
@@ -55,6 +135,47 @@ vector<<pair<string,string>> get_params(Parameter_List* p){
 }
 string Declarator :: check_declarator(){
     //return which type of declarator
+    Direct_Declarator* z=this->dd;
+    if(dd->type=="function"){
+        Direct_Declarator* nxt=z->dd;
+        assert(nxt!=nullptr);
+        if(nxt->type="id"){
+            return "function";
+        }
+        else if(nxt->type="declarator"){
+            if(nxt->d->dd->type="id"&&nxt->d->p!=nullptr){
+                return "function pointer";
+            }
+            else{
+                cout << "error: " << z->id << "is not valid declarator" << endl;
+                exit(1);
+            }
+        }
+        else{
+            cout << "error: " << z->id << "is not valid declarator" << endl;
+             exit(1);
+        }
+    }
+    else if(z->type=="id"){
+        return "id";
+    }
+    else if(z->type=="declarator"){
+        cout << "error: " << z->id << "is not valid declarator" << endl;
+        exit(1);
+    }
+    else if(z->type=="array"){
+        Direct_Declarator* x=z;
+        while(x->type=="array"){
+            x=x->dd;
+        }
+        if(x->type=="id"){
+            return "array";
+        }
+        else{
+            cout << "error: " << z->id << "is not valid declarator" << endl;
+            exit(1);
+        }
+    }
 }
 void Declarator :: check_for_func(){
     string t=this->check_declarator()
@@ -91,7 +212,6 @@ vector<string> get_func_params(Declarator* d){
     return get_const_params(tpl);
 }
 
-string create_type(Declaration_Specifiers* ds,Declarator* d){}
 
 vector<pair<string, string>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
     vector<pair<string, string>> result;

@@ -60,6 +60,16 @@ Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_
 Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
 Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expression* ce);
 Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
+string create_type(Declaration_Specifiers* ds,Declarator* d);
+vector<string> get_func_params(Declarator* d);
+string get_level_name();
+string get_name(Declarator* d);
+vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl);
+vector<string> get_const_params(Parameter_List* p);
+vector<<pair<string,string>> get_params(Parameter_List* p);
+void add_params_to_map(Parameter_List* pl);
+Direct_Declarator* create_direct_declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
+Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd);
 struct Symbol_Info{
     string name;
     string type;//return type of function

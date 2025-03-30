@@ -7,7 +7,40 @@ std::unordered_map<std::string, std::string> current_params_list; // Definition
 std::stack<std::string> lvl_name; // Definition
 Local_Symbol_Table* current_table = nullptr; // Definition
 stack<string> access_spec_stk;
+string func_ret_type;
 int current_level = 0; 
+string get_level_name(){
+    stack<string> temp;
+    string ans="";
+    while(!lvl_name.empty()){
+        temp.push(lvl_name.top());
+        lvl_name.pop();
+    }
+    while(!temp.empty()){
+        string x=temp.top();
+        lvl_name.push(x);
+        ans+=x;
+        ans+=":";
+        temp.pop();
+    }
+    return ans;
+}
+string create_type(Declaration_Specifiers* ds,Declarator* d){}
+vector<string> get_func_params(Declarator* d){}
+string get_name(Declarator* d){}
+vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl){
+    /*for each declarator first generate type and also check whether it is a valid type*/
+}
+vector<string> get_const_params(Parameter_List* p){
+    /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
+}
+void check_declarator_for_func(Declarator* d){
+
+}
+void Declarator :: check_declarator(){
+    
+}
+
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type){
     Local_Symbol_Table* x=current_table;
     bool check=false;
@@ -30,7 +63,13 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
 }
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
     for(auto i:symbol->name_type_list){
-        Symbol_Info info={i.first,i.second,symbol->level_name,symbol->level,symbol->scope,false,{}};
+        Enumerator_List* z=nullptr;
+        bool isenum=false;
+        if(i.second=="enum"){
+            isenum=true;
+            z=symbol->dec_spec->ts.front()->enum_type->el;
+        }
+        Symbol_Info info={i.first,i.second,symbol->level_name,symbol->level,symbol->scope,"-",false,{},isenum,z};
         Symbol_Info* x=&info;
         if(gst->gst.find(i.first)!=gst->gst.end()){
             cout << "error :" << "redeclaration of " << i.first << endl;
@@ -41,7 +80,7 @@ void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
 
 }
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
-    Symbol_Info info={symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,true,symbol->parameters};
+    Symbol_Info info={symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,"-",true,symbol->parameters,false,nullptr};
     Symbol_Info* x=&info;
     if(gst->gst.find(symbol->name)!=gst->gst.end()){
         cout << "error :" << "redeclaration of function " << symbol->name << endl;
@@ -58,7 +97,7 @@ Local_Symbol_Table* next_table(Local_Symbol_Table* current_table){
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd){
     for(auto i:sd->name_type_list){
-        Symbol_Info info={i.first,i.second,sd->level_name,sd->level,sd->scope};
+        Symbol_Info info={i.first,i.second,sd->level_name,sd->level,sd->scope,"-",false,{},false,nullptr};
         Symbol_Info* x=&info;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){
             cout << "error :" << "redeclaration of " << i.first << endl;
@@ -66,6 +105,53 @@ void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd
         }
         current_table->lst[i.first]=x;
     }
+}
+void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
+    string access="PRIVATE";
+    if(!access_spec_stk.empty()){
+        access=access_spec_stk.top();
+    }
+    for(auto i:d->name_type_list){
+        Enumerator_List* z=nullptr;
+        bool isenum=false;
+        if(i.second=="enum"){
+            isenum=true;
+            z=symbol->dec_spec->ts.front()->enum_type->el;
+        }
+        Symbol_Info info={i.first,i.second,d->level_name,d->level,d->scope,access,false,{},isenum,z};
+        Symbol_Info* x=&info;
+        if(current_table->lst.find(i.first)!=current_table->lst.end()){
+            cout << "error :" << "redeclaration of " << i.first << endl;
+            exit(1);
+        }
+        current_table->lst[i.first]=x;
+    }
+}
+void add_to_local_table(Local_Symbol_Table* current_table,Constructor_Declaration* cd){
+    if(!access_spec_stk.empty()){
+        access=access_spec_stk.top();
+    }
+    string name=cd->class_name;
+    string type="constructor";
+    string level_name=get_level_name();
+    int level=current_level-lvl_name.size()+1;
+    vector<string> prms=cd->pvec;
+    Symbol_Info info={name,type,level_name,level,"local",access,false,prms,false,nullptr};
+    Symbol_Info* x=&info;
+    current_table->lst[name]=x;/*redefinition of same type of constructor not handled. also multiple constructors case not handled. can handle by adding params to name*/
+}
+void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* fd){
+    string access="PRIVATE";
+    if(!access_spec_stk.empty()){
+        access=access_spec_stk.top();
+    }
+    Symbol_Info info={fd>name,fd->type,fd->level_name,fd->level,fd->scope,access,true,fd->parameters,false,nullptr};
+    Symbol_Info* x=&info;
+    if(current_table->lst.find(fd->name)!=current_table->lst.end()){
+        cout << "error :" << "redeclaration of function " << fd->name << endl;
+        exit(1);
+    }
+    current_table->lst[symbol->name]=x;
 }
 Node* create_node(){
     Node* node = new Node();
@@ -86,7 +172,6 @@ Function_Definition:: Function_Definition(Declaration_Specifiers* ds,Declarator*
     this->level=0;
     this->scope="";
     this->parameters={};
-    this->params_with_name ={};
 }
 
 Declaration::Declaration(Declaration_Specifiers* ds,Init_Declarator_List* idl,Typedef_Specifier* ts) {
@@ -131,7 +216,7 @@ Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,D
     fd->parameters=get_func_params(dc);
     fd->name=get_name(dc);
     fd->level=0;
-    fd->level_name=get_level_name(lvl_name);//stack se
+    fd->level_name=get_level_name();//stack se
     if(current_level==0){
         fd->scope="global";
     }
@@ -140,13 +225,11 @@ Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,D
     }
     return fd;
 }
-vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl){
-    /*for each declarator first generate type and also check whether it is a valid type*/
-}
+
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts){
     Declaration* d=new Declaration(ds,init_dl,ts);
     d->name_type_list=create_name_type_list(ds,init_dl);
-    d->level_name=get_level_name(lvl_name);
+    d->level_name=get_level_name();
     d->level=current_level-lvl_name.size()+1;
     if(current_level==0){
         d->scope="global";
@@ -238,4 +321,11 @@ Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expressio
     Struct_Declarator* d=new Struct_Declarator(d,ce);
     return d;
 }
+Init_Declarator:: Init_Declarator(Declarator* d,Initializer* i){
+    this->d=d;
+    this->i=i;
+    d->check_declarator();
+}
+
+
 

@@ -29,12 +29,20 @@ class Base_Class;
 class Base_Class_List;
 class Inheritance_Specifier;
 class Constant_Expression;
+class Member_Declaration;
+class Constructor_Declaration;
+class Enum_Specifier;
+class Enumerator_List;
+class Enumerator;
+class Function_Declaration;
+class Init_Declarator;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,string> current_params_list;
 extern stack<string> lvl_name;
 extern Local_Symbol_Table* current_table;
 extern int current_level;
 extern stack<string> access_spec_stk;
+extern string func_ret_type;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
@@ -55,8 +63,11 @@ struct Symbol_Info{
     string level_name;
     int level;
     string scope;
+    string access;
     bool isfunction;// indicate if symbol is function 
     vector<string> function_parameters;// store parameter types in order if symbol is function
+    bool isenum;
+    Enumerator_List* enumerator_list;
 };
 class Global_Symbol_Table{
     public:
@@ -70,7 +81,6 @@ class Local_Symbol_Table{
     unordered_map<string,Symbol_Info*> lst;
     bool ispargst;
     Local_Symbol_Table* parent;
-    string access;
     Local_Symbol_Table(bool ispargst, Local_Symbol_Table* parent);
     Local_Symbol_Table* get_parent();
 
@@ -93,9 +103,14 @@ class Function_Definition : public Node{
     int level; // level in any function or struct;
     string scope; //global/local
     vector<string> parameters;
-    vector<pair<string,string>> params_with_name;
     Function_Definition(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 };
+class Function_Declaration: public Node{
+    public:
+    Declaration_Specifiers* ds;
+    Declarator* d;
+    Function_Declaration(Declaration_Specifiers* ds,Declarator* d);
+}
 class Declaration : public Node{
     public:
     vector<pair<string,string>> name_type_list;
@@ -111,8 +126,16 @@ class Declaration : public Node{
 
 // };
 class Init_Declarator_List: public Node{
-
+    public :
+    vector<Init_Declarator*> idl;
+    Init_Declarator_List();
 };
+class Init_Declarator: public Node{
+    public :
+    Declarator* d;
+    Initializer* i;
+    Init_Declarator(Declarator* d,Initializer* i);
+}
 class Declaration_Specifiers : public Node{
     public:
     vector<string> scs;
@@ -121,7 +144,8 @@ class Declaration_Specifiers : public Node{
     Declaration_Specifiers();
 };
 class Declarator : public Node{
-
+    public:
+    void check_declarator();
 };
 class Declaration_List : public Node{
 
@@ -205,6 +229,63 @@ class Base_Class_List{
     public:
     vector<Base_Class*> bc;
     Base_Class_List();
+};
+class Class_Member_Declaration_List:public Node{
+    public:
+    vector<Class_Member_Declaration*> cd;
+    Class_Member_Declaration_List();
+};
+class Class_Member_Declaration:public Node{
+    public:
+    Member_Declaration* md;
+    Constructor_Declaration* cd;
+    Class_Member_Declaration(Member_Declaration* md,Constructor_Declaration* cd);
+}
+class Member_Declaration: public Node{
+    public:
+    Declaration* d;
+    Function_Definition* fd;
+    Member_Declaration(Declaration* d,Function_Definition* fd);
+};
+class Constructor_Declaration: public Node{
+    public:
+    string class_name;
+    Parameter_List* params;
+    vector<string> pvec/*=get_const_params(this->params) do this in constructor*/
+    Compound_Statement* cs;
+    Constructor_Declaration(string& class_name,Parameter_List* params,Compound_Statement* cs);
+};
+// enum_specifier
+// 	: ENUM '{' enumerator_list '}' {$$=Enum_Specifier("",$3);}
+// 	| ENUM IDENTIFIER '{' enumerator_list '}' {$$=Enum_Specifier($2,$4);}
+// 	| ENUM IDENTIFIER {$$=Enum_Specifier($2,nullptr);check_if_declared(current_table,$2,"enum");}
+// 	;
+
+// enumerator_list
+// 	: enumerator {Enumerator_List* x=new Enumerator_List();x->e.push_back($1);}
+// 	| enumerator_list ',' enumerator {Enumerator_List* x=$1;x->e.push_back($3);}
+// 	;
+
+// enumerator
+// 	: IDENTIFIER {$$=new Enumerator($1);}
+// 	| IDENTIFIER '=' constant_expression {$$=new Enumerator($1,$3);}
+// 	;
+class Enum_Specifier:public Node{
+    public:
+    string id;
+    Enumerator_List* enuml;
+    Enum_Specifier(string& id,Enumerator_List* enuml);
+};
+class Enumerator_List:public Node{
+    public:
+    vector<Enumerator*> e;
+    Enumerator_List();
+};
+class Enumerator:public Node{
+    public:
+    string id;
+    Constant_Expression* ce;
+    Enumerator(string id,Constant_Expression* ce);
 };
 // class Primary_expresssion{
 

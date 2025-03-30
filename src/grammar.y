@@ -25,6 +25,14 @@
 	class Base_Class;
 	class Base_Class_List;
 	class Inheritance_Specifier;
+	class Member_Declaration;
+	class Constructor_Declaration;
+	class Enum_Specifier;
+	class Enumerator_List;
+	class Enumerator;
+	class Function_Declaration;
+	class Init_Declarator;
+
 }
 
 %{
@@ -77,6 +85,13 @@ Node* root;
 	Base_Class* bc;
 	Base_Class_List* bcl;
 	Inheritance_Specifier* inh_spec;
+	Member_Declaration* memd;
+	Constructor_Declaration* constrdec;
+	Enum_Specifier* enum_spec;
+	Enumerator_List* enuml;
+	Enumerator* enum;
+	Function_Declaration* func_decl;
+	Init_Declarator* init_dec;
 	char* str;
 	Class_Member_Declaration* class_mem_dec;
 	Class_Member_Declaration_List* class_mem_dec_list;
@@ -120,7 +135,13 @@ Node* root;
 %type <node> constant_expression compound_statement
 %type <class_mem_dec_list> class_member_declaration_list
 %type <class_mem_dec> class_body class_member_declaration
-
+%type <memd> member_declaration
+%type <constrdec> constructor_declaration
+%type <enum_spec> enum_specifier
+%type <enuml> enumerator_list
+%type <enum> enumerator
+%type <func_decl> function_declaration
+%type <init_dec> init_declarator
 %start translation_unit
 %%
 
@@ -287,21 +308,21 @@ declaration
 
 declaration_specifiers
 	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back($1);$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
-	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);}/* add storage_class_specifier to $2*/
-	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);}/* create declaration specifier object . add type specifier to it . pass it above. */
-	| type_specifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->ts.push_back($1);}/* add type_specifier to $2 */
-	| type_qualifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back($1);}/* create declaration_specifiers object . add type qualifier to it . pass it above. */
-	| type_qualifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->tq.push_back($1);}/* add type_qualifier to $2 */
+	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);$$=ds;}/* add storage_class_specifier to $2*/
+	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);$$=ds;}/* create declaration specifier object . add type specifier to it . pass it above. */
+	| type_specifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->ts.push_back($1);$$=ds;}/* add type_specifier to $2 */
+	| type_qualifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back($1);$$=ds;}/* create declaration_specifiers object . add type qualifier to it . pass it above. */
+	| type_qualifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->tq.push_back($1);$$=ds;}/* add type_qualifier to $2 */
 	;
 
 init_declarator_list
-	: init_declarator
-	| init_declarator_list ',' init_declarator
+	: init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;}
+	| init_declarator_list ',' init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;}
 	;
 
 init_declarator
-	: declarator
-	| declarator '=' initializer
+	: declarator {Init_Declarator* d=new Init_Declarator($1,nullptr);$$=d;}
+	| declarator '=' initializer {Init_Declarator* d=new Init_Declarator($1,$3);$$=d;}
 	;
 
 storage_class_specifier
@@ -404,7 +425,7 @@ access_specifier
     ;
 
 class_body
-    : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->get_parent();lvl_name.pop();}/*come to parent table from current table. pass above*/ 
+    : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->get_parent();lvl_name.pop();while(!access_spec_stk.empty())access_spec_stk.pop();}/*come to parent table from current table. pass above*/ 
     | '{' '}' {lvl_name.pop();}/* pass empty class member declaration list object */
     ;
 
@@ -414,40 +435,36 @@ class_member_declaration_list
     ;
 
 constructor_declaration
-    : class_name'(' parameter_list_opt ')' compound_statement /* make a constructor declaration with class name and parameter list and body */
+    : class_name'(' parameter_list ')' compound_statement {current_params_list.clear();add_params_to_map($3);$$=new Constructor_Declaration($1,$3,$5);} /* make a constructor declaration with class name and parameter list and body */
+	| class_name '(' ')' compound_statement {current_params_list.clear();$$=new Constructor_Declaration($1,nullptr,$4);}
     ;
 
-parameter_list_opt
-    : parameter_list
-    | /* empty */
-    ;
 
 class_member_declaration
     : access_specifier ':' {access_spec_stk.push($1);} /* make class_member_declaration obj and add access specifier to it . pass */
-    | member_declaration /* make class_member_declaration obj and add member decl to it . pass */
-    | constructor_declaration /* make class_member_declaration obj and add constructor_declaration to it . pass */
+    | member_declaration {$$=new Class_Member_Declaration($1,nullptr);}/* make class_member_declaration obj and add member decl to it . pass */
+    | constructor_declaration {$$=new Class_Member_Declaration(nullptr,$1);add_to_local_table(current_table,$1);}/* make class_member_declaration obj and add constructor_declaration to it . pass */
     ;
 
 member_declaration
-    : declaration 
-    | function_definition
-
+    : declaration {add_to_local_table(current_table,$1);$$=new Member_Declaration($1,nullptr);}
+    | function_definition {add_to_local_table(current_table,$1);$$=new Member_Declaration(nullptr,$1);}
     ;
 
 enum_specifier
-	: ENUM '{' enumerator_list '}'
-	| ENUM IDENTIFIER '{' enumerator_list '}'
-	| ENUM IDENTIFIER
+	: ENUM '{' enumerator_list '}' {$$=Enum_Specifier("",$3);}
+	| ENUM IDENTIFIER '{' enumerator_list '}' {$$=Enum_Specifier($2,$4);}
+	| ENUM IDENTIFIER {$$=Enum_Specifier($2,nullptr);check_if_declared(current_table,$2,"enum");}
 	;
 
 enumerator_list
-	: enumerator
-	| enumerator_list ',' enumerator
+	: enumerator {Enumerator_List* x=new Enumerator_List();x->e.push_back($1);}
+	| enumerator_list ',' enumerator {Enumerator_List* x=$1;x->e.push_back($3);}
 	;
 
 enumerator
-	: IDENTIFIER
-	| IDENTIFIER '=' constant_expression
+	: IDENTIFIER {$$=new Enumerator($1);}
+	| IDENTIFIER '=' constant_expression {$$=new Enumerator($1,$3);}
 	;
 
 type_qualifier
@@ -456,7 +473,7 @@ type_qualifier
 	;
 
 declarator
-	: pointer direct_declarator
+	: pointer direct_declarator 
 	| direct_declarator /* check if is a function . if yes then add its name to stack */
 	;
 
@@ -466,7 +483,7 @@ direct_declarator
 	| direct_declarator '[' constant_expression ']'
 	| direct_declarator '[' ']'
 	| direct_declarator '(' parameter_type_list ')' /* add parameters to current params list */
-	| direct_declarator '(' identifier_list ')'
+/*	| direct_declarator '(' identifier_list ')' */
 	| direct_declarator '(' ')'
 	;
 
@@ -498,12 +515,12 @@ parameter_declaration
 	| declaration_specifiers abstract_declarator
 	| declaration_specifiers
 	;
-
+/*
 identifier_list
 	: IDENTIFIER
 	| identifier_list ',' IDENTIFIER
 	;
-
+*/
 type_name
 	: specifier_qualifier_list
 	| specifier_qualifier_list abstract_declarator
@@ -616,12 +633,14 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	: function_definition  {add_to_gst($1,gst);$$=$1;}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
-
+function_declaration
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);string t=create_type($1,$2);check_declarator_for_func($2);$$=x;func_ret_type=t; }
+	;
 function_definition /*(function_definition <- node ) */
-	: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();} /* create function definition object.parameter. assign type. assign size. */
-	| declaration_specifiers declarator compound_statement {$$=create_func_def($1,$2,nullptr,$3);lvl_name.pop();}/*same as above */
-	| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above */
-	| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}/* same as above */
+	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();}*/ /* create function definition object.parameter. assign type. assign size. */
+	: function_definition compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);current_params_list.clear();lvl_name.pop();}/*same as above */
+	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above */
+	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
 	;
 
 %%
@@ -664,6 +683,7 @@ int main(int argc, char *argv[]){
 	Node* root= new Node();
 	gst=new Global_Symbol_Table();
 	current_params_list.clear();
+	func_ret_type="";
 	while (!lvl_name.empty()){
     lvl_name.pop();
 	}

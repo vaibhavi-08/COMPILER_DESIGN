@@ -11,7 +11,6 @@
 	class Typedef_Specifier;
 	class Type_Specifier;
 	class Struct_or_Union_Specifier;
-	class Class_Specifier;
 	class Enum_Specifier;
 	class Struct_Declaration_List;
 	class Struct_Declaration;
@@ -20,6 +19,8 @@
 	class Specifier_Qualifier_List;
 	class Struct_Declarator_List;
 	class Struct_Declarator;
+	class Class_Member_Declaration;
+	class Class_Member_Declaration_List;
 	class Class_Specifier;
 	class Base_Class;
 	class Base_Class_List;
@@ -66,7 +67,6 @@ Node* root;
 	Typedef_Specifier* typedef_spec;
 	Type_Specifier* type_spec;
 	Struct_or_Union_Specifier* str_union;
-	Class_Specifier* class_spec;
 	Enum_Specifier* enum_spec;
 	Struct_Declaration_List* struc_dec_list;
 	Struct_Declaration * struc_dec;
@@ -78,6 +78,8 @@ Node* root;
 	Base_Class_List* bcl;
 	Inheritance_Specifier* inh_spec;
 	char* str;
+	Class_Member_Declaration* class_mem_dec;
+	Class_Member_Declaration_List* class_mem_dec_list;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL 
 %token SIZEOF
@@ -112,10 +114,13 @@ Node* root;
 %type <sql> specifier_qualifier_list 
 %type <sdl> struct_declarator_list 
 %type <sd> struct_declarator
-%type <class_spec> class_specifier
 %type <bc> base_class
 %type <bcl> base_class_list
 %type <inh_spec> inheritance_specifier
+%type <node> constant_expression compound_statement
+%type <class_mem_dec_list> class_member_declaration_list
+%type <class_mem_dec> class_body class_member_declaration
+
 %start translation_unit
 %%
 
@@ -127,7 +132,7 @@ primary_expression
 	;
 
 class_name
-    : IDENTIFIER /* pass */ ($$=$1;lvl_name.push("class"+$1);)
+    : IDENTIFIER /* pass */ { $$ = $1; lvl_name.push(std::string("class") + $1); }
     ;
 
 postfix_expression
@@ -308,7 +313,7 @@ storage_class_specifier
 	;
 
 type_specifier
-	: VOID /* just pass */ {$$=create_ts_obj("VOID",nullptr,nullptr,nullptr);}
+    : VOID { $$ = create_ts_obj(std::string("VOID"), nullptr, nullptr, nullptr); }
 	| CHAR	{$$=create_ts_obj("CHAR",nullptr,nullptr,nullptr);}
 	| SHORT {$$=create_ts_obj("SHORT",nullptr,nullptr,nullptr);}
 	| INT {$$=create_ts_obj("INT",nullptr,nullptr,nullptr);}
@@ -324,7 +329,7 @@ type_specifier
 	;
 
 struct_or_union_specifier
-	: struct struct_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->get_parent(); lvl_name.pop(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
 	| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* same as above */
 	| struct IDENTIFIER {check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
 	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
@@ -363,7 +368,7 @@ specifier_qualifier_list
 
 struct_declarator_list
 	: struct_declarator  {Struct_Declarator_List* x=new Struct_Declarator_List();x->sd.push_back($1);}/* create struct declarator list object . add struct declarator to it . */
-	| struct_declarator_list ',' struct_declarator  {Struct_Declarator_List* x=$1;x->sd.push_back($2);}/* add struct declarator to existing list */
+	| struct_declarator_list ',' struct_declarator  {Struct_Declarator_List* x=$1;x->sd.push_back($3);}/* add struct declarator to existing list */
 	;
 
 struct_declarator
@@ -373,9 +378,9 @@ struct_declarator
 	;
 
 class_specifier
-    : CLASS class_name class_body  {$$=new Class_Specifier($2,nullptr,$3);} /*  make class_specifier object and add all info.  */
-    | CLASS class_name inheritance_specifier class_body {$$=new Class_Specifier($2,$3,$4);}/* make object add all info . add base classes also in class_specifier */
-	| CLASS class_name {$$=new Class_Specifier($2,nullptr,nullptr);check_if_declared(current_table,$2,"class");}/* check whether variable already declared */
+    : CLASS class_name class_body  {$$=new Class_Specifier(std::string($2),nullptr,$3);} /*  make class_specifier object and add all info.  */
+    | CLASS class_name inheritance_specifier class_body {$$=new Class_Specifier(std::string($2),$3,$4);}/* make object add all info . add base classes also in class_specifier */
+	| CLASS class_name {$$=new Class_Specifier(std::string($2),nullptr,nullptr);check_if_declared(current_table,std::string($2),"class");}/* check whether variable already declared */
     ;
 
 inheritance_specifier
@@ -388,8 +393,8 @@ base_class_list
     ;
 
 base_class
-    : access_specifier IDENTIFIER   /*  make base class object. add info */ {check_if_declared(current_table,$2,"class");$$=new Base_Class($1,$2);}
-    | IDENTIFIER {check_if_declared(current_table,$2,"class");$$=new Base_Class("",$2);}/* make base class object. add info with access specifier as default */
+    : access_specifier IDENTIFIER   /*  make base class object. add info */ {check_if_declared(current_table,std::string($2),"class");$$=new Base_Class($1,std::string($2));}
+    | IDENTIFIER {check_if_declared(current_table,$1,"class");$$=new Base_Class("",std::string($1));}/* make base class object. add info with access specifier as default */
     ;
 
 access_specifier
@@ -399,7 +404,7 @@ access_specifier
     ;
 
 class_body
-    : '{' class_member_declaration_list '}' {$$=$1; current_level--;current_table=current_table->get_parent();lvl_name.pop();}/*come to parent table from current table. pass above*/ 
+    : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->get_parent();lvl_name.pop();}/*come to parent table from current table. pass above*/ 
     | '{' '}' {lvl_name.pop();}/* pass empty class member declaration list object */
     ;
 

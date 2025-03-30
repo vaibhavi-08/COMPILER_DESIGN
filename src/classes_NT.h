@@ -28,6 +28,7 @@ class Class_Specifier;
 class Base_Class;
 class Base_Class_List;
 class Inheritance_Specifier;
+class Constant_Expression;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,string> current_params_list;
 extern stack<string> lvl_name;
@@ -40,13 +41,14 @@ Node* create_node();
 Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
+Declaration_Specifiers* create_decl_spec_object();
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
-Struct_or_Union_Specifier* create_struct_union_spec_obj(string& sou,string& name,Struct_Declaration_List* sdl);
+Struct_or_Union_Specifier* create_struct_union_spec_obj(const std::string& sou, const std::string& name, Struct_Declaration_List* sdl);
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
 Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expression* ce);
-Type_Specifier* create_ts_obj(string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
+Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 struct Symbol_Info{
     string name;
     string type;//return type of function
@@ -143,9 +145,6 @@ class Struct_or_Union_Specifier: public Node{
     Struct_or_Union_Specifier(const string& sou,const string& name,Struct_Declaration_List* sdl);
 
 } ;
-class Class_Specifier{
-
-};
 class Enum_Specifier{
 
 };
@@ -164,48 +163,23 @@ class Struct_Declaration: public Node{
     string level_name; 
     Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl);
 };
-class Specifier_Qualifier_List: public Node{
-    public:
-    vector<Type_Specifier*> ts;
-    vector<string> tq;
-    Specifier_Qualifier_List();
 
-};
 class Struct_Declarator_List:public Node{
     public:
     vector<Struct_Declarator*> sd;
-    Struct_Declaration_List();
-};
-class Struct_Declarator: public Node{
-    public:
-    Declarator* d;
-    Constant_Expression* ce;
-    Struct_Declarator(Declarator* d,Constant_Expression* ce);
-
+    Struct_Declarator_List();
 };
 class Class_Specifier : public Node{
     public:
     string class_name;
-    Inheritence_Specifier* is;
-    Class_Body* cb;
-    Class_Specifier(string& class_name,Inheritence_Specifier* is,Class_Body* cb);
+    Inheritance_Specifier* is;
+    Class_Member_Declaration_List* cb;
+    Class_Specifier(const std::string& class_name,Inheritance_Specifier* is,Class_Member_Declaration_List* cb);
 };
-class Base_Class :public Node{
-    public:
-    string asp;
-    string id;
-    Base_Class(string& asp,string& id);
-};
-class Base_Class_List{
-    public:
-    vector<Base_Class*> bc;
-    Base_Class_List()
-};
-class Inheritance_Specifier{
+class Inheritance_Specifier: public Node{
     public:
     Base_Class_List* bcl;
     Inheritance_Specifier(Base_Class_List* bcl);
-
 };
 class Specifier_Qualifier_List: public Node{
     public:
@@ -214,11 +188,6 @@ class Specifier_Qualifier_List: public Node{
     Specifier_Qualifier_List();
 
 };
-class Struct_Declarator_List:public Node{
-    public:
-    vector<Struct_Declarator*> sd;
-    Struct_Declaration_List();
-};
 class Struct_Declarator: public Node{
     public:
     Declarator* d;
@@ -226,29 +195,16 @@ class Struct_Declarator: public Node{
     Struct_Declarator(Declarator* d,Constant_Expression* ce);
 
 };
-class Class_Specifier : public Node{
-    public:
-    string class_name;
-    Inheritence_Specifier* is;
-    Class_Body* cb;
-    Class_Specifier(string& class_name,Inheritence_Specifier* is,Class_Body* cb);
-};
 class Base_Class :public Node{
     public:
     string asp;
     string id;
-    Base_Class(string& asp,string& id);
+    Base_Class(const std::string& asp, const std::string& id);
 };
 class Base_Class_List{
     public:
     vector<Base_Class*> bc;
-    Base_Class_List()
-};
-class Inheritance_Specifier{
-    public:
-    Base_Class_List* bcl;
-    Inheritance_Specifier(Base_Class_List* bcl);
-
+    Base_Class_List();
 };
 // class Primary_expresssion{
 
@@ -319,9 +275,9 @@ class Inheritance_Specifier{
 // class Expression{
 
 // };
-// class Constant_Expression{
+class Constant_Expression{
 
-// };
+};
 // class Declaration{
 
 // };
@@ -347,17 +303,11 @@ class Inheritance_Specifier{
 
 // };
 
-class Struct_Declaration_List{
-
-};
 
 // class Struct_Declaration{
 
 // };
 
-class Specifier_Qualifier_List{
-
-};
 
 // class Struct_Declarator{
 

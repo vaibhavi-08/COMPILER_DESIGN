@@ -67,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 24 "grammar.y"
+#line 30 "grammar.y"
 
 #include <stdio.h>
 #include <iostream>
@@ -694,32 +694,32 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   105,   105,   106,   107,   108,   112,   116,   117,   118,
-     119,   120,   121,   122,   123,   127,   128,   131,   132,   136,
-     137,   140,   141,   142,   143,   144,   145,   149,   150,   151,
-     152,   153,   154,   158,   159,   163,   164,   165,   166,   170,
-     171,   172,   176,   177,   178,   182,   183,   184,   185,   186,
-     190,   191,   192,   196,   197,   201,   202,   206,   207,   211,
-     212,   216,   217,   221,   222,   226,   227,   231,   232,   233,
-     234,   235,   236,   237,   238,   239,   240,   241,   245,   246,
-     250,   256,   257,   266,   267,   268,   269,   270,   271,   275,
-     276,   280,   281,   285,   286,   287,   288,   289,   293,   294,
-     295,   296,   297,   298,   299,   300,   301,   302,   303,   304,
-     309,   310,   311,   312,   313,   314,   318,   321,   324,   327,
-     331,   332,   336,   340,   341,   342,   343,   347,   348,   352,
-     353,   354,   357,   358,   359,   363,   367,   368,   372,   373,
-     377,   378,   379,   383,   384,   388,   389,   393,   397,   398,
-     402,   403,   404,   408,   409,   414,   415,   416,   420,   421,
-     425,   426,   430,   431,   435,   436,   440,   441,   442,   443,
-     444,   445,   446,   450,   451,   452,   453,   457,   458,   463,
-     464,   468,   469,   473,   474,   475,   479,   480,   484,   485,
-     489,   490,   491,   495,   496,   497,   498,   499,   500,   501,
-     502,   503,   507,   508,   509,   510,   514,   515,   519,   520,
-     521,   522,   523,   524,   525,   532,   533,   537,   538,   539,
-     543,   544,   545,   546,   550,   551,   555,   556,   560,   561,
-     565,   566,   567,   571,   572,   573,   574,   575,   579,   580,
-     581,   582,   583,   587,   588,   592,   593,   597,   598,   599,
-     600
+       0,   128,   128,   129,   130,   131,   135,   139,   140,   141,
+     142,   143,   144,   145,   146,   150,   151,   154,   155,   159,
+     160,   163,   164,   165,   166,   167,   168,   172,   173,   174,
+     175,   176,   177,   181,   182,   186,   187,   188,   189,   193,
+     194,   195,   199,   200,   201,   205,   206,   207,   208,   209,
+     213,   214,   215,   219,   220,   224,   225,   229,   230,   234,
+     235,   239,   240,   244,   245,   249,   250,   254,   255,   256,
+     257,   258,   259,   260,   261,   262,   263,   264,   268,   269,
+     273,   279,   280,   289,   290,   291,   292,   293,   294,   298,
+     299,   303,   304,   308,   309,   310,   311,   312,   316,   317,
+     318,   319,   320,   321,   322,   323,   324,   325,   326,   327,
+     332,   333,   334,   335,   336,   337,   341,   344,   347,   350,
+     354,   355,   359,   363,   364,   365,   366,   370,   371,   375,
+     376,   377,   381,   382,   383,   387,   391,   392,   396,   397,
+     401,   402,   403,   407,   408,   412,   413,   417,   421,   422,
+     426,   427,   428,   432,   433,   438,   439,   440,   444,   445,
+     449,   450,   454,   455,   459,   460,   464,   465,   466,   467,
+     468,   469,   470,   474,   475,   476,   477,   481,   482,   487,
+     488,   492,   493,   497,   498,   499,   503,   504,   508,   509,
+     513,   514,   515,   519,   520,   521,   522,   523,   524,   525,
+     526,   527,   531,   532,   533,   534,   538,   539,   543,   544,
+     545,   546,   547,   548,   549,   556,   557,   561,   562,   563,
+     567,   568,   569,   570,   574,   575,   579,   580,   584,   585,
+     589,   590,   591,   595,   596,   597,   598,   599,   603,   604,
+     605,   606,   607,   611,   612,   616,   617,   621,   622,   623,
+     624
 };
 #endif
 
@@ -1821,290 +1821,446 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn)
     {
-  case 81: /* declaration: declaration_specifiers ';'  */
-#line 256 "grammar.y"
-                                     {(yyval.declaration)=create_declaration_object((yyvsp[-1].dec_spec),nullptr,nullptr);}
+  case 6: /* class_name: IDENTIFIER  */
+#line 135 "grammar.y"
+                            { (yyval.str) = (yyvsp[0].str); lvl_name.push(std::string("class") + (yyvsp[0].str)); }
 #line 1828 "grammar.tab.c"
     break;
 
-  case 82: /* declaration: declaration_specifiers init_declarator_list ';'  */
-#line 257 "grammar.y"
-                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);}
+  case 81: /* declaration: declaration_specifiers ';'  */
+#line 279 "grammar.y"
+                                     {(yyval.declaration)=create_declaration_object((yyvsp[-1].dec_spec),nullptr,nullptr);}
 #line 1834 "grammar.tab.c"
     break;
 
-  case 83: /* declaration_specifiers: storage_class_specifier  */
-#line 266 "grammar.y"
-                                  {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back((yyvsp[0].str));(yyval.dec_spec)=ds;}
+  case 82: /* declaration: declaration_specifiers init_declarator_list ';'  */
+#line 280 "grammar.y"
+                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);}
 #line 1840 "grammar.tab.c"
     break;
 
-  case 84: /* declaration_specifiers: storage_class_specifier declaration_specifiers  */
-#line 267 "grammar.y"
-                                                         {Declaration_Specifiers* ds=(yyvsp[0].dec_spec);ds->scs.push_back((yyvsp[-1].str));}
+  case 83: /* declaration_specifiers: storage_class_specifier  */
+#line 289 "grammar.y"
+                                  {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back((yyvsp[0].str));(yyval.dec_spec)=ds;}
 #line 1846 "grammar.tab.c"
     break;
 
-  case 85: /* declaration_specifiers: type_specifier  */
-#line 268 "grammar.y"
-                         {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back((yyvsp[0].type_spec));}
+  case 84: /* declaration_specifiers: storage_class_specifier declaration_specifiers  */
+#line 290 "grammar.y"
+                                                         {Declaration_Specifiers* ds=(yyvsp[0].dec_spec);ds->scs.push_back((yyvsp[-1].str));}
 #line 1852 "grammar.tab.c"
     break;
 
-  case 86: /* declaration_specifiers: type_specifier declaration_specifiers  */
-#line 269 "grammar.y"
-                                                {Declaration_Specifiers* ds=(yyvsp[0].dec_spec); ds->ts.push_back((yyvsp[-1].type_spec));}
+  case 85: /* declaration_specifiers: type_specifier  */
+#line 291 "grammar.y"
+                         {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back((yyvsp[0].type_spec));}
 #line 1858 "grammar.tab.c"
     break;
 
-  case 87: /* declaration_specifiers: type_qualifier  */
-#line 270 "grammar.y"
-                         {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back((yyvsp[0].str));}
+  case 86: /* declaration_specifiers: type_specifier declaration_specifiers  */
+#line 292 "grammar.y"
+                                                {Declaration_Specifiers* ds=(yyvsp[0].dec_spec); ds->ts.push_back((yyvsp[-1].type_spec));}
 #line 1864 "grammar.tab.c"
     break;
 
-  case 88: /* declaration_specifiers: type_qualifier declaration_specifiers  */
-#line 271 "grammar.y"
-                                                {Declaration_Specifiers* ds=(yyvsp[0].dec_spec); ds->tq.push_back((yyvsp[-1].str));}
+  case 87: /* declaration_specifiers: type_qualifier  */
+#line 293 "grammar.y"
+                         {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back((yyvsp[0].str));}
 #line 1870 "grammar.tab.c"
     break;
 
-  case 94: /* storage_class_specifier: EXTERN  */
-#line 286 "grammar.y"
-                 {(yyval.str)="EXTERN";}
+  case 88: /* declaration_specifiers: type_qualifier declaration_specifiers  */
+#line 294 "grammar.y"
+                                                {Declaration_Specifiers* ds=(yyvsp[0].dec_spec); ds->tq.push_back((yyvsp[-1].str));}
 #line 1876 "grammar.tab.c"
     break;
 
-  case 95: /* storage_class_specifier: STATIC  */
-#line 287 "grammar.y"
-                 {(yyval.str)="STATIC";}
+  case 94: /* storage_class_specifier: EXTERN  */
+#line 309 "grammar.y"
+                 {(yyval.str)="EXTERN";}
 #line 1882 "grammar.tab.c"
     break;
 
-  case 96: /* storage_class_specifier: AUTO  */
-#line 288 "grammar.y"
-               {(yyval.str)="AUTO";}
+  case 95: /* storage_class_specifier: STATIC  */
+#line 310 "grammar.y"
+                 {(yyval.str)="STATIC";}
 #line 1888 "grammar.tab.c"
     break;
 
-  case 97: /* storage_class_specifier: REGISTER  */
-#line 289 "grammar.y"
-                   {(yyval.str)="REGISTER";}
+  case 96: /* storage_class_specifier: AUTO  */
+#line 311 "grammar.y"
+               {(yyval.str)="AUTO";}
 #line 1894 "grammar.tab.c"
     break;
 
-  case 98: /* type_specifier: VOID  */
-#line 293 "grammar.y"
-                               {(yyval.type_spec)=create_ts_obj("VOID",nullptr,nullptr,nullptr);}
+  case 97: /* storage_class_specifier: REGISTER  */
+#line 312 "grammar.y"
+                   {(yyval.str)="REGISTER";}
 #line 1900 "grammar.tab.c"
     break;
 
-  case 99: /* type_specifier: CHAR  */
-#line 294 "grammar.y"
-                {(yyval.type_spec)=create_ts_obj("CHAR",nullptr,nullptr,nullptr);}
+  case 98: /* type_specifier: VOID  */
+#line 316 "grammar.y"
+           { (yyval.type_spec) = create_ts_obj(std::string("VOID"), nullptr, nullptr, nullptr); }
 #line 1906 "grammar.tab.c"
     break;
 
-  case 100: /* type_specifier: SHORT  */
-#line 295 "grammar.y"
-                {(yyval.type_spec)=create_ts_obj("SHORT",nullptr,nullptr,nullptr);}
+  case 99: /* type_specifier: CHAR  */
+#line 317 "grammar.y"
+                {(yyval.type_spec)=create_ts_obj("CHAR",nullptr,nullptr,nullptr);}
 #line 1912 "grammar.tab.c"
     break;
 
-  case 101: /* type_specifier: INT  */
-#line 296 "grammar.y"
-              {(yyval.type_spec)=create_ts_obj("INT",nullptr,nullptr,nullptr);}
+  case 100: /* type_specifier: SHORT  */
+#line 318 "grammar.y"
+                {(yyval.type_spec)=create_ts_obj("SHORT",nullptr,nullptr,nullptr);}
 #line 1918 "grammar.tab.c"
     break;
 
-  case 102: /* type_specifier: LONG  */
-#line 297 "grammar.y"
-               {(yyval.type_spec)=create_ts_obj("LONG",nullptr,nullptr,nullptr);}
+  case 101: /* type_specifier: INT  */
+#line 319 "grammar.y"
+              {(yyval.type_spec)=create_ts_obj("INT",nullptr,nullptr,nullptr);}
 #line 1924 "grammar.tab.c"
     break;
 
-  case 103: /* type_specifier: FLOAT  */
-#line 298 "grammar.y"
-                {(yyval.type_spec)=create_ts_obj("FLOAT",nullptr,nullptr,nullptr);}
+  case 102: /* type_specifier: LONG  */
+#line 320 "grammar.y"
+               {(yyval.type_spec)=create_ts_obj("LONG",nullptr,nullptr,nullptr);}
 #line 1930 "grammar.tab.c"
     break;
 
-  case 104: /* type_specifier: DOUBLE  */
-#line 299 "grammar.y"
-                 {(yyval.type_spec)=create_ts_obj("DOUBLE",nullptr,nullptr,nullptr);}
+  case 103: /* type_specifier: FLOAT  */
+#line 321 "grammar.y"
+                {(yyval.type_spec)=create_ts_obj("FLOAT",nullptr,nullptr,nullptr);}
 #line 1936 "grammar.tab.c"
     break;
 
-  case 105: /* type_specifier: SIGNED  */
-#line 300 "grammar.y"
-                 {(yyval.type_spec)=create_ts_obj("SIGNED",nullptr,nullptr,nullptr);}
+  case 104: /* type_specifier: DOUBLE  */
+#line 322 "grammar.y"
+                 {(yyval.type_spec)=create_ts_obj("DOUBLE",nullptr,nullptr,nullptr);}
 #line 1942 "grammar.tab.c"
     break;
 
-  case 106: /* type_specifier: UNSIGNED  */
-#line 301 "grammar.y"
-                   {(yyval.type_spec)=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);}
+  case 105: /* type_specifier: SIGNED  */
+#line 323 "grammar.y"
+                 {(yyval.type_spec)=create_ts_obj("SIGNED",nullptr,nullptr,nullptr);}
 #line 1948 "grammar.tab.c"
     break;
 
-  case 107: /* type_specifier: struct_or_union_specifier  */
-#line 302 "grammar.y"
-                                    {(yyval.type_spec)=create_ts_obj("",(yyvsp[0].str_union),nullptr,nullptr);}
+  case 106: /* type_specifier: UNSIGNED  */
+#line 324 "grammar.y"
+                   {(yyval.type_spec)=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);}
 #line 1954 "grammar.tab.c"
     break;
 
-  case 108: /* type_specifier: class_specifier  */
-#line 303 "grammar.y"
-                      {(yyval.type_spec)=create_ts_obj("",nullptr,(yyvsp[0].class_spec),nullptr);}
+  case 107: /* type_specifier: struct_or_union_specifier  */
+#line 325 "grammar.y"
+                                    {(yyval.type_spec)=create_ts_obj("",(yyvsp[0].str_union),nullptr,nullptr);}
 #line 1960 "grammar.tab.c"
     break;
 
-  case 109: /* type_specifier: enum_specifier  */
-#line 304 "grammar.y"
-                         {(yyval.type_spec)=create_ts_obj("",nullptr,nullptr,(yyvsp[0].enum_spec));}
+  case 108: /* type_specifier: class_specifier  */
+#line 326 "grammar.y"
+                      {(yyval.type_spec)=create_ts_obj("",nullptr,(yyvsp[0].class_spec),nullptr);}
 #line 1966 "grammar.tab.c"
     break;
 
-  case 110: /* struct_or_union_specifier: struct struct_id '{' struct_declaration_list '}'  */
-#line 309 "grammar.y"
-                                                           {(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-4].str),(yyvsp[-3].str),(yyvsp[-1].struc_dec_list));current_level--;current_table=current_table->get_parent();}
+  case 109: /* type_specifier: enum_specifier  */
+#line 327 "grammar.y"
+                         {(yyval.type_spec)=create_ts_obj("",nullptr,nullptr,(yyvsp[0].enum_spec));}
 #line 1972 "grammar.tab.c"
     break;
 
-  case 111: /* struct_or_union_specifier: struct '{' struct_declaration_list '}'  */
-#line 310 "grammar.y"
-                                                {(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-3].str),"",(yyvsp[-1].struc_dec_list));current_level--;current_table=current_table->get_parent();}
+  case 110: /* struct_or_union_specifier: struct struct_id '{' struct_declaration_list '}'  */
+#line 332 "grammar.y"
+                                                            { (yyval.str_union)=create_struct_union_spec_obj(std::string((yyvsp[-4].str)),std::string((yyvsp[-3].str)),(yyvsp[-1].struc_dec_list)); current_level--; current_table=current_table->get_parent(); lvl_name.pop(); }
 #line 1978 "grammar.tab.c"
     break;
 
-  case 112: /* struct_or_union_specifier: struct IDENTIFIER  */
-#line 311 "grammar.y"
-                            {check_if_declared(current_table,(yyvsp[0].str),"struct");(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-1].str),(yyvsp[0].str),nullptr);}
+  case 111: /* struct_or_union_specifier: struct '{' struct_declaration_list '}'  */
+#line 333 "grammar.y"
+                                                {(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-3].str),"",(yyvsp[-1].struc_dec_list));current_level--;current_table=current_table->get_parent();lvl_name.pop();}
 #line 1984 "grammar.tab.c"
     break;
 
-  case 113: /* struct_or_union_specifier: union union_id '{' struct_declaration_list '}'  */
-#line 312 "grammar.y"
-                                                         {(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-4].str),(yyvsp[-3].str),(yyvsp[-1].struc_dec_list));current_level--;current_table=current_table->get_parent();}
+  case 112: /* struct_or_union_specifier: struct IDENTIFIER  */
+#line 334 "grammar.y"
+                            {check_if_declared(current_table,(yyvsp[0].str),"struct");(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-1].str),(yyvsp[0].str),nullptr);}
 #line 1990 "grammar.tab.c"
     break;
 
-  case 114: /* struct_or_union_specifier: union '{' struct_declaration_list '}'  */
-#line 313 "grammar.y"
-                                                {(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-3].str),"",(yyvsp[-1].struc_dec_list));current_level--;current_table=current_table->get_parent();}
+  case 113: /* struct_or_union_specifier: union union_id '{' struct_declaration_list '}'  */
+#line 335 "grammar.y"
+                                                         {(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-4].str),(yyvsp[-3].str),(yyvsp[-1].struc_dec_list));current_level--;current_table=current_table->get_parent();lvl_name.pop();}
 #line 1996 "grammar.tab.c"
     break;
 
-  case 115: /* struct_or_union_specifier: union IDENTIFIER  */
-#line 314 "grammar.y"
-                           {check_if_declared(current_table,(yyvsp[0].str),"union");(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-1].str),(yyvsp[0].str),nullptr);/* whether this identifier is declared before use */}
+  case 114: /* struct_or_union_specifier: union '{' struct_declaration_list '}'  */
+#line 336 "grammar.y"
+                                                {(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-3].str),"",(yyvsp[-1].struc_dec_list));current_level--;current_table=current_table->get_parent();lvl_name.pop();}
 #line 2002 "grammar.tab.c"
     break;
 
-  case 116: /* struct_id: IDENTIFIER  */
-#line 318 "grammar.y"
-                     {lvl_name.push("struct " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);}
+  case 115: /* struct_or_union_specifier: union IDENTIFIER  */
+#line 337 "grammar.y"
+                           {check_if_declared(current_table,(yyvsp[0].str),"union");(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-1].str),(yyvsp[0].str),nullptr);/* whether this identifier is declared before use */}
 #line 2008 "grammar.tab.c"
     break;
 
-  case 117: /* union_id: IDENTIFIER  */
-#line 321 "grammar.y"
-                     {lvl_name.push("union " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);}
+  case 116: /* struct_id: IDENTIFIER  */
+#line 341 "grammar.y"
+                     {lvl_name.push("struct " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);}
 #line 2014 "grammar.tab.c"
     break;
 
-  case 118: /* struct: STRUCT  */
-#line 324 "grammar.y"
-                                {(yyval.str)="STRUCT";}
+  case 117: /* union_id: IDENTIFIER  */
+#line 344 "grammar.y"
+                     {lvl_name.push("union " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);}
 #line 2020 "grammar.tab.c"
     break;
 
-  case 119: /* union: UNION  */
-#line 327 "grammar.y"
-                {(yyval.str)="UNION";}
+  case 118: /* struct: STRUCT  */
+#line 347 "grammar.y"
+                                {(yyval.str)="STRUCT";}
 #line 2026 "grammar.tab.c"
     break;
 
-  case 120: /* struct_declaration_list: struct_declaration  */
-#line 331 "grammar.y"
-                             {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;current_table=next_table(current_table);add_to_local_table(current_table,(yyvsp[0].struc_dec));}
+  case 119: /* union: UNION  */
+#line 350 "grammar.y"
+                {(yyval.str)="UNION";}
 #line 2032 "grammar.tab.c"
     break;
 
-  case 121: /* struct_declaration_list: struct_declaration_list struct_declaration  */
-#line 332 "grammar.y"
-                                                     {Struct_Declaration_List* x=(yyvsp[-1].struc_dec_list);x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;add_to_local_table(current_table,(yyvsp[0].struc_dec));}
+  case 120: /* struct_declaration_list: struct_declaration  */
+#line 354 "grammar.y"
+                             {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;current_table=next_table(current_table);add_to_local_table(current_table,(yyvsp[0].struc_dec));}
 #line 2038 "grammar.tab.c"
     break;
 
-  case 122: /* struct_declaration: specifier_qualifier_list struct_declarator_list ';'  */
-#line 336 "grammar.y"
-                                                             {(yyval.struc_dec)=create_struct_dec_obj((yyvsp[-2].node),(yyvsp[-1].node));}
+  case 121: /* struct_declaration_list: struct_declaration_list struct_declaration  */
+#line 355 "grammar.y"
+                                                     {Struct_Declaration_List* x=(yyvsp[-1].struc_dec_list);x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;add_to_local_table(current_table,(yyvsp[0].struc_dec));}
 #line 2044 "grammar.tab.c"
     break;
 
-  case 162: /* type_qualifier: CONST  */
-#line 430 "grammar.y"
-                 {(yyval.str)="CONST";}
+  case 122: /* struct_declaration: specifier_qualifier_list struct_declarator_list ';'  */
+#line 359 "grammar.y"
+                                                             {(yyval.struc_dec)=create_struct_dec_obj((yyvsp[-2].sql),(yyvsp[-1].sdl));}
 #line 2050 "grammar.tab.c"
     break;
 
-  case 163: /* type_qualifier: VOLATILE  */
-#line 431 "grammar.y"
-                   {(yyval.str)="VOLATILE";}
+  case 123: /* specifier_qualifier_list: type_specifier specifier_qualifier_list  */
+#line 363 "grammar.y"
+                                                  {Specifier_Qualifier_List* x=(yyvsp[0].sql);x->ts.push_back((yyvsp[-1].type_spec));}
 #line 2056 "grammar.tab.c"
     break;
 
-  case 243: /* translation_unit: external_declaration  */
-#line 587 "grammar.y"
-                               {Node* ext=create_node();ext->add_child((yyvsp[0].node));root->add_child(ext);}
+  case 124: /* specifier_qualifier_list: type_specifier  */
+#line 364 "grammar.y"
+                         {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back((yyvsp[0].type_spec));}
 #line 2062 "grammar.tab.c"
     break;
 
-  case 244: /* translation_unit: translation_unit external_declaration  */
-#line 588 "grammar.y"
-                                                {Node* ext=create_node();ext->add_child((yyvsp[0].node));root->add_child(ext);}
+  case 125: /* specifier_qualifier_list: type_qualifier specifier_qualifier_list  */
+#line 365 "grammar.y"
+                                                  {Specifier_Qualifier_List* x=(yyvsp[0].sql);x->tq.push_back((yyvsp[-1].str));}
 #line 2068 "grammar.tab.c"
     break;
 
-  case 245: /* external_declaration: function_definition  */
-#line 592 "grammar.y"
-                               {add_to_gst((yyvsp[0].fun_def),gst);(yyval.node)=(yyvsp[0].fun_def);}
+  case 126: /* specifier_qualifier_list: type_qualifier  */
+#line 366 "grammar.y"
+                         {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->tq.push_back((yyvsp[0].str));}
 #line 2074 "grammar.tab.c"
     break;
 
-  case 246: /* external_declaration: declaration  */
-#line 593 "grammar.y"
-                      {add_to_gst((yyvsp[0].declaration),gst);(yyval.node)=(yyvsp[0].declaration);}
+  case 127: /* struct_declarator_list: struct_declarator  */
+#line 370 "grammar.y"
+                             {Struct_Declarator_List* x=new Struct_Declarator_List();x->sd.push_back((yyvsp[0].sd));}
 #line 2080 "grammar.tab.c"
     break;
 
-  case 247: /* function_definition: declaration_specifiers declarator declaration_list compound_statement  */
-#line 597 "grammar.y"
-                                                                                {Function_Definition* x=create_func_def((yyvsp[-3].dec_spec),(yyvsp[-2].dec),(yyvsp[-1].dec_list),(yyvsp[0].node));current_params_list.clear();lvl_name.pop();}
+  case 128: /* struct_declarator_list: struct_declarator_list ',' struct_declarator  */
+#line 371 "grammar.y"
+                                                        {Struct_Declarator_List* x=(yyvsp[-2].sdl);x->sd.push_back((yyvsp[0].sd));}
 #line 2086 "grammar.tab.c"
     break;
 
-  case 248: /* function_definition: declaration_specifiers declarator compound_statement  */
-#line 598 "grammar.y"
-                                                               {(yyval.fun_def)=create_func_def((yyvsp[-2].dec_spec),(yyvsp[-1].dec),nullptr,(yyvsp[0].node));lvl_name.pop();}
+  case 129: /* struct_declarator: declarator  */
+#line 375 "grammar.y"
+                                           {(yyval.sd)=create_struct_declarator_obj((yyvsp[0].dec),nullptr);}
 #line 2092 "grammar.tab.c"
     break;
 
-  case 249: /* function_definition: declarator declaration_list compound_statement  */
-#line 599 "grammar.y"
-                                                         {(yyval.fun_def)=create_func_def(nullptr,(yyvsp[-2].dec),(yyvsp[-1].dec_list),(yyvsp[0].node));lvl_name.pop();}
+  case 130: /* struct_declarator: ':' constant_expression  */
+#line 376 "grammar.y"
+                                  {(yyval.sd)=create_struct_declarator_obj(nullptr,(yyvsp[0].node));}
 #line 2098 "grammar.tab.c"
     break;
 
-  case 250: /* function_definition: declarator compound_statement  */
-#line 600 "grammar.y"
-                                        {(yyval.fun_def)=create_func_def(nullptr,(yyvsp[-1].dec),nullptr,(yyvsp[0].node));lvl_name.pop();}
+  case 131: /* struct_declarator: declarator ':' constant_expression  */
+#line 377 "grammar.y"
+                                              {(yyval.sd)=create_struct_declarator_obj((yyvsp[-2].dec),(yyvsp[0].node));}
 #line 2104 "grammar.tab.c"
     break;
 
+  case 132: /* class_specifier: CLASS class_name class_body  */
+#line 381 "grammar.y"
+                                   {(yyval.class_spec)=new Class_Specifier(std::string((yyvsp[-1].str)),nullptr,(yyvsp[0].class_mem_dec));}
+#line 2110 "grammar.tab.c"
+    break;
 
-#line 2108 "grammar.tab.c"
+  case 133: /* class_specifier: CLASS class_name inheritance_specifier class_body  */
+#line 382 "grammar.y"
+                                                        {(yyval.class_spec)=new Class_Specifier(std::string((yyvsp[-2].str)),(yyvsp[-1].inh_spec),(yyvsp[0].class_mem_dec));}
+#line 2116 "grammar.tab.c"
+    break;
+
+  case 134: /* class_specifier: CLASS class_name  */
+#line 383 "grammar.y"
+                           {(yyval.class_spec)=new Class_Specifier(std::string((yyvsp[0].str)),nullptr,nullptr);check_if_declared(current_table,std::string((yyvsp[0].str)),"class");}
+#line 2122 "grammar.tab.c"
+    break;
+
+  case 135: /* inheritance_specifier: ':' base_class_list  */
+#line 387 "grammar.y"
+                                     {(yyval.inh_spec)=new Inheritance_Specifier((yyvsp[0].bcl));}
+#line 2128 "grammar.tab.c"
+    break;
+
+  case 136: /* base_class_list: base_class  */
+#line 391 "grammar.y"
+                                                                     {Base_Class_List* x=new Base_Class_List();x->bc.push_back((yyvsp[0].bc));}
+#line 2134 "grammar.tab.c"
+    break;
+
+  case 137: /* base_class_list: base_class_list ',' base_class  */
+#line 392 "grammar.y"
+                                     {Base_Class_List* x=(yyvsp[-2].bcl);x->bc.push_back((yyvsp[0].bc));}
+#line 2140 "grammar.tab.c"
+    break;
+
+  case 138: /* base_class: access_specifier IDENTIFIER  */
+#line 396 "grammar.y"
+                                                                            {check_if_declared(current_table,std::string((yyvsp[0].str)),"class");(yyval.bc)=new Base_Class((yyvsp[-1].str),std::string((yyvsp[0].str)));}
+#line 2146 "grammar.tab.c"
+    break;
+
+  case 139: /* base_class: IDENTIFIER  */
+#line 397 "grammar.y"
+                 {check_if_declared(current_table,(yyvsp[0].str),"class");(yyval.bc)=new Base_Class("",std::string((yyvsp[0].str)));}
+#line 2152 "grammar.tab.c"
+    break;
+
+  case 140: /* access_specifier: PUBLIC  */
+#line 401 "grammar.y"
+                        {(yyval.str)="PUBLIC";}
+#line 2158 "grammar.tab.c"
+    break;
+
+  case 141: /* access_specifier: PRIVATE  */
+#line 402 "grammar.y"
+              {(yyval.str)="PRIVATE";}
+#line 2164 "grammar.tab.c"
+    break;
+
+  case 142: /* access_specifier: PROTECTED  */
+#line 403 "grammar.y"
+                {(yyval.str)="PROTECTED";}
+#line 2170 "grammar.tab.c"
+    break;
+
+  case 143: /* class_body: '{' class_member_declaration_list '}'  */
+#line 407 "grammar.y"
+                                            {(yyval.class_mem_dec)=(yyvsp[-1].class_mem_dec_list); current_level--;current_table=current_table->get_parent();lvl_name.pop();}
+#line 2176 "grammar.tab.c"
+    break;
+
+  case 144: /* class_body: '{' '}'  */
+#line 408 "grammar.y"
+              {lvl_name.pop();}
+#line 2182 "grammar.tab.c"
+    break;
+
+  case 145: /* class_member_declaration_list: class_member_declaration  */
+#line 412 "grammar.y"
+                               {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back((yyvsp[0].class_mem_dec));current_level++;current_table=next_table(current_table);}
+#line 2188 "grammar.tab.c"
+    break;
+
+  case 146: /* class_member_declaration_list: class_member_declaration_list class_member_declaration  */
+#line 413 "grammar.y"
+                                                             {Class_Member_Declaration_List* x=(yyvsp[-1].class_mem_dec_list);x->cd.push_back((yyvsp[-1].class_mem_dec_list));}
+#line 2194 "grammar.tab.c"
+    break;
+
+  case 150: /* class_member_declaration: access_specifier ':'  */
+#line 426 "grammar.y"
+                           {access_spec_stk.push((yyvsp[-1].str));}
+#line 2200 "grammar.tab.c"
+    break;
+
+  case 162: /* type_qualifier: CONST  */
+#line 454 "grammar.y"
+                 {(yyval.str)="CONST";}
+#line 2206 "grammar.tab.c"
+    break;
+
+  case 163: /* type_qualifier: VOLATILE  */
+#line 455 "grammar.y"
+                   {(yyval.str)="VOLATILE";}
+#line 2212 "grammar.tab.c"
+    break;
+
+  case 243: /* translation_unit: external_declaration  */
+#line 611 "grammar.y"
+                               {Node* ext=create_node();ext->add_child((yyvsp[0].node));root->add_child(ext);}
+#line 2218 "grammar.tab.c"
+    break;
+
+  case 244: /* translation_unit: translation_unit external_declaration  */
+#line 612 "grammar.y"
+                                                {Node* ext=create_node();ext->add_child((yyvsp[0].node));root->add_child(ext);}
+#line 2224 "grammar.tab.c"
+    break;
+
+  case 245: /* external_declaration: function_definition  */
+#line 616 "grammar.y"
+                               {add_to_gst((yyvsp[0].fun_def),gst);(yyval.node)=(yyvsp[0].fun_def);}
+#line 2230 "grammar.tab.c"
+    break;
+
+  case 246: /* external_declaration: declaration  */
+#line 617 "grammar.y"
+                      {add_to_gst((yyvsp[0].declaration),gst);(yyval.node)=(yyvsp[0].declaration);}
+#line 2236 "grammar.tab.c"
+    break;
+
+  case 247: /* function_definition: declaration_specifiers declarator declaration_list compound_statement  */
+#line 621 "grammar.y"
+                                                                                {Function_Definition* x=create_func_def((yyvsp[-3].dec_spec),(yyvsp[-2].dec),(yyvsp[-1].dec_list),(yyvsp[0].node));current_params_list.clear();lvl_name.pop();}
+#line 2242 "grammar.tab.c"
+    break;
+
+  case 248: /* function_definition: declaration_specifiers declarator compound_statement  */
+#line 622 "grammar.y"
+                                                               {(yyval.fun_def)=create_func_def((yyvsp[-2].dec_spec),(yyvsp[-1].dec),nullptr,(yyvsp[0].node));lvl_name.pop();}
+#line 2248 "grammar.tab.c"
+    break;
+
+  case 249: /* function_definition: declarator declaration_list compound_statement  */
+#line 623 "grammar.y"
+                                                         {(yyval.fun_def)=create_func_def(nullptr,(yyvsp[-2].dec),(yyvsp[-1].dec_list),(yyvsp[0].node));lvl_name.pop();}
+#line 2254 "grammar.tab.c"
+    break;
+
+  case 250: /* function_definition: declarator compound_statement  */
+#line 624 "grammar.y"
+                                        {(yyval.fun_def)=create_func_def(nullptr,(yyvsp[-1].dec),nullptr,(yyvsp[0].node));lvl_name.pop();}
+#line 2260 "grammar.tab.c"
+    break;
+
+
+#line 2264 "grammar.tab.c"
 
       default: break;
     }
@@ -2297,7 +2453,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 603 "grammar.y"
+#line 627 "grammar.y"
 
 #include <stdio.h>
 #include <bits/stdc++.h>

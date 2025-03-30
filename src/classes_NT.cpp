@@ -178,6 +178,34 @@ Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Dec
     this->level_name = "";         
 }
 
+Struct_Declarator_List::Struct_Declarator_List() {
+   this->sd={};
+}
+
+Struct_Declarator::Struct_Declarator(Declarator* d, Constant_Expression* ce){
+    this->d=d;
+    this->ce=ce;
+}
+
+Inheritance_Specifier::Inheritance_Specifier(Base_Class_List* bcl){
+    this->bcl=bcl;
+}
+
+Base_Class_List::Base_Class_List() {
+    this->bc={};
+}
+
+// Implementation (.cpp file)
+Base_Class::Base_Class(const std::string& asp, const std::string& id)
+    : asp(asp), id(id) {  // Use const references to accept temporary strings
+}
+
+
+Specifier_Qualifier_List::Specifier_Qualifier_List() {
+    this->ts={};
+    this->tq={};
+}
+
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl){
     Struct_Declaration* sd=new Struct_Declaration(sql,sdl);
     sd->level=current_level-lvl_name.size()+1;
@@ -190,7 +218,15 @@ Declaration_Specifiers* create_decl_spec_object(){
     Declaration_Specifiers* ds=new Declaration_Specifiers();
     return ds;
 }
-Type_Specifier* create_ts_obj(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
+
+// In your .cpp file
+Class_Specifier::Class_Specifier(const std::string class_name, Inheritance_Specifier* is, Class_Member_Declaration_List* cb)
+    : class_name(class_name), 
+      is(is),
+      cb(cb) {
+}
+
+Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
     Type_Specifier* ts=new Type_Specifier(str,struct_union_type, class_type, enum_type);
     return ts;
 }

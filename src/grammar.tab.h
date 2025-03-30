@@ -59,7 +59,6 @@ extern int yydebug;
 	class Typedef_Specifier;
 	class Type_Specifier;
 	class Struct_or_Union_Specifier;
-	class Class_Specifier;
 	class Enum_Specifier;
 	class Struct_Declaration_List;
 	class Struct_Declaration;
@@ -67,8 +66,15 @@ extern int yydebug;
 	class Local_Symbol_Table;
 	class Specifier_Qualifier_List;
 	class Struct_Declarator_List;
+	class Struct_Declarator;
+	class Class_Member_Declaration;
+	class Class_Member_Declaration_List;
+	class Class_Specifier;
+	class Base_Class;
+	class Base_Class_List;
+	class Inheritance_Specifier;
 
-#line 72 "grammar.tab.h"
+#line 78 "grammar.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -156,7 +162,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 52 "grammar.y"
+#line 58 "grammar.y"
 
 	Node* node;
 	Function_Definition* fun_def;
@@ -169,13 +175,21 @@ union YYSTYPE
 	Typedef_Specifier* typedef_spec;
 	Type_Specifier* type_spec;
 	Struct_or_Union_Specifier* str_union;
-	Class_Specifier* class_spec;
 	Enum_Specifier* enum_spec;
 	Struct_Declaration_List* struc_dec_list;
 	Struct_Declaration * struc_dec;
+	Specifier_Qualifier_List* sql;
+	Struct_Declarator_List* sdl;
+	Struct_Declarator* sd;
+	Class_Specifier* class_spec;
+	Base_Class* bc;
+	Base_Class_List* bcl;
+	Inheritance_Specifier* inh_spec;
 	char* str;
+	Class_Member_Declaration* class_mem_dec;
+	Class_Member_Declaration_List* class_mem_dec_list;
 
-#line 179 "grammar.tab.h"
+#line 193 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

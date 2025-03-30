@@ -297,7 +297,7 @@ constant_expression
 /*check whether type is correct*/
 declaration
 	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
-	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);}/* create object as above but add both fields*/
+	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);func_ret_type="";current_params_list.clear();}/* create object as above but add both fields*/
 /* thik karna hai action*/	/*| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}*//* same as above . check whether typedef specifier is there in typedef table. */
 	;
 
@@ -473,47 +473,47 @@ type_qualifier
 	;
 
 declarator
-	: pointer direct_declarator 
-	| direct_declarator /* check if is a function . if yes then add its name to stack */
+	: pointer direct_declarator ($$=create_new_declarator($1,$2);)
+	| direct_declarator {$$=create_new_declarator(nullptr,$1);}/* check if is a function . if yes then add its name to stack */
 	;
 
 direct_declarator
-	: IDENTIFIER
-	| '(' declarator ')'
-	| direct_declarator '[' constant_expression ']'
-	| direct_declarator '[' ']'
-	| direct_declarator '(' parameter_type_list ')' /* add parameters to current params list */
+	: IDENTIFIER {$$=create_direct_declarator("id",$1,nullptr,nullptr,nullptr,nullptr);}
+	| '(' declarator ')' {$$=create_direct_declarator("declarator","",$2,nullptr,nullptr,nullptr);}
+	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator("array","",nullptr,$1,nullptr,nullptr);}
+	| direct_declarator '[' ']' {$$=create_direct_declarator("array","",nullptr,$1,nullptr,nullptr);}
+	| direct_declarator '(' parameter_type_list ')' {$$=create_direct_declarator("function","",nullptr,$1,nullptr,$3);}/* add parameters to current params list */
 /*	| direct_declarator '(' identifier_list ')' */
-	| direct_declarator '(' ')'
+	| direct_declarator '(' ')' {$$=create_direct_declarator("function","",nullptr,$1,nullptr,nullptr);}
 	;
 
 pointer
-	: '*'
-	| '*' type_qualifier_list
-	| '*' pointer
-	| '*' type_qualifier_list pointer
+	: '*' {$$=new Pointer(nullptr,nullptr);}
+	| '*' type_qualifier_list {$$=new Pointer(nullptr,$2);}
+	| '*' pointer {$$=new Pointer($2,nullptr);}
+	| '*' type_qualifier_list pointer {$$=new Pointer($3,$2);}
 	;
 
 type_qualifier_list
-	: type_qualifier
-	| type_qualifier_list type_qualifier
+	: type_qualifier {Type_Qualifier_List* x=new Type_Qualifier_List();x->tq.push_back($1);$$=x;}
+	| type_qualifier_list type_qualifier {Type_Qualifier_List* x=$2;x->tq.push_back($2);$$=x;}
 	;
 
 
 parameter_type_list
-	: parameter_list
-	| parameter_list ',' ELLIPSIS
+	: parameter_list {$$=$1;}
+	| parameter_list ',' ELLIPSIS {Parameter_List* x=$1; x->ellipses=true;}
 	;
 
 parameter_list
-	: parameter_declaration
-	| parameter_list ',' parameter_declaration
+	: parameter_declaration {Parameter_List* x=new Parameter_List();x->pl.push_back($1);$$=x;}
+	| parameter_list ',' parameter_declaration {$1->pl.push_back($3);$$=$1;}
 	;
 
 parameter_declaration
-	: declaration_specifiers declarator
-	| declaration_specifiers abstract_declarator
-	| declaration_specifiers
+	: declaration_specifiers declarator {$$=new Parameter_Declaration($1,$2);}
+	/*| declaration_specifiers abstract_declarator
+	| declaration_specifiers */
 	;
 /*
 identifier_list
@@ -634,7 +634,7 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);string t=create_type($1,$2);check_declarator_for_func($2);$$=x;func_ret_type=t; }
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);string t=create_type($1,$2);$2->check_for_func();$$=x;func_ret_type=t; }
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();}*/ /* create function definition object.parameter. assign type. assign size. */

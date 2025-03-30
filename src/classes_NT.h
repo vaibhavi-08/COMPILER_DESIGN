@@ -146,10 +146,6 @@ class Declaration_Specifiers : public Node{
     vector<string> tq;
     Declaration_Specifiers();
 };
-class Declarator : public Node{
-    public:
-    void check_declarator();
-};
 class Declaration_List : public Node{
 
 };
@@ -273,6 +269,50 @@ class Enumerator:public Node{
     Constant_Expression* ce;
     Enumerator(const std::string& id, Constant_Expression* ce);
 };
+class Declarator : public Node{
+    public:
+    Pointer* p;
+    Direct_Declarator* dd;
+    string type;
+    string id;
+    vector<pair<string,string>> prms;
+    bool isfunction;
+    void check_declarator();
+    void check_for_func();
+    Declarator(Pointer* p,Direct_Declarator* dd);
+};
+class Direct_Declarator:public Node{
+    public:
+    string type;
+    string id;
+    Declarator* d;
+    Direct_Declarator* dd;
+    Constant_Expression* ce;
+    Parameter_List* pl;
+    Direct_Declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
+};
+class Pointer:public Node{
+    public:
+    Type_Qualifier_List* tql;
+    Pointer* p;
+    Pointer(Type_Qualifier_List* tql,Pointer* p);
+};
+class Type_Qualifier_List:public Node{
+    public:
+    vector<string> tq;
+    Type_Qualifier_List();
+};
+class Parameter_List:public Node{
+    public:
+    vector<Parameter_Declaration*> pl;
+    Parameter_List();
+};
+class Parameter_Declaration:public Node{
+    public:
+    Declaration_Specifiers* ds;
+    Declarator* dec;
+    Parameter_Declaration(Declaration_Specifiers* ds,Declarator* d);
+}
 // class Primary_expresssion{
 
 // };

@@ -33,14 +33,69 @@ vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Ini
 }
 vector<string> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
+    vector<string> ans;
+    if(p==nullptr)return ans;
+    vector<pair<string,string>> prms=get_params(p);
+    set<string> s;
+    for(auto i:prms){
+        s.insert(i.second);
+        ans.push_back(i.first);
+    }
+    if(s.size()!=prms.size()){
+        cout << "error: " << "all parameters should have unique name" << endl;
+        exit(0);
+    }
+    return ans;
 }
-void check_declarator_for_func(Declarator* d){
+vector<<pair<string,string>> get_params(Parameter_List* p){
+    vector<pair<string,string>> ans;
+    if(p==nullptr)return ans;
+    for(auto i:p->pl){
+        string type=create_type(i->ds,i->dec);
+        string name=get_name(i->dec);
+        pair<string,string> x={type,name};
+        ans.push_back(x);
+    }
+    return ans;
+}
+string Declarator :: check_declarator(){
+    //return which type of declarator
+}
+void Declarator :: check_for_func(){
+    string t=this->check_declarator()
+    if(t!="function"){
+        cout << "error : invalid function declarator " << this->id << endl;
+        exit(0); 
+    }
+}
+void add_params_to_map(Parameter_List* pl){
 
 }
-void Declarator :: check_declarator(){
-    
+Direct_Declarator* create_direct_declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl){
+    Direct_Declarator* z=new Direct_Declarator(type,id,d,dd,ce,pl);
+    if(z->id==""){
+        if(z->dd!=nullptr){
+            z->id=z->dd->id;
+        }
+        else if(z->d!=nullptr) {
+            z->id=z->d->id;
+        }
+    }
+    return z;
 }
-
+Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
+    Declarator* z=new Declarator(p,dd);
+    z->id=z->dd->id;
+    string t=check_declarator();
+    if(t=="function"){
+        z->isfunction=true;
+        z->prms=get_params(dd->pl);
+        for(auto i:z->prms){
+            current_params_list[i.second]=i.first;
+        }
+    }
+    z->type=t;
+}
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type){
     Local_Symbol_Table* x=current_table;
     bool check=false;

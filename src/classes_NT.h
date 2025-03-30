@@ -167,7 +167,7 @@ class Struct_or_Union_Specifier: public Node{
     Struct_Declaration_List* strdec_list;
     Struct_or_Union_Specifier(const string& sou,const string& name,Struct_Declaration_List* sdl);
 
-} ;
+};
 class Struct_Declaration_List: public Node{
     public:
     vector<Struct_Declaration*> sdl;

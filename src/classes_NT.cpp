@@ -25,12 +25,7 @@ string get_level_name(){
     }
     return ans;
 }
-string create_type(Declaration_Specifiers* ds,Declarator* d){}
-vector<string> get_func_params(Declarator* d){}
-string get_name(Declarator* d){}
-vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl){
-    /*for each declarator first generate type and also check whether it is a valid type*/
-}
+
 vector<string> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
     vector<string> ans;
@@ -68,9 +63,49 @@ void Declarator :: check_for_func(){
         exit(0); 
     }
 }
-void add_params_to_map(Parameter_List* pl){
-
+void add_params_to_map(Parameter_List* pl) {
+    std::vector<std::pair<std::string, std::string>> params = get_params(pl);
+    
+    for (const auto& param : params) {
+        if (current_params_list.find(param.second) != current_params_list.end()) {
+            std::cerr << "error: parameter '" << param.second 
+                      << "' of type '" << param.first 
+                      << "' conflicts with previous declaration of type '" 
+                      << current_params_list[param.second] ;
+            exit(1);
+        }
+        current_params_list[param.second] = param.first;
+    }
 }
+
+string get_name(Declarator* d){
+    return d->id;
+}
+
+vector<string> get_func_params(Declarator* d){
+    if (!d->isfunction) {
+        cerr << "error: declarator is not a function"<< endl;
+        exit(1);
+    }
+    Parameter_List* tpl = d->dd->pl;
+    return get_const_params(tpl);
+}
+
+string create_type(Declaration_Specifiers* ds,Declarator* d){}
+
+vector<pair<string, string>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
+    vector<pair<string, string>> result;
+    if (!idl) return result;
+    for (Init_Declarator* init_decl : idl->idl) {
+        Declarator* d = init_decl->d;
+        string type = create_type(ds, d);
+        string name = d->id;
+        result.emplace_back(name, type);
+    }
+    return result;
+}
+
+
 Direct_Declarator* create_direct_declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl){
     Direct_Declarator* z=new Direct_Declarator(type,id,d,dd,ce,pl);
     if(z->id==""){
@@ -306,12 +341,60 @@ Struct_or_Union_Specifier::Struct_or_Union_Specifier(const string& sou,const str
     this->strdec_list = sdl;   
 }
 
-Type_Specifier::Type_Specifier(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
-    this->string_type = str;               
-    this->struct_union_type = struct_union_type; 
-    this->class_type = class_type;           
-    this->enum_type = enum_type;       
+Type_Specifier::Type_Specifier(const string& str, Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type) 
+    : string_type(str),
+    struct_union_type(struct_union_type),
+    class_type(class_type),
+    enum_type(enum_type){
+    if(struct_union_type) {
+        const string& sou = struct_union_type->str_or_union;
+        const string& name = struct_union_type->name;
+        Struct_Declaration_List* sdl = struct_union_type->strdec_list;
+        if (!sou.empty()) {
+            if (sdl) { 
+                if (name.empty()) {
+                    string_type = sou + " anonymous";
+                } 
+                else {
+                    string_type = sou;
+                }
+            } 
+            else {
+                if (!name.empty()) {
+                    string_type = sou + " " + name;
+                }
+            }
+        }
+    }
+    else if (class_type) { 
+        if (class_type->cb == nullptr) {
+            string_type = "class " + class_type->class_name;
+        }
+        else {
+            if (class_type->class_name.empty()) {
+                string_type = "class anonymous";
+            } 
+            else {
+                string_type = "class";
+            }
+        }
+    }
+    else if (enum_type) {
+        if (enum_type->enuml == nullptr) {
+            string_type = "enum " + enum_type->id;
+        } else {
+            if (enum_type->id.empty()) {
+                string_type = "enum anonymous"; 
+            } else {
+                string_type = "enum";  
+            }
+        }
+    }
+    else{
+        cout<<"Not struct_or_union,enum or class"<<endl;
+    }
 }
+
 
 Enum_Specifier::Enum_Specifier(const std::string& id, Enumerator_List* enuml)
     : id(id), enuml(enuml) { 

@@ -205,21 +205,12 @@ argument_expression_list
 	;
 
 unary_expression
-<<<<<<< HEAD
-	: postfix_expression
-	| INC_OP unary_expression
-	| DEC_OP unary_expression
-	| unary_operator cast_expression 
-	| SIZEOF unary_expression
-	| SIZEOF '(' type_name ')'
-=======
 	: postfix_expression {$$=$1;}
 	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$1;}
 	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$1;}
 	| unary_operator cast_expression {string type=get_type_unary_expression($1,$2);$$=new Expression(type,"");}
 	| SIZEOF unary_expression {check_for_sizeof($2->type); $$=new Expression("UNSIGNED INT","");}/* void , functiions */
 	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);$$=new Expression("UNSIGNED INT","");}
->>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
 	;
 
 unary_operator

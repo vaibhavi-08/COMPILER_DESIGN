@@ -43,11 +43,7 @@ string get_level_name(){
     }
     return ans;
 }
-<<<<<<< HEAD
-string create_type(Declaration_Specifiers* ds,Declarator* d){
-=======
 string create_type(Declaration_Specifiers* ds,Declarator* d,bool& check_f,vector<string>& fp){
->>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
     string type="";
     bool isconst=false;
     bool isvolatile=false;
@@ -159,7 +155,6 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,bool& check_f,vector
     return type;
      
 }
-<<<<<<< HEAD
 Type_Name::Type_Name(Specifier_Qualifier_List* sql, Abstract_Declarator* ad)
     : sql(sql), ad(ad) {
 }
@@ -173,10 +168,8 @@ Direct_Abstract_Declarator::Direct_Abstract_Declarator(string type, Abstract_Dec
 : type(type), ad(ad), dad(dad), con_exp(con_exp),pl(pl)  {
 
 }
-string create_type(Specifier_Qualifier_List* ds,Declarator* d){
-=======
+
 string create_type(Specifier_Qualifier_List* ds,Declarator* d,bool& check_f,vector<string>& fp){
->>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
     string type="";
     bool isfunction=false;
     vector<string> prms;
@@ -350,7 +343,6 @@ vector<string> get_const_params(Parameter_List* p){
     }
     return ans;
 }
-<<<<<<< HEAD
 Expression::Expression(const std::string& type,const std::string& name)
     : type(type) , name(name) {  
 
@@ -420,11 +412,9 @@ string check_if_array_or_pointer(Expression* e){
         cout<<"Declaration "<<e->name<<" is incorrect! It should be pointer or array."<<endl;
     }
 }
-vector<pair<string,string>> get_params(Parameter_List* p){
-=======
+
 /*
 vector<pair<string,Symbol_Info>> get_params(Parameter_List* p){
->>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
     vector<pair<string,string>> ans;
     if(p==nullptr)return ans;
     for(auto i:p->pl){

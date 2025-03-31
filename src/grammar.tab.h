@@ -85,9 +85,13 @@ extern int yydebug;
 	class Direct_Declarator;
 	class Type_Qualifier_List;
 	class Parameter_Declaration;
+	class Expression;
+	class Type_Name
+	class Abstract_Declarator
+	class Direct_Abstract_Declarator
 
 
-#line 91 "grammar.tab.h"
+#line 95 "grammar.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
@@ -175,7 +179,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 71 "grammar.y"
+#line 75 "grammar.y"
 
 	Node* node;
 	Function_Definition* fun_def;
@@ -211,9 +215,10 @@ union YYSTYPE
 	Parameter_List* pl;
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
-	Compound_Statemen* comp_stmt;
+	Compound_Statement* comp_stmt;
+	Expression* expr;
 
-#line 217 "grammar.tab.h"
+#line 222 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

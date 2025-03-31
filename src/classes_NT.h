@@ -35,7 +35,6 @@ class Enum_Specifier;
 class Enumerator_List;
 class Enumerator;
 class Function_Declaration;
-class Init_Declarator;
 class Class_Member_Declaration_List;
 class Class_Member_Declaration;
 class Parameter_List;
@@ -43,6 +42,10 @@ class Pointer;
 class Direct_Declarator;
 class Type_Qualifier_List;
 class Parameter_Declaration;
+class Expression;
+class Type_Name;
+class Abstract_Declarator;
+class Direct_Abstract_Declarator;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,string> current_params_list;
 extern stack<string> lvl_name;
@@ -53,6 +56,7 @@ extern string func_ret_type;
 extern set<string> labelset;
 extern set<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
+pair<string,bool> get_type_id(string id);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
 Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
@@ -104,7 +108,6 @@ class Local_Symbol_Table{
     Local_Symbol_Table* parent;
     Local_Symbol_Table(bool ispargst, Local_Symbol_Table* parent);
     Local_Symbol_Table* get_parent();
-
 };
 class Node{
     public:
@@ -148,14 +151,13 @@ class Declaration : public Node{
 // };
 class Init_Declarator_List: public Node{
     public :
-    vector<Init_Declarator*> idl;
+    vector<Declarator*> idl;
     Init_Declarator_List();
 };
-class Init_Declarator : public Node {
+class Argument_Expression_List: public Node{
     public:
-        Declarator* d;
-        Initializer* i;  
-        Init_Declarator(Declarator* d, Initializer* i);
+    vector<Expression*> vec_exp;
+    Argument_Expression_List();
 };
 class Declaration_Specifiers : public Node{
     public:
@@ -167,6 +169,7 @@ class Declaration_Specifiers : public Node{
 class Compound_Statement : public Node{
     public:
     Node* st;
+    int have_ret;
     Declaration_List* dl;
     Compound_Statement(Node* st,Declaration_List* dl);
 };
@@ -185,7 +188,20 @@ class Struct_or_Union_Specifier: public Node{
     string name;
     Struct_Declaration_List* strdec_list;
     Struct_or_Union_Specifier(const string& sou,const string& name,Struct_Declaration_List* sdl);
-
+};
+class Initializer: public Node{
+    public:
+    string type;
+    string name;
+    Initializer_List* ini_lst;
+    string class_id;
+    Argument_Expression_List* arg_exp_lst;
+    Initializer(string type,string name,Initializer_List* ini_lst,string class_id,Argument_Expression_List* arg_exp_lst);
+};
+class Initializer_List:public Node{
+    public:
+    vector<Initializer*> iv;
+    Initializer_List();
 };
 class Struct_Declaration_List: public Node{
     public:
@@ -225,13 +241,11 @@ class Specifier_Qualifier_List: public Node{
     vector<Type_Specifier*> ts;
     vector<string> tq;
     Specifier_Qualifier_List();
-
 };
 class Struct_Declarator: public Node{
     public:
     Declarator* d;
     Struct_Declarator(Declarator* d);
-
 };
 class Base_Class :public Node{
     public:
@@ -282,7 +296,31 @@ class Enumerator_List:public Node{
     vector<Enumerator*> e;
     Enumerator_List();
 };
-
+class Type_Name : public Node{
+    public:
+    string type;
+    Specifier_Qualifier_List* sql;
+    Abstract_Declarator* ad;
+    Type_Name(Specifier_Qualifier_List* sql,Abstract_Declarator* ad);
+    string create_type(Specifier_Qualifier_List* sql,Abstract_Declarator* ad);
+};
+class Abstract_Declarator : public Node{
+    public:
+    string type;
+    Pointer* p;
+    Direct_Abstract_Declarator* dad;
+    string check_abstract_declarator();
+    Abstract_Declarator(Pointer* p,Direct_Abstract_Declarator* dad);
+};
+class Direct_Abstract_Declarator : public Node{
+    public:
+    string type;
+    Abstract_Declarator* ad;
+    Direct_Abstract_Declarator* dad;
+    Parameter_List* pl;
+    Constant_Expression* con_exp;
+    Direct_Abstract_Declarator(string type,Abstract_Declarator* ad,Direct_Abstract_Declarator* dad,Constant_Expression* con_exp,Parameter_List* pl);
+};
 class Declaration_List:public Node{
     public:
     vector<Declaration*> dv;
@@ -295,12 +333,13 @@ class Enumerator:public Node{
     Constant_Expression* ce;
     Enumerator(const std::string& id, Constant_Expression* ce);
 };
-class Declarator : public Node{
+class Declarator: public Node{
     public:
     Pointer* p;
     Direct_Declarator* dd;
     string type;
     string id;
+    Initializer* ini;
     vector<pair<string,string>> prms;
     bool isfunction;
     void check_declarator();
@@ -333,272 +372,16 @@ class Parameter_List:public Node{
     vector<Parameter_Declaration*> pl;
     Parameter_List();
 };
+class Expression : public Node{
+    public:
+    string type;
+    string name;
+    Expression(const std::string& type,const std::string& name);
+};
 class Parameter_Declaration:public Node{
     public:
     Declaration_Specifiers* ds;
     Declarator* dec;
     Parameter_Declaration(Declaration_Specifiers* ds,Declarator* d);
 };
-// class Primary_expresssion{
-
-// };
-// class Class_Name{
-
-// };
-// class Postfix_Expression{
-
-// };
-// class Argument_Expression_List{
-
-// };
-// class Argument_List_Opt{
-
-// };
-// class Argument_List{
-
-// };
-// class Unary_Expression{
-
-// };
-// class Unary_Operator{
-
-// };
-// class Cast_Expression{
-
-// };
-// class Multiplicative_Expresssion{
-
-// };
-// class Additive_Expression{
-
-// };
-// class Shift_Expression{
-
-// };
-// class Relational_Expression{
-
-// };
-// class Equality_Expression{
-
-// };
-// class And_Expression{
-
-// };
-// class Exclusive_Or_Expression{
-
-// };
-// class Inclusive_Or_Expression{
-
-// };
-// class Logical_And_Expression{
-
-// };
-// class Logical_Or_Expression{
-
-// };
-// class Conditional_Expression{
-
-// };
-// class Assignment_Expression{
-
-// };
-// class Assignment_Operator{
-
-// };
-// class Expression{
-
-// };
-class Constant_Expression{
-
-};
-// class Declaration{
-
-// };
-// class Typedef_Specifier{
-
-// };
-// class Declaration_Specifiers{
-
-// };
-// class Init_Declarator_List{
-
-// };
-// class Init_Declarator{
-
-// };
-
-
-// class Struct_or_Union_Specifier{
-
-// };
-
-// class Struct_or_Union{
-
-// };
-
-
-// class Struct_Declaration{
-
-// };
-
-
-// class Struct_Declarator{
-
-// };
-
-// class Class_Specifier{
-
-// };
-
-// class Inheritance_Specifier{
-
-// };
-
-// class Base_Class_List{
-
-// };
-
-// class Base_Class{
-
-// };
-
-// class Access_Specifier{
-
-// };
-
-// class Class_Body{
-
-// };
-
-// class Class_Member_Declaration_List{
-
-// };
-
-// class Constructor_Declaration{
-
-// };
-
-// class Parameter_List_Opt{
-
-// };
-
-// class Class_Member_Declaration{
-
-// };
-
-// class Member_Declaration{
-
-// };
-
-// class Enum_Specifier{
-
-// };
-
-// class Enumerator_List{
-
-// };
-
-// class Enumerator{
-
-// };
-
-// class Type_Qualifier{
-
-// };
-
-// class Declarator{
-
-// };
-
-// class Direct_Declarator{
-
-// };
-
-// class Pointer{
-
-// };
-
-// class Type_Qualifier_List{
-
-// };
-
-// class Parameter_Type_List{
-
-// };
-
-// class Parameter_List{
-
-// };
-
-// class Parameter_Declaration{
-
-// };
-
-// class Identifier_List{
-
-// };
-
-// class Type_Name{
-
-// };
-
-// class Abstract_Declarator{
-
-// };
-
-// class Direct_Abstract_Declarator{
-
-// };
-
-// class Initializer{
-
-// };
-
-// class Initializer_List{
-
-// };
-
-// class Delete_Statement{
-
-// };
-
-// class Labeled_Statement{
-
-// };
-
-// class Compound_Statement{
-
-// };
-
-// class Statement_List{
-
-// };
-
-// class Expression_Statement{
-
-// };
-
-// class Selection_Statement{
-
-// };
-
-// class Iteration_Statement{
-
-// };
-
-// class Jump_Statement{
-
-// };
-
-// class Translation_Unit{
-    
-// };
-
-// class External_Declaration{
-
-// };
-
-// class Function_Definition{
-
-// };
 #endif

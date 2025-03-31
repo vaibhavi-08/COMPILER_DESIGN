@@ -37,7 +37,10 @@
 	class Direct_Declarator;
 	class Type_Qualifier_List;
 	class Parameter_Declaration;
-
+	class Expression;
+	class Type_Name
+	class Abstract_Declarator
+	class Direct_Abstract_Declarator
 }
 
 %{
@@ -104,6 +107,9 @@ Node* root;
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
 	Compound_Statement* comp_stmt;
+	Expression* expr;
+	vector<int> vec_int;
+	int int_value;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL 
 %token SIZEOF
@@ -119,8 +125,8 @@ Node* root;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 %type <node> translation_unit external_declaration
-%type <node> statement statement_list labeled_statement jump_statement
-%type <node> delete_statement selection_statement expression_statement iteration_statement
+%type <init_value> statement statement_list labeled_statement jump_statement
+%type <init_value> delete_statement selection_statement expression_statement iteration_statement
 %type <declaration> declaration
 %type <fun_def> function_definition
 %type <dec_spec> declaration_specifiers
@@ -128,11 +134,12 @@ Node* root;
 %type <dec_list> declaration_list
 %type <comp_stmt> compound_statement
 %type <init_dec_list> init_declarator_list
-%type <str> storage_class_specifier class_name access_specifier
+%type <str> storage_class_specifier class_name access_specifier assignment_operator
 %type<type_spec> type_specifier
 %type<class_spec> class_specifier
 %type<str_union> struct_or_union_specifier
-%type <str> type_qualifier
+%type <str> type_qualifier unary_operator
+%type <vec_int> statement_list
 %type <str> struct_id union_id struct union
 %type <struc_dec_list> struct_declaration_list
 %type <struc_dec> struct_declaration
@@ -142,10 +149,16 @@ Node* root;
 %type <bc> base_class
 %type <bcl> base_class_list
 %type <inh_spec> inheritance_specifier
-%type <node> constant_expression initializer
+%type <node> initializer
 %type <class_mem_dec_list> class_body class_member_declaration_list
 %type <class_mem_dec> class_member_declaration
 %type <memd> member_declaration
+%type <expr> primary_expression postfix_expression assignment_expression
+%type <expr> constant_expression unary_expression cast multiplicative_expression
+%type <expr> additive_expression shift_expression relational_expression equality_expression
+%type <expr> and_expression exclusive_or_expression inclusive_or_expression
+%type <expr> logical_and_expression logical_or_expression conditional_expression
+%type <expr> assignment_expression
 %type <constrdec> constructor_declaration
 %type <enum_spec> enum_specifier
 %type <enuml> enumerator_list
@@ -199,7 +212,7 @@ unary_expression
 	: postfix_expression
 	| INC_OP unary_expression
 	| DEC_OP unary_expression
-	| unary_operator cast_expression
+	| unary_operator cast_expression 
 	| SIZEOF unary_expression
 	| SIZEOF '(' type_name ')'
 	;
@@ -580,8 +593,6 @@ statement
 	| jump_statement 
 	| delete_statement 
 	;
-
-
 
 delete_statement
 	: DELETE IDENTIFIER

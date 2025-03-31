@@ -43,7 +43,7 @@ string get_level_name(){
     }
     return ans;
 }
-string create_type(Declaration_Specifiers* ds,Declarator* d)string create_type(Declaration_Specifiers* ds,Declarator* d){
+string create_type(Declaration_Specifiers* ds,Declarator* d){
     string type="";
     bool isconst=false;
     bool isvolatile=false;
@@ -133,6 +133,19 @@ string create_type(Declaration_Specifiers* ds,Declarator* d)string create_type(D
     return type;
      
 }
+Type_Name::Type_Name(Specifier_Qualifier_List* sql, Abstract_Declarator* ad)
+    : sql(sql), ad(ad) {
+}
+Abstract_Declarator :: Abstract_Declarator(Pointer* p,Direct_Abstract_Declarator* dad) 
+{   
+    this->p=p;
+    this->dad=dad;
+    this->type="";
+}
+Direct_Abstract_Declarator::Direct_Abstract_Declarator(string type, Abstract_Declarator* ad, Direct_Abstract_Declarator* dad, Constant_Expression* con_exp,Parameter_List* pl)
+: type(type), ad(ad), dad(dad), con_exp(con_exp),pl(pl)  {
+
+}
 string create_type(Specifier_Qualifier_List* ds,Declarator* d){
     string type="";
     bool isconst=false;
@@ -213,8 +226,6 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d){
         }
     }
     return type;
-     
-
 }
 vector<pair<string,string>> create_struct_name_type_list(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl){
     vector<pair<string,string>> ans;
@@ -273,6 +284,75 @@ vector<string> get_const_params(Parameter_List* p){
         exit(0);
     }
     return ans;
+}
+Expression::Expression(const std::string& type,const std::string& name)
+    : type(type) , name(name) {  
+
+}
+void check_argument_with_params(Argument_Expression_List* arg_el,vector<string>pl){
+
+}
+
+Argument_Expression_List :: Argument_Expression_List(){
+    this->vec_exp={};
+}
+
+vector<string> check_if_function(string name){
+    Local_Symbol_Table* temp = current_table;
+    while (temp != nullptr) {
+        auto it = temp->lst.find(name);
+        if (it != temp->lst.end()) {
+            if(!it->second->isfunction){
+                cout << "error: " << it->first << " should be a function" << endl;
+                exit(1);
+            }
+            else{
+                return it->second->function_parameters;
+            }
+        }
+        temp = temp->get_parent(); 
+    }
+    if(gst && gst->gst.count(id)) {
+        if(!gst->gst[id]->isfunction){
+            cout << "error: " << it->first << " should be a function" << endl;
+            exit(1);
+        }
+        else{
+            return gst->gst[id]->function_parameters;
+        }
+    }
+    cerr << "Error: Identifier '" << id << "' not found in any symbol table" << endl;
+    exit(1);
+}
+
+pair<string,string> get_type_id(string id) {
+    Local_Symbol_Table* temp = current_table;
+    while (temp != nullptr) {
+        auto it = temp->lst.find(id);
+        if (it != temp->lst.end()) {
+            return {it->second->type,it->second->name};
+        }
+        temp = temp->get_parent(); 
+    }
+    if(gst && gst->gst.count(id)) {
+        return {gst->gst[id]->type,gst->gst[id]->name};
+    }
+    cerr << "Error: Identifier '" << id << "' not found in any symbol table" << endl;
+    exit(1);
+}
+string check_if_array_or_pointer(Expression* e){
+    string x=e->type;
+    int len=x.length();
+    char ch=x[len-1];
+    if(ch=='$'){
+        x.pop_back();
+    }
+    else if(ch=='*'){
+        x.pop_back();
+    }
+    else{
+        cout<<"Declaration "<<e->name<<" is incorrect! It should be pointer or array."<<endl;
+    }
 }
 vector<pair<string,string>> get_params(Parameter_List* p){
     vector<pair<string,string>> ans;
@@ -404,8 +484,7 @@ vector<pair<string, string>> create_name_type_list(Declaration_Specifiers* ds, I
     }
 
     }
-    for (Init_Declarator* init_decl : idl->idl) {
-        Declarator* d = init_decl->d;
+    for (Declarator* d : idl->idl) {
         string type = create_type(ds, d);
         if(type=="class"||type=="struct"||type=="union"||type=="enum"){
             cout << "error: can't define objects like this for " << d->id << endl;
@@ -442,6 +521,10 @@ Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
         }
     }
     z->type=t;
+}
+
+Direct_Declarator::Direct_Declarator(string& type, string& id, Declarator* d, Direct_Declarator* dd, Constant_Expression* ce, Parameter_List* pl)
+    : type(type), id(id), d(d), dd(dd), ce(ce), pl(pl) {
 }
 
 Parameter_Declaration::Parameter_Declaration(Declaration_Specifiers* ds, Declarator* d)
@@ -554,11 +637,17 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration_Specifiers
 
 }
 Compound_Statement::Compound_Statement(Node* st, Declaration_List* dl)
-    : st(st), dl(dl) { 
+    : st(st), dl(dl),have_ret(0) { 
 }
 
 Declaration_List :: Declaration_List(){
     this->dv={};
+}
+Struct_Declarator_List::Struct_Declarator_List() : sd() {
+}
+
+Function_Declaration::Function_Declaration(Declaration_Specifiers* ds, Declarator* d)
+    : ds(ds), d(d) {
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Constructor_Declaration* cd){
     string access="PRIVATE";
@@ -594,7 +683,6 @@ Node* create_node(){
 Init_Declarator_List::Init_Declarator_List() {
     this->idl={};
 }
-
 
 void Node::add_child(Node* child){
     this->children.push_back(child);
@@ -741,6 +829,22 @@ Enum_Specifier::Enum_Specifier(const std::string& id, Enumerator_List* enuml)
     : id(id), enuml(enuml) { 
 }
 
+Declarator::Declarator(Pointer* p, Direct_Declarator* dd)
+    : p(p), dd(dd), type(""), id(""), prms(), isfunction(false) {
+        this->check_declarator();
+}
+
+Enumerator_List::Enumerator_List() : e() {
+}
+
+Initializer::Initializer(string type, string name, Initializer_List* ini_lst, string class_id, Argument_Expression_List* arg_exp_lst)
+    : type(type),          
+      name(name),         
+      ini_lst(ini_lst),   
+      class_id(class_id),  
+      arg_exp_lst(arg_exp_lst) {  
+}
+
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
     this->sql = sql;                   
     this->sdl = sdl;                  
@@ -777,11 +881,12 @@ Constructor_Declaration::Constructor_Declaration(
 ) : class_name(class_name), params(params), cs(cs) {
 }
 
+Parameter_List::Parameter_List() : pl() {
+}
 
 Base_Class::Base_Class(const std::string& asp, const std::string& id)
     : asp(asp), id(id) {  
 }
-
 
 Specifier_Qualifier_List::Specifier_Qualifier_List() {
     this->ts={};
@@ -827,11 +932,4 @@ Struct_Declarator* create_struct_declarator_obj(Declarator* d){
     Struct_Declarator* sd=new Struct_Declarator(d);
     return sd;
 }
-Init_Declarator:: Init_Declarator(Declarator* d,Initializer* i){
-    this->d=d;
-    this->i=i;
-    d->check_declarator();
-}
-
-
 

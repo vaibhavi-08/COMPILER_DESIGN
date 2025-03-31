@@ -683,6 +683,7 @@ int main(int argc, char *argv[]){
 	Node* root= new Node();
 	gst=new Global_Symbol_Table();
 	current_params_list.clear();
+	labelset.clear();
 	func_ret_type="";
 	while (!lvl_name.empty()){
     lvl_name.pop();

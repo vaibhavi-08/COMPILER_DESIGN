@@ -95,10 +95,60 @@ string create_type(Declaration_Specifiers* ds,Declarator* d){}
 
 vector<pair<string, string>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
     vector<pair<string, string>> result;
-    if (!idl) return result;
+    if (!idl){
+        if(ds->ts.size()==1){
+            if(ds->ts[0]->string_type=="class"){
+                if(ds->scs.empty()&&ds->tq.empty()){
+                    string name=ds->ts[0]->class_type->class_name;
+                    result.push_back(make_pair(name,"class"));
+                }
+                else{
+                    cout << "error: incorrect class declaration" << endl;
+                    exit(1);
+                }
+                
+            }
+            else if(ds->ts[0]->string_type=="struct"){
+                if(ds->scs.empty()&&ds->tq.empty()){
+                    string name=ds->ts[0]->struct_union_type->name;
+                    result.push_back(make_pair(name,"struct"));
+                }
+                else{
+                    cout << "error: incorrect struct declaration" << endl;
+                    exit(1);
+                }
+                
+            }
+            else if(ds->ts[0]->string_type=="union"){
+                if(ds->scs.empty()&&ds->tq.empty()){
+                    string name=ds->ts[0]->struct_union_type->name;
+                    result.push_back(make_pair(name,"union"));
+                }
+                else{
+                    cout << "error: incorrect union declaration" << endl;
+                    exit(1);
+                }
+            }
+            else if(ds->ts[0]->string_type=="enum"){
+                if(ds->scs.empty()&&ds->tq.empty()){
+                    string name=ds->ts[0]->enum_type->id;
+                    result.push_back(make_pair(name,"enum"));
+                }
+                else{
+                    cout << "error: incorrect enum declaration" << endl;
+                    exit(1);
+                }
+            }
+            else return result;
+        }
+    }
     for (Init_Declarator* init_decl : idl->idl) {
         Declarator* d = init_decl->d;
         string type = create_type(ds, d);
+        if(type=="class"||type=="struct"||type=="union"||type=="enum"){
+            cout << "error: can't define objects like this for " << d->id << endl;
+            exit(1);
+        }
         string name = d->id;
         result.emplace_back(name, type);
     }
@@ -216,6 +266,17 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         }
         current_table->lst[i.first]=x;
     }
+}
+Compound_Statement::Compound_Statement(Statement_List* st, Declaration_List* dl)
+    : st(st), dl(dl) { 
+}
+
+Statement_List :: Statement_List(){
+    this->st={};
+}
+
+Declaration_List :: Declaration_List(){
+    this->dv={};
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Constructor_Declaration* cd){
     string access="PRIVATE";

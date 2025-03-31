@@ -146,12 +146,13 @@ class Declaration_Specifiers : public Node{
     vector<string> tq;
     Declaration_Specifiers();
 };
-class Declaration_List : public Node{
-
-};
 class Compound_Statement : public Node{
-
+    public:
+    Statement_List* st;
+    Declaration_List* dl;
+    Compound_Statement(Statement_List* st,Declaration_List* dl);
 };
+
 class Type_Specifier: public Node{
     public:
     string string_type;
@@ -263,6 +264,13 @@ class Enumerator_List:public Node{
     vector<Enumerator*> e;
     Enumerator_List();
 };
+
+class Declaration_List:public Node{
+    public:
+    vector<Declaration*> dv;
+    Declaration_List();
+};
+
 class Enumerator:public Node{
     public:
     string id;
@@ -529,10 +537,6 @@ class Constant_Expression{
 // };
 
 // class Initializer_List{
-
-// };
-
-// class Statement{
 
 // };
 

@@ -9,6 +9,24 @@ Local_Symbol_Table* current_table = nullptr; // Definition
 stack<string> access_spec_stk;
 string func_ret_type;
 int current_level = 0; 
+set<string> labelset;
+set<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
+void add_to_local_class_struct_union_info(){
+    if(!current_class_struct_union_info.empty()){
+        auto z=current_class_struct_union_info.top();
+        if(current_table=nullptr){
+            gst->class_struct_union_info[z.first]=z.second;
+        }
+        else{
+            current_table->class_struct_union_info[z.first]=z.second;
+        }
+        current_class_struct_union_info.pop();
+    }
+    else{
+        cout << "error class not entered in stack" << endl;
+    }
+    
+}
 string get_level_name(){
     stack<string> temp;
     string ans="";
@@ -89,23 +107,157 @@ string create_type(Declaration_Specifiers* ds,Declarator* d)string create_type(D
         }
     }
     else if(z.size()==1){
-        type+=z->string_type;
+        if(z->string_type=="class"||"struct"||"enum"||"union"){
+            if(ds->scs.empty()&&ds->tq.empty()&&d==nullptr){
+                return z->string_type;
+            }
+            else{
+                cout << "error incorrect declaration ^struct^union^enum^class" << endl;
+            }
+        }
+        else{
+            type+=z->string_type;
+        }
     }
     else if(z.size()>3) {
         cout << "incorrect type specs in type of " << d->id << endl;
         exit(1);
     }
-    Pointer* y=d->p;
-    while(y!=nullptr){
-        type+='*';
-        y=y->p;
+    if(d!=nullptr){
+        Pointer* y=d->p;
+        while(y!=nullptr){
+            type+='*';
+            y=y->p;
+        }
+    }
+    return type;
+     
+}
+string create_type(Specifier_Qualifier_List* ds,Declarator* d){
+    string type="";
+    bool isconst=false;
+    bool isvolatile=false;
+    for(auto i : ds->tq){
+        if(i=="CONST")isconst=true;
+        else isvolatile=true;
+    }
+    if(isconst){
+        type+="CONST ";
+    }
+    if(isvolatile){
+        type+="VOLATILE ";
+    }
+    vector<Type_Specifier*> z=ds->ts;
+    reverse(z.begin(),z.end());
+    if(z.size()==3){
+        if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type="LONG"&&z[2]->string_type="LONG"){
+            return type + "UNSIGNED LONG LONG";
+        }
+        else{
+            cout << "incorrect type specs in type of " << d->id << endl;
+            exit(1);
+        }
+    }
+    else if(z.size()==2){
+        if(z[0]->string_type="UNSIGNED"&&z[1].string_type="CHAR"){
+            type += " UNSIGNED CHAR";
+        }
+        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="SHORT"){
+            type +=" UNSIGNED SHORT";
+        }
+        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="INT"){
+            type+=" UNSIGNED INT";
+        }
+        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="LONG"){
+            type+=" UNSIGNED LONG";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="CHAR"){
+            type+=" SIGNED CHAR";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="SHORT"){
+            type+=" SIGNED SHORT";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="INT"){
+            type+=" SIGNED INT";
+        }
+        else if(z[0]->string_type="SIGNED"&&z[1].string_type="LONG"){
+            type+=" SIGNED LONG";
+        }
+        else{
+            cout << "incorrect type specs in type of " << d->id << endl;
+            exit(1);
+        }
+    }
+    else if(z.size()==1){
+        if(z->string_type=="class"||"struct"||"enum"||"union"){
+            if(ds->scs.empty()&&ds->tq.empty()&&d==nullptr){
+                return z->string_type;
+            }
+            else{
+                cout << "error incorrect declaration ^struct^union^enum^class" << endl;
+            }
+        }
+        else{
+            type+=z->string_type;
+        }
+    }
+    else if(z.size()>3) {
+        cout << "incorrect type specs in type of " << d->id << endl;
+        exit(1);
+    }
+    if(d!=nullptr){
+        Pointer* y=d->p;
+        while(y!=nullptr){
+            type+='*';
+            y=y->p;
+        }
     }
     return type;
      
 
-
 }
-
+vector<pair<string,string>> create_struct_name_type_list(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl){
+    vector<pair<string,string>> ans;
+    if(sdl==nullptr){
+        string type=check_type(sql,nullptr);
+        if(type=="class"||type=="struct"||type=="union"||type=="enum"){
+            if(sql->ts[0]->string_type=="class"){
+                
+                    string name=sql->ts[0]->class_type->class_name;
+                    result.push_back(make_pair(name,"class"));
+                
+            }
+            else if(sql->ts[0]->string_type=="struct"){
+                
+                    string name=sql->ts[0]->struct_union_type->name;
+                    result.push_back(make_pair(name,"struct"));
+            
+                
+            }
+            else if(sql->ts[0]->string_type=="union"){
+               
+                    string name=sql->ts[0]->struct_union_type->name;
+                    result.push_back(make_pair(name,"union"));
+                
+            }
+            else if(sql->ts[0]->string_type=="enum"){
+                
+                    string name=sql->ts[0]->enum_type->id;
+                    result.push_back(make_pair(name,"enum"));
+            }
+            else {
+                cout << "error &&&" << endl;
+            }
+            else return ans;
+    }
+    }
+    for(auto i:sdl->sd){
+        string type=create_type(sql,i->d);
+        string name=get_name(i->d);
+        ans.push_back(make_pair(name,type));
+    }
+    return ans;
+}
 vector<string> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
     vector<string> ans;
@@ -215,52 +367,42 @@ vector<string> get_func_params(Declarator* d){
 
 vector<pair<string, string>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
     vector<pair<string, string>> result;
-    if (!idl){
-        if(ds->ts.size()==1){
+    if (!idl) {
+         if (!idl){
+        string type=check_type(ds,nullptr);
+        if(type=="class"||type=="struct"||type=="union"||type=="enum"){
             if(ds->ts[0]->string_type=="class"){
-                if(ds->scs.empty()&&ds->tq.empty()){
+                
                     string name=ds->ts[0]->class_type->class_name;
                     result.push_back(make_pair(name,"class"));
-                }
-                else{
-                    cout << "error: incorrect class declaration" << endl;
-                    exit(1);
-                }
                 
             }
             else if(ds->ts[0]->string_type=="struct"){
-                if(ds->scs.empty()&&ds->tq.empty()){
+                
                     string name=ds->ts[0]->struct_union_type->name;
                     result.push_back(make_pair(name,"struct"));
-                }
-                else{
-                    cout << "error: incorrect struct declaration" << endl;
-                    exit(1);
-                }
+            
                 
             }
             else if(ds->ts[0]->string_type=="union"){
-                if(ds->scs.empty()&&ds->tq.empty()){
+               
                     string name=ds->ts[0]->struct_union_type->name;
                     result.push_back(make_pair(name,"union"));
-                }
-                else{
-                    cout << "error: incorrect union declaration" << endl;
-                    exit(1);
-                }
+                
             }
             else if(ds->ts[0]->string_type=="enum"){
-                if(ds->scs.empty()&&ds->tq.empty()){
+                
                     string name=ds->ts[0]->enum_type->id;
                     result.push_back(make_pair(name,"enum"));
-                }
-                else{
-                    cout << "error: incorrect enum declaration" << endl;
-                    exit(1);
-                }
+            }
+            else {
+                cout << "error &&&" << endl;
             }
             else return result;
+
         }
+    }
+
     }
     for (Init_Declarator* init_decl : idl->idl) {
         Declarator* d = init_decl->d;
@@ -391,12 +533,28 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         current_table->lst[i.first]=x;
     }
 }
+void add_to_local_table(Local_Symbol_Table* current_table,Declaration_Specifiers* ds,Declarator* d){
+    string access="PRIVATE";
+    if(!access_spec_stk.empty()){
+        access=access_spec_stk.top();
+    }
+    string type=check_type(ds,d);
+    string name=get_name(d);
+    Enumerator_List* z=nullptr;
+    bool isenum=false;
+    if(type=="enum"){
+        isenum=true;
+        z=ds->ts.front()->enum_type->enuml;
+    }
+    string level_name=get_level_name();
+    int level=current_level-lvl_name.size()+1;
+    Symbol_Info info={name,type,level_name,level,"local",access,false,{},isenum,z};
+    Symbol_Info* x=&info;
+    current_table->lst[name]=x;
+
+}
 Compound_Statement::Compound_Statement(Node* st, Declaration_List* dl)
     : st(st), dl(dl) { 
-}
-
-Statement_List :: Statement_List(){
-    this->st={};
 }
 
 Declaration_List :: Declaration_List(){
@@ -467,12 +625,10 @@ Declaration::Declaration(Declaration_Specifiers* ds,Init_Declarator_List* idl,Ty
 
 Global_Symbol_Table::Global_Symbol_Table() {
     this->children = {};
-    this->gst = {};
 }
 
 Local_Symbol_Table::Local_Symbol_Table(bool ispargst,Local_Symbol_Table* parent) {
     this->children = {};
-    this->lst = {};
     this->ispargst = ispargst ;
     this->parent = parent;
 }
@@ -588,10 +744,10 @@ Enum_Specifier::Enum_Specifier(const std::string& id, Enumerator_List* enuml)
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
     this->sql = sql;                   
     this->sdl = sdl;                  
-    this->name_type_list = {};         
-    this->scope = "";                  
-    this->level = 0;                  
-    this->level_name = "";         
+    this->name_type_list = create_struct_name_type_list(sql,sdl);         
+    this->scope = "local";                  
+    this->level = current_level-lvl_name.size()+1;                  
+    this->level_name = get_level_name();         
 }
 
 Struct_Declarator_List::Struct_Declarator_List() {
@@ -602,9 +758,8 @@ Enumerator::Enumerator(const std::string& id, Constant_Expression* ce)
     : id(id), ce(ce) { 
 }
 
-Struct_Declarator::Struct_Declarator(Declarator* d, Constant_Expression* ce){
+Struct_Declarator::Struct_Declarator(Declarator* d){
     this->d=d;
-    this->ce=ce;
 }
 
 Inheritance_Specifier::Inheritance_Specifier(Base_Class_List* bcl){
@@ -668,8 +823,8 @@ Struct_or_Union_Specifier* create_struct_union_spec_obj(const string& sou,const 
     Struct_or_Union_Specifier* sus =new Struct_or_Union_Specifier(sou,name,sdl);
     return sus;
 }
-Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expression* ce){
-    Struct_Declarator* sd=new Struct_Declarator(d,ce);
+Struct_Declarator* create_struct_declarator_obj(Declarator* d){
+    Struct_Declarator* sd=new Struct_Declarator(d);
     return sd;
 }
 Init_Declarator:: Init_Declarator(Declarator* d,Initializer* i){

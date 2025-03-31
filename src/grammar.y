@@ -168,7 +168,7 @@ primary_expression
 	;
 
 class_name
-    : IDENTIFIER /* pass */ { $$ = $1; lvl_name.push(std::string("class") + $1); }
+    : IDENTIFIER /* pass */ { $$ = $1; lvl_name.push(std::string("class ") + $1);current_class_struct_union_info.push(make_pair($1,nullptr)); }
     ;
 
 postfix_expression
@@ -365,19 +365,19 @@ type_specifier
 	;
 
 struct_or_union_specifier
-	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->get_parent(); lvl_name.pop(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* same as above */
+	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->get_parent(); lvl_name.pop();add_to_local_class_struct_union_info(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* same as above */
 	| struct IDENTIFIER {check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
-	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();} /* same as above */
+	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();} /* same as above */
 	| union IDENTIFIER {check_if_declared(current_table,$2,"union");$$=create_struct_union_spec_obj($1,$2,nullptr);/* whether this identifier is declared before use */}
 	;
 
 struct_id 
-	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;}
+	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(make_pair($1,nullptr));}
 	;
 union_id
-	: IDENTIFIER {lvl_name.push("union " + std::string($1));$$=$1;}
+	: IDENTIFIER {lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(make_pair($1,nullptr));}
 	;
 struct
 	: STRUCT /*just pass */ {$$="STRUCT";}
@@ -387,7 +387,7 @@ union
 	;
 
 struct_declaration_list
-	: struct_declaration {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
+	: struct_declaration {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
 	| struct_declaration_list struct_declaration {Struct_Declaration_List* x=$1;x->sdl.push_back($2);$$=x;add_to_local_table(current_table,$2);} /* add struct decl. to already made object.  add struct declaration to current table*/
 	;
 
@@ -408,9 +408,9 @@ struct_declarator_list
 	;
 
 struct_declarator
-	: declarator /* pass this above */ {$$=create_struct_declarator_obj($1,nullptr);}
-	| ':' constant_expression {$$=create_struct_declarator_obj(nullptr,$2);}/* will find out what this is for later */
-	| declarator ':' constant_expression  {$$=create_struct_declarator_obj($1,$3);} /* will find out what this is for later */
+	: declarator /* pass this above */ {$$=create_struct_declarator_obj($1);}
+	/*| ':' constant_expression {$$=create_struct_declarator_obj(nullptr,$2);}*//* will find out what this is for later */
+	/*| declarator ':' constant_expression  {$$=create_struct_declarator_obj($1,$3);}*/ /* will find out what this is for later */
 	;
 
 class_specifier
@@ -440,14 +440,13 @@ access_specifier
     ;
 
 class_body
-    : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->get_parent();lvl_name.pop();while(!access_spec_stk.empty())access_spec_stk.pop();}/*come to parent table from current table. pass above*/ 
-    | '{' '}' {lvl_name.pop();}/* pass empty class member declaration list object */
+    : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->get_parent();lvl_name.pop();while(!access_spec_stk.empty())access_spec_stk.pop();add_to_local_class_struct_union_info();}/*come to parent table from current table. pass above*/ 
+    | '{' '}' {lvl_name.pop();add_to_local_class_struct_union_info();}/* pass empty class member declaration list object */
     ;
 
 class_member_declaration_list
-    : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table(current_table);}  /* make obj class_member_declaration_list . add class_member_declaration. */
-    | class_member_declaration_list class_member_declaration { $1->cd.push_back($2);
-    $$ = $1;}/* add class_member_declaration to existing obj */
+    : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table(current_table);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}  /* make obj class_member_declaration_list . add class_member_declaration. */
+    | class_member_declaration_list class_member_declaration { $1->cd.push_back($2); $$ = $1;}/* add class_member_declaration to existing obj */
     ;
 
 constructor_declaration
@@ -463,8 +462,8 @@ class_member_declaration
     ;
 
 member_declaration
-    : declaration {add_to_local_table(current_table,$1);$$=new Member_Declaration($1,nullptr);}
-    | function_definition {add_to_local_table(current_table,$1);$$=new Member_Declaration(nullptr,$1);}
+    : declaration_specifiers declarator ';' {$$=new Member_Declaration($1,$2,nullptr);add_to_local_table(current_table,$1,$2);} /* do not add directly in local symtab , change grammar*/
+    | function_definition {$$=new Member_Declaration(nullptr,nullptr,$1);add_to_local_table(current_table,$1);}
     ;
 
 enum_specifier
@@ -573,14 +572,13 @@ initializer_list
 	;
 
 statement
-	: labeled_statement
-	| compound_statement
-	| expression_statement
-	| selection_statement
-	| iteration_statement
-	| jump_statement
-	| delete_statement
-
+	: labeled_statement 
+	| compound_statement 
+	| expression_statement 
+	| selection_statement 
+	| iteration_statement 
+	| jump_statement 
+	| delete_statement 
 	;
 
 
@@ -591,26 +589,26 @@ delete_statement
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement
+	: IDENTIFIER ':' statement {labelset.insert($1);}
 	| CASE constant_expression ':' statement
 	| DEFAULT ':' statement
 	;
 
 compound_statement
-	: '{' '}'
-	| '{' statement_list '}'
-	| '{' declaration_list '}'
-	| '{' declaration_list statement_list '}'
+	: '{' '}' {$$=new Compound_Statement(nullptr,nullptr);}
+	| '{' statement_list '}' {$$=new Compound_Statement($2,nullptr);}
+	| '{' declaration_list '}' {$$=new Compound_Statement(nullptr,$2);}
+	| '{' declaration_list statement_list '}' {$$=new Compound_Statement($3,$2);}
 	;
 
 declaration_list
-	: declaration
-	| declaration_list declaration
+	: declaration {Declaration_list* x=new Declaration_List();x->dv.push_back($1);$$=x;current_level++;current_table->get_parent();add_to_local_table(current_table,$1);}
+	| declaration_list declaration {$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
 	;
 
 statement_list
-	: statement
-	| statement_list statement
+	: statement 
+	| statement_list statement 
 	;
 
 expression_statement
@@ -650,7 +648,7 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);string t=create_type($1,$2);$2->check_for_func();$$=x;func_ret_type=t; }
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);string t=create_type($1,$2);$2->check_for_func();$$=x;func_ret_type=t; lvl_name.push(get_name($2));}
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();}*/ /* create function definition object.parameter. assign type. assign size. */

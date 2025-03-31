@@ -50,6 +50,8 @@ extern Local_Symbol_Table* current_table;
 extern int current_level;
 extern stack<string> access_spec_stk;
 extern string func_ret_type;
+extern set<string> labelset;
+extern set<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
@@ -89,12 +91,14 @@ struct Symbol_Info{
 class Global_Symbol_Table{
     public:
     vector<Local_Symbol_Table*> children;
+    set<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
     unordered_map<string,Symbol_Info*> gst;
     Global_Symbol_Table();
 };
 class Local_Symbol_Table{
     public:
     vector<Local_Symbol_Table*> children;
+    unordered_map<string,Local_Symbol_Table*> class_struct_union_info;
     unordered_map<string,Symbol_Info*> lst;
     bool ispargst;
     Local_Symbol_Table* parent;
@@ -226,8 +230,7 @@ class Specifier_Qualifier_List: public Node{
 class Struct_Declarator: public Node{
     public:
     Declarator* d;
-    Constant_Expression* ce;
-    Struct_Declarator(Declarator* d,Constant_Expression* ce);
+    Struct_Declarator(Declarator* d);
 
 };
 class Base_Class :public Node{
@@ -254,9 +257,10 @@ class Class_Member_Declaration:public Node{
 };
 class Member_Declaration: public Node{
     public:
-    Declaration* d;
+    Declaration_Specifiers* ds;
+    Declarator* dec;
     Function_Definition* fd;
-    Member_Declaration(Declaration* d,Function_Definition* fd);
+    Member_Declaration(Declaration_Specifiers* ds,  Declarator* dec,Function_Definition* fd);
 };
 class Constructor_Declaration: public Node{
     public:

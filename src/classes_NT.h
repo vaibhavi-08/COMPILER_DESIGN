@@ -197,6 +197,8 @@ class Struct_Declaration: public Node{
     Specifier_Qualifier_List* sql;
     Struct_Declarator_List* sdl;
     vector<pair<string,string>> name_type_list;
+    vector<string> prms;
+    bool isfunction;
     string scope;
     int level;
     string level_name; 
@@ -257,10 +259,10 @@ class Class_Member_Declaration:public Node{
 };
 class Member_Declaration: public Node{
     public:
-    Declaration_Specifiers* ds;
+    Specifier_Qualifier_List* ds;
     Declarator* dec;
     Function_Definition* fd;
-    Member_Declaration(Declaration_Specifiers* ds,  Declarator* dec,Function_Definition* fd);
+    Member_Declaration(Specifier_Qualifier_List* ds,  Declarator* dec,Function_Definition* fd);
 };
 class Constructor_Declaration: public Node{
     public:

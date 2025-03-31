@@ -43,7 +43,7 @@ string get_level_name(){
     }
     return ans;
 }
-string create_type(Declaration_Specifiers* ds,Declarator* d)string create_type(Declaration_Specifiers* ds,Declarator* d){
+string create_type(Declaration_Specifiers* ds,Declarator* d,bool& check_f,vector<string>& fp){
     string type="";
     bool isconst=false;
     bool isvolatile=false;
@@ -129,12 +129,36 @@ string create_type(Declaration_Specifiers* ds,Declarator* d)string create_type(D
             type+='*';
             y=y->p;
         }
+        string dtype=d->check_declarator();
+        if(dtype=="array"){
+            Direct_Declarator* a=d->dd;
+            while(a->type=="array"){
+                type+='$';
+                a=a->dd;
+            }
+        }
+        else (dtype=="function"){
+            isfunction=true;
+            prms=get_func_prms(d);
+        }
+        else if(dtype=="function pointer"){
+            prms=get_func_prms(d);
+            Declarator* a=d->dd->d;
+            while(a->p!=nullptr){
+                type+='#';
+                a=a->p;
+            }
+        }
     }
+    check_f=isfunction;
+    fp=prms;
     return type;
      
 }
-string create_type(Specifier_Qualifier_List* ds,Declarator* d){
+string create_type(Specifier_Qualifier_List* ds,Declarator* d,bool& check_f,vector<string>& fp){
     string type="";
+    bool isfunction=false;
+    vector<string> prms;
     bool isconst=false;
     bool isvolatile=false;
     for(auto i : ds->tq){
@@ -211,12 +235,34 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d){
             type+='*';
             y=y->p;
         }
+        string dtype=d->check_declarator();
+        if(dtype=="array"){
+            Direct_Declarator* a=d->dd;
+            while(a->type=="array"){
+                type+='$';
+                a=a->dd;
+            }
+        }
+        else (dtype=="function"){
+            isfunction=true;
+            prms=get_func_prms(d);
+        }
+        else if(dtype=="function pointer"){
+            prms=get_func_prms(d);
+            Declarator* a=d->dd->d;
+            while(a->p!=nullptr){
+                type+='#';
+                a=a->p;
+            }
+        }
     }
+    check_f=isfunction;
+    fp=prms;
     return type;
      
 
 }
-vector<pair<string,string>> create_struct_name_type_list(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl){
+void create_struct_name_type_list(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl,vector<pair<string,string>>& yy,bool& check_f,vector<string>& fp){
     vector<pair<string,string>> ans;
     if(sdl==nullptr){
         string type=check_type(sql,nullptr);
@@ -248,15 +294,15 @@ vector<pair<string,string>> create_struct_name_type_list(Specifier_Qualifier_Lis
             else {
                 cout << "error &&&" << endl;
             }
-            else return ans;
+            else yy=ans;
     }
     }
     for(auto i:sdl->sd){
-        string type=create_type(sql,i->d);
+        string type=create_type(sql,i->d,check_f,fp);
         string name=get_name(i->d);
         ans.push_back(make_pair(name,type));
     }
-    return ans;
+    yy=ans;
 }
 vector<string> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
@@ -274,17 +320,22 @@ vector<string> get_const_params(Parameter_List* p){
     }
     return ans;
 }
-vector<pair<string,string>> get_params(Parameter_List* p){
+/*
+vector<pair<string,Symbol_Info>> get_params(Parameter_List* p){
     vector<pair<string,string>> ans;
     if(p==nullptr)return ans;
     for(auto i:p->pl){
-        string type=create_type(i->ds,i->dec);
+        vector<string> prms;
+        bool isfunction;
+        string type=create_type(i->ds,i->dec,isfunction,prms);
         string name=get_name(i->dec);
+        if
+        Symbol_Info info;
         pair<string,string> x={type,name};
         ans.push_back(x);
     }
     return ans;
-}
+}*/
 string Declarator :: check_declarator(){
     //return which type of declarator
     Direct_Declarator* z=this->dd;
@@ -513,10 +564,6 @@ void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd
     }
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
-    string access="PRIVATE";
-    if(!access_spec_stk.empty()){
-        access=access_spec_stk.top();
-    }
     for(auto i:d->name_type_list){
         Enumerator_List* z=nullptr;
         bool isenum=false;
@@ -524,7 +571,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
             isenum=true;
             z=d->dec_spec->ts.front()->enum_type->enuml;
         }
-        Symbol_Info info={i.first,i.second,d->level_name,d->level,d->scope,access,false,{},isenum,z};
+        Symbol_Info info={i.first,i.second,d->level_name,d->level,d->scope,"-",false,{},isenum,z};
         Symbol_Info* x=&info;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){
             cout << "error :" << "redeclaration of " << i.first << endl;
@@ -533,7 +580,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         current_table->lst[i.first]=x;
     }
 }
-void add_to_local_table(Local_Symbol_Table* current_table,Declaration_Specifiers* ds,Declarator* d){
+void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_List* ds,Declarator* d){
     string access="PRIVATE";
     if(!access_spec_stk.empty()){
         access=access_spec_stk.top();
@@ -744,7 +791,7 @@ Enum_Specifier::Enum_Specifier(const std::string& id, Enumerator_List* enuml)
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
     this->sql = sql;                   
     this->sdl = sdl;                  
-    this->name_type_list = create_struct_name_type_list(sql,sdl);         
+    this->name_type_list = create_struct_name_type_list(sql,sdl,this->isfunction,this->prms);         
     this->scope = "local";                  
     this->level = current_level-lvl_name.size()+1;                  
     this->level_name = get_level_name();         

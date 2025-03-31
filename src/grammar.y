@@ -105,7 +105,7 @@ Node* root;
 	Parameter_Declaration* par_dec;
 	Compound_Statement* comp_stmt;
 }
-%token <str> IDENTIFIER CONSTANT STRING_LITERAL 
+%token <str> IDENTIFIER CONSTANT STRING_LITERAL CONST_FLOAT CONST_CHAR CONST_EXP
 %token SIZEOF
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
@@ -113,8 +113,8 @@ Node* root;
 %token XOR_ASSIGN OR_ASSIGN TYPE_NAME
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER
-%token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID
-%token STRUCT UNION ENUM ELLIPSIS
+%token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID 
+%token STRUCT UNION ENUM ELLIPSIS NULL
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
@@ -161,10 +161,14 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER  {$$=$1}
-	| CONSTANT  {$$=$1}
-	| STRING_LITERAL {$$=$1}
-	| '(' expression ')' 
+	: IDENTIFIER (pair<string,string> x=get_type_id($1);$$=new Expression(x.first,x.second);)
+	| CONSTANT {$$=new Expression("INT","");} 
+	| STRING_LITERAL {$$=new Expression("CONST CHAR*","");}
+	| CONST_CHAR {$$=new Expression("CHAR","");}
+	| CONST_FLOAT {$$=new Expression("FLOAT","");}
+	| CONST_EXP {$$=new Expression(get_type_exp($1),"");}
+	| '(' expression ')' {$$=new Expression($1->type,"");}
+	| NULL {$$=new Expression("NULL","");}
 	;
 
 class_name
@@ -172,141 +176,133 @@ class_name
     ;
 
 postfix_expression
-	: primary_expression
-	| postfix_expression '[' expression ']'
-	| postfix_expression '(' ')'
-	| postfix_expression '(' argument_expression_list ')'
-	| postfix_expression '.' IDENTIFIER
-	| postfix_expression PTR_OP IDENTIFIER
-	| postfix_expression INC_OP
-	| postfix_expression DEC_OP
+	: primary_expression {$$=$1;}
+	| postfix_expression '[' expression ']' {string type=check_if_array_or_pointer($1);$$=new Expression(type,"");}
+	| postfix_expression '(' ')' {vector<Parameter_Declaration*> prms=check_if_function($1->name);check_argument_with_params($1,prms);$$=new Expression($1->type,"");}
+	| postfix_expression '(' argument_expression_list ')' {vector<Parameter_Declaration*> prms=check_if_function($1->name);check_argument_with_params($1,prms);$$=new Expression($1->type,"");}
+	| postfix_expression '.' IDENTIFIER {check_obj($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");}/*check if $1 is object and idenfier is the member of that class*/}
+	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");/*check if $1 is an pointer to class struct or union*/}
+	| postfix_expression INC_OP /* later */ {type=check_inc_dec_op_right();$$=new Expression(type,"");}
+	| postfix_expression DEC_OP {type=check_inc_dec_op_right();$$=new Expression(type,"");}
 	;
 
 argument_expression_list
-	: assignment_expression
-	| argument_expression_list ',' assignment_expression
+	: assignment_expression {Argument_Expression_List* z=new Argument_Expression_List();z->vec_exp.push_back($1);$$=z;}
+	| argument_expression_list ',' assignment_expression {$1->vec_exp.push_back($3);$$=$1;}
 	;
-argument_list_opt
-    : /* empty */
-    | argument_list
-    ;
 
-argument_list
-    : assignment_expression
-    | argument_list ',' assignment_expression
-    ;
 unary_expression
-	: postfix_expression
-	| INC_OP unary_expression
-	| DEC_OP unary_expression
-	| unary_operator cast_expression
-	| SIZEOF unary_expression
-	| SIZEOF '(' type_name ')'
+	: postfix_expression {$$=$1;}
+	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$1;}
+	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$1;}
+	| unary_operator cast_expression {string type=get_type_unary_expression($1,$2);$$=new Expression(type,"");}
+	| SIZEOF unary_expression {check_for_sizeof($2->type); $$=new Expression("UNSIGNED INT","");}/* void , functiions */
+	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);$$=new Expression("UNSIGNED INT","");}
 	;
 
 unary_operator
-	: '&'
-	| '*'
-	| '+'
-	| '-'
-	| '~'
-	| '!'
+	: '&' {$$="&";}
+	| '*' {$$="*";}//dereference
+	| '+' {$$="+";}
+	| '-' {$$="-";}
+	| '~' {$$=""~";}//bitwise not
+	| '!' {$$="!";} 
 	;
 
 cast_expression
-	: unary_expression
-	| '(' type_name ')' cast_expression
+	: unary_expression {$$=$1;}
+	| '(' type_name ')' cast_expression {check_typecast_compatibility($2->type,$4);$$=new Expression($2->type,"");}
 	;
 
 multiplicative_expression
-	: cast_expression
-	| multiplicative_expression '*' cast_expression
-	| multiplicative_expression '/' cast_expression
-	| multiplicative_expression '%' cast_expression
+	: cast_expression {$$=$1;}
+	| multiplicative_expression '*' cast_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| multiplicative_expression '/' cast_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| multiplicative_expression '%' cast_expression	{string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
 	;
 
 additive_expression
-	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression
-	| additive_expression '-' multiplicative_expression
+	: multiplicative_expression {$$=$1;}
+	| additive_expression '+' multiplicative_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| additive_expression '-' multiplicative_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
 	;
 
 shift_expression
-	: additive_expression
-	| shift_expression LEFT_OP additive_expression
-	| shift_expression RIGHT_OP additive_expression
+	: additive_expression {$$=$1;}
+	| shift_expression LEFT_OP additive_expression  {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
+	| shift_expression RIGHT_OP additive_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
 	;
 
 relational_expression
-	: shift_expression
-	| relational_expression '<' shift_expression
-	| relational_expression '>' shift_expression
-	| relational_expression LE_OP shift_expression
-	| relational_expression GE_OP shift_expression
+	: shift_expression {$$=$1;}
+	| relational_expression '<' shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| relational_expression '>' shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| relational_expression LE_OP shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| relational_expression GE_OP shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
 	;
 
 equality_expression
-	: relational_expression
-	| equality_expression EQ_OP relational_expression
-	| equality_expression NE_OP relational_expression
+	: relational_expression {$$=$1;}
+	| equality_expression EQ_OP relational_expression {string type=check_for_eq_op($1,$3);$$=new Expression(type,"");}
+	| equality_expression NE_OP relational_expression {string type=check_for_eq_op($1,$3);$$=new Expression(type,"");}
 	;
 
 and_expression
-	: equality_expression
-	| and_expression '&' equality_expression
+	: equality_expression {$$=$1;}
+	| and_expression '&' equality_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
 	;
 
 exclusive_or_expression
-	: and_expression
-	| exclusive_or_expression '^' and_expression
+	: and_expression {$$=$1;}
+	| exclusive_or_expression '^' and_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
 	;
 
 inclusive_or_expression
-	: exclusive_or_expression
-	| inclusive_or_expression '|' exclusive_or_expression
+	: exclusive_or_expression {$$=$1;}
+	| inclusive_or_expression '|' exclusive_or_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
 	;
 
 logical_and_expression
-	: inclusive_or_expression
-	| logical_and_expression AND_OP inclusive_or_expression
+	: inclusive_or_expression {$$=$1;}
+	| logical_and_expression AND_OP inclusive_or_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
 	;
 
 logical_or_expression
-	: logical_and_expression
-	| logical_or_expression OR_OP logical_and_expression
+	: logical_and_expression {$$=$1;}
+	| logical_or_expression OR_OP logical_and_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
 	;
 
 conditional_expression
-	: logical_or_expression
-	| logical_or_expression '?' expression ':' conditional_expression
+	: logical_or_expression {$$=$1;}
+	| logical_or_expression '?' expression ':' conditional_expression   {string type=check_for_assign($3,$5);$$=new Expression(type,"");}
 	;
 
 assignment_expression
-	: conditional_expression
-	| unary_expression assignment_operator assignment_expression 
+	: conditional_expression  {$$=$1;}
+	| unary_expression assignment_operator assignment_expression  {string type=check_for_assign($1,$3,$2);$$=new Expression(type,"");}
 	;
 
 assignment_operator
-	: '=' {$$=$1}
-	| MUL_ASSIGN  {$$=$1}
-	| DIV_ASSIGN {$$=$1}
-	| MOD_ASSIGN {$$=$1}
-	| ADD_ASSIGN {$$=$1}
-	| SUB_ASSIGN {$$=$1}
-	| LEFT_ASSIGN {$$=$1}
-	| RIGHT_ASSIGN {$$=$1}
-	| AND_ASSIGN {$$=$1}
-	| XOR_ASSIGN {$$=$1}
-	| OR_ASSIGN {$$=$1}
+	: '=' {$$="=";}
+	| MUL_ASSIGN {$$="*=";}
+	| DIV_ASSIGN {$$="/=";}
+	| MOD_ASSIGN {$$="%=";}
+	| ADD_ASSIGN {$$="+=";}
+	| SUB_ASSIGN {$$="-=";}
+	| LEFT_ASSIGN {$$="<<=";}
+	| RIGHT_ASSIGN {$$=">>=";}
+	| AND_ASSIGN {$$="&=";}
+	| XOR_ASSIGN {$$="^=";}
+	| OR_ASSIGN {$$="|=";}
 	;
 
 expression
-	: assignment_expression
+	: assignment_expression 
 	| expression ',' assignment_expression
 	;
 
 constant_expression
-	: conditional_expression
+	: conditional_expression {$$=$1;}
 	;
 /* stack dekho and level name vali fied bharo iski */
 /* fix error notebook ka 1 */
@@ -336,8 +332,8 @@ init_declarator_list
 	;
 
 init_declarator
-	: declarator {Init_Declarator* d=new Init_Declarator($1,nullptr);$$=d;}
-	| declarator '=' initializer {Init_Declarator* d=new Init_Declarator($1,$3);$$=d;}
+	: declarator {$$=$1;}
+	| declarator '=' initializer {$1->ini=$3;$$=$1;}
 	;
 
 storage_class_specifier
@@ -366,10 +362,10 @@ type_specifier
 
 struct_or_union_specifier
 	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->get_parent(); lvl_name.pop();add_to_local_class_struct_union_info(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* same as above */
+	/*| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*//* same as above */
 	| struct IDENTIFIER {check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
 	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();} /* same as above */
+	/*| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*/ /* same as above */
 	| union IDENTIFIER {check_if_declared(current_table,$2,"union");$$=create_struct_union_spec_obj($1,$2,nullptr);/* whether this identifier is declared before use */}
 	;
 
@@ -462,13 +458,13 @@ class_member_declaration
     ;
 
 member_declaration
-    : declaration_specifiers declarator ';' {$$=new Member_Declaration($1,$2,nullptr);add_to_local_table(current_table,$1,$2);} /* do not add directly in local symtab , change grammar*/
+    : specifier_qualifier_list declarator ';' {$$=new Member_Declaration($1,$2,nullptr);add_to_local_table(current_table,$1,$2);} /* do not add directly in local symtab , change grammar*/
     | function_definition {$$=new Member_Declaration(nullptr,nullptr,$1);add_to_local_table(current_table,$1);}
     ;
 
 enum_specifier
-	: ENUM '{' enumerator_list '}' {$$=new Enum_Specifier(std::string(""),$3);}
-	| ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);}
+	/*: ENUM '{' enumerator_list '}' {$$=new Enum_Specifier(std::string(""),$3);}*/
+	: ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);}
 	| ENUM IDENTIFIER {$$=new Enum_Specifier(std::string($2),nullptr);check_if_declared(current_table,std::string($2),"enum");}
 	;
 
@@ -495,7 +491,7 @@ declarator
 direct_declarator
 	: IDENTIFIER {$$=create_direct_declarator(std::string("id"),$1,nullptr,nullptr,nullptr,nullptr);}
 	| '(' declarator ')' {$$=create_direct_declarator(std::string("declarator"),"",$2,nullptr,nullptr,nullptr);}
-	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);}
+	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);check_int_comp($3->type);}
 	| direct_declarator '[' ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);}
 	| direct_declarator '(' parameter_type_list ')' {$$=create_direct_declarator(std::string("function"),"",nullptr,$1,nullptr,$3);}/* add parameters to current params list */
 /*	| direct_declarator '(' identifier_list ')' */
@@ -537,38 +533,39 @@ identifier_list
 	;
 */
 type_name
-	: specifier_qualifier_list
-	| specifier_qualifier_list abstract_declarator
+	: specifier_qualifier_list  { $$=new Type_Name($1,nullptr);}
+	| specifier_qualifier_list abstract_declarator {$$=new Type_Name($1,$2);$1->type=$1->check_abstract_declarator();}
 	;
 
 abstract_declarator
-	: pointer
-	| direct_abstract_declarator
-	| pointer direct_abstract_declarator
+	: pointer {Abstract_Declarator* x=new Abstract_Declarator($1,nullptr);$$=x;}
+	| direct_abstract_declarator {Abstract_Declarator* x=new Abstract_Declarator(nullptr,$2);$$=x;}
+	| pointer direct_abstract_declarator {Abstract_Declarator* x=new Abstract_Declarator($1,$2);$$=x;}
 	;
 
 direct_abstract_declarator
-	: '(' abstract_declarator ')'
-	| '[' ']'
-	| '[' constant_expression ']'
-	| direct_abstract_declarator '[' ']'
-	| direct_abstract_declarator '[' constant_expression ']'
-	| '(' ')'
-	| '(' parameter_type_list ')'
-	| direct_abstract_declarator '(' ')'
-	| direct_abstract_declarator '(' parameter_type_list ')'
+	: '(' abstract_declarator ')' {$$=new Direct_Abstract_Declarator("abs_dec",$3,nullptr,nullptr,nullptr);}
+	| '[' ']'						{$$=new Direct_Abstract_Declarator("array",nullptr,nullptr,nullptr,nullptr);}
+	| '[' constant_expression ']' {check_int_comp($1->type);$$=new Direct_Abstract_Declarator("array",nullptr,nullptr,$2,nullptr);}
+	| direct_abstract_declarator '[' ']' {$$=new Direct_Abstract_Declarator("array",nullptr,$1,nullptr,nullptr);}
+	| direct_abstract_declarator '[' constant_expression ']' {new Direct_Abstract_Declarator("array",nullptr,$1,$3,nullptr);}
+	| '(' ')'	{$$=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,nullptr);}
+	| '(' parameter_type_list ')'  {$$=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,$2);}
+	| direct_abstract_declarator '(' ')' {$$=new Direct_Abstract_Declarator("func",nullptr,$1,nullptr,nullptr);}
+	| direct_abstract_declarator '(' parameter_type_list ')' {$$=new Direct_Abstract_Declarator("func",nullptr,$1,nullptr,$3);}
 	;
 
 initializer
-	: assignment_expression
-	| '{' initializer_list '}'
-	| '{' initializer_list ',' '}'
-	| NEW class_name '(' argument_list_opt ')'
+	: assignment_expression  {$$=new Initializer($1->type,$1->name,nullptr,"",nullptr);}
+	| '{' initializer_list '}' {$$=new Initializer("","",$2,"",nullptr);} 
+	| '{' initializer_list ',' '}' {$$=new Initializer("","",$2,"",nullptr);} 
+	| NEW class_name '(' argument_expression_list ')' {$$=new Initializer("","",nullptr,$2,$4);} 
+	| NEW class_name '(' ')' {$$=new Initializer("","",nullptr,$2,nullptr);}
 	;
 
 initializer_list
-	: initializer
-	| initializer_list ',' initializer
+	: initializer {Initializer_List* x=new Initializer_List();x->iv.push_back($1);$$=$1;}
+	| initializer_list ',' initializer {$1->iv.push_back($3);$$=$1;}
 	;
 
 statement
@@ -584,21 +581,21 @@ statement
 
 
 delete_statement
-	: DELETE IDENTIFIER
-	| DELETE '[' ']' IDENTIFIER
+	: DELETE IDENTIFIER (check_if_pointer();)
+	| DELETE '[' ']' IDENTIFIER (check_if_array();)
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement {labelset.insert($1);}
+	: IDENTIFIER ':' statement {if(labelset.find($1)==labelset.end())labelset.insert($1);else {cout << "label declared twice" << endl;exit(1);}}
 	| CASE constant_expression ':' statement
 	| DEFAULT ':' statement
 	;
 
 compound_statement
-	: '{' '}' {$$=new Compound_Statement(nullptr,nullptr);}
-	| '{' statement_list '}' {$$=new Compound_Statement($2,nullptr);}
-	| '{' declaration_list '}' {$$=new Compound_Statement(nullptr,$2);}
-	| '{' declaration_list statement_list '}' {$$=new Compound_Statement($3,$2);}
+	: '{' '}' {Compound_Statement* x=new Compound_Statement(nullptr,nullptr);}
+	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement($2,nullptr);for(int i:$2){if(i==1)x->have_ret=1;}}
+	| '{' declaration_list '}' {Compound_Statement* x=new Compound_Statement(nullptr,$2);}
+	| '{' declaration_list statement_list '}' {Compound_Statement* x=new Compound_Statement($3,$2);for(int i:$3){if(i==1)x->have_ret=1;}}
 	;
 
 declaration_list
@@ -607,35 +604,35 @@ declaration_list
 	;
 
 statement_list
-	: statement 
-	| statement_list statement 
+	: statement {vector<int> z;z.push_back($1);$$=$1;}
+	| statement_list statement {$1.push_back($2);$$=$1;}
 	;
 
 expression_statement
-	: ';'
-	| expression ';'
+	: ';' {$$=0;}
+	| expression ';' {$$=0;}
 	;
 
 selection_statement
-	: IF '(' expression ')' statement
-	| IF '(' expression ')' statement ELSE statement
-	| SWITCH '(' expression ')' statement
+	: IF '(' expression ')' statement {$$=$4;}
+	| IF '(' expression ')' statement ELSE statement {$$=($4|$6);}
+	| SWITCH '(' expression ')' statement {$$=$5;}
 	;
 
 iteration_statement
-	: WHILE '(' expression ')' statement
-	| UNTIL '(' expression ')' statement
-	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement
-	| FOR '(' expression_statement expression_statement expression ')' statement
+	: WHILE '(' expression ')' statement {$$=$5;}
+	| UNTIL '(' expression ')' statement {$$=$5;}
+	| DO statement WHILE '(' expression ')' ';' {$$=$5;}
+	| FOR '(' expression_statement expression_statement ')' statement {$$=$6;}
+	| FOR '(' expression_statement expression_statement expression ')' statement {$$=$7;}
 	;
 
 jump_statement
-	: GOTO IDENTIFIER ';'
-	| CONTINUE ';'
-	| BREAK ';'
-	| RETURN ';'
-	| RETURN expression ';'
+	: GOTO IDENTIFIER ';' {$$=0;}
+	| CONTINUE ';' {$$=0;}
+	| BREAK ';' {$$=0;}
+	| RETURN ';' {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$1;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
@@ -651,7 +648,7 @@ function_declaration
 	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);string t=create_type($1,$2);$2->check_for_func();$$=x;func_ret_type=t; lvl_name.push(get_name($2));}
 	;
 function_definition /*(function_definition <- node ) */
-	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();}*/ /* create function definition object.parameter. assign type. assign size. */
+	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}}*/ /* create function definition object.parameter. assign type. assign size. */
 	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);current_params_list.clear();lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above */
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */

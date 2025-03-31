@@ -70,13 +70,13 @@ extern bool iserror;
 "false"                 { symtab[yytext]="FALSE";program.emplace_back(yytext);count(); return FALSE;}
 "volatile"              { symtab[yytext]="VOLATILE";program.emplace_back(yytext);count(); return VOLATILE;}
 "while"                 { symtab[yytext]="WHILE";program.emplace_back(yytext);count(); return WHILE;}
-
+"NULL"                   {symtab[yytext]="NULL";program.emplace_back(yytext);count(); return NULL;}
 {L}({L}|{D})*           { symtab[yytext]="IDENTIFIER";program.emplace_back(yytext);count(); yylval.str = strdup(yytext); return IDENTIFIER;}
 0[xX]{H}+{IS}?          { symtab[yytext]="CONSTANT HEX";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONSTANT;}
 {D}+{IS}                { symtab[yytext]="INTEGER";program.emplace_back(yytext);count();yylval.str = strdup(yytext); return CONSTANT;}
-L?'(\\.|[^\\'])+'      { symtab[yytext]="CONSTANT CHAR";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONSTANT;}
-{D}+{E}{FS}?            { symtab[yytext]="CONSTANT EXP";program.emplace_back(yytext);count(); yylval.str = strdup(yytext); return CONSTANT;}
-{D}*"."{D}+({E})?{FS}?  { symtab[yytext]="CONSTANT FLOAT";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONSTANT;}
+L?'(\\.|[^\\'])+'      { symtab[yytext]="CONSTANT CHAR";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONST_CHAR;}
+{D}+{E}{FS}?            { symtab[yytext]="CONSTANT EXP";program.emplace_back(yytext);count(); yylval.str = strdup(yytext); return CONST_EXP;}
+{D}*"."{D}+({E})?{FS}?  { symtab[yytext]="CONSTANT FLOAT";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONST_FLOAT;}
 L?\"(\\.|[^\\"])*\"    { symtab[yytext]="STRING LITERAL";program.emplace_back(yytext);count();yylval.str = strdup(yytext);return STRING_LITERAL;}
 "..."                   { symtab[yytext]="ELLIPSIS";program.emplace_back(yytext);count(); return ELLIPSIS;}
 ">>="                   { symtab[yytext]="RIGHT_ASSIGN";program.emplace_back(yytext);count(); return RIGHT_ASSIGN;}

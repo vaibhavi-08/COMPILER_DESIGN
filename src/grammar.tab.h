@@ -211,7 +211,7 @@ union YYSTYPE
 	Parameter_List* pl;
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
-	Compound_Statemen* comp_stmt;
+	Compound_Statement* comp_stmt;
 
 #line 217 "grammar.tab.h"
 

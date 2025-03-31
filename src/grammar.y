@@ -161,14 +161,14 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER
-	| CONSTANT
-	| STRING_LITERAL
-	| '(' expression ')'
+	: IDENTIFIER  {$$=$1}
+	| CONSTANT  {$$=$1}
+	| STRING_LITERAL {$$=$1}
+	| '(' expression ')' 
 	;
 
 class_name
-    : IDENTIFIER /* pass */ { $$ = $1; lvl_name.push(std::string("class ") + $1);current_class_struct_union_info.push(make_pair($1,nullptr)); }
+    : IDENTIFIER /* pass */ { $$ = $1; lvl_name.push("class " + $1);current_class_struct_union_info.push(std::make_pair($1, nullptr) ); }
     ;
 
 postfix_expression
@@ -283,21 +283,21 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression
-	| unary_expression assignment_operator assignment_expression
+	| unary_expression assignment_operator assignment_expression 
 	;
 
 assignment_operator
-	: '='
-	| MUL_ASSIGN
-	| DIV_ASSIGN
-	| MOD_ASSIGN
-	| ADD_ASSIGN
-	| SUB_ASSIGN
-	| LEFT_ASSIGN
-	| RIGHT_ASSIGN
-	| AND_ASSIGN
-	| XOR_ASSIGN
-	| OR_ASSIGN
+	: '=' {$$=$1}
+	| MUL_ASSIGN  {$$=$1}
+	| DIV_ASSIGN {$$=$1}
+	| MOD_ASSIGN {$$=$1}
+	| ADD_ASSIGN {$$=$1}
+	| SUB_ASSIGN {$$=$1}
+	| LEFT_ASSIGN {$$=$1}
+	| RIGHT_ASSIGN {$$=$1}
+	| AND_ASSIGN {$$=$1}
+	| XOR_ASSIGN {$$=$1}
+	| OR_ASSIGN {$$=$1}
 	;
 
 expression
@@ -374,10 +374,10 @@ struct_or_union_specifier
 	;
 
 struct_id 
-	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(make_pair($1,nullptr));}
+	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));}
 	;
 union_id
-	: IDENTIFIER {lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(make_pair($1,nullptr));}
+	: IDENTIFIER {lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));}
 	;
 struct
 	: STRUCT /*just pass */ {$$="STRUCT";}
@@ -504,14 +504,14 @@ direct_declarator
 
 pointer
 	: '*' {$$=new Pointer(nullptr,nullptr);}
-	| '*' type_qualifier_list {$$=new Pointer(nullptr,$2);}
-	| '*' pointer {$$=new Pointer($2,nullptr);}
-	| '*' type_qualifier_list pointer {$$=new Pointer($3,$2);}
+	| '*' type_qualifier_list {$$=new Pointer($2,nullptr);}
+	| '*' pointer {$$=new Pointer(nullptr,$2);}
+	| '*' type_qualifier_list pointer {$$=new Pointer($2,$3);}
 	;
 
 type_qualifier_list
 	: type_qualifier {Type_Qualifier_List* x=new Type_Qualifier_List();x->tq.push_back($1);$$=x;}
-	| type_qualifier_list type_qualifier {Type_Qualifier_List* x=$2;x->tq.push_back($2);$$=x;}
+	| type_qualifier_list type_qualifier {Type_Qualifier_List* x=$1;x->tq.push_back($2);$$=x;}
 	;
 
 
@@ -652,7 +652,7 @@ function_declaration
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();}*/ /* create function definition object.parameter. assign type. assign size. */
-	: function_definition compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);current_params_list.clear();lvl_name.pop();}/*same as above */
+	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);current_params_list.clear();lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above */
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
 	;

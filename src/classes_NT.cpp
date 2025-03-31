@@ -578,6 +578,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
             exit(1);
         }
         current_table->lst[i.first]=x;
+        /*check if initializer is matching with type*/
     }
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_List* ds,Declarator* d){

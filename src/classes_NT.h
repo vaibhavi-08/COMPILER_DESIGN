@@ -54,7 +54,7 @@ extern int current_level;
 extern stack<string> access_spec_stk;
 extern string func_ret_type;
 extern set<string> labelset;
-extern set<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
+extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
 pair<string,bool> get_type_id(string id);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
@@ -62,13 +62,14 @@ Node* create_node();
 Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
+void add_to_local_class_struct_union_info();
 Declaration_Specifiers* create_decl_spec_object();
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
 Struct_or_Union_Specifier* create_struct_union_spec_obj(const std::string& sou, const std::string& name, Struct_Declaration_List* sdl);
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
-Struct_Declarator* create_struct_declarator_obj(Declarator* d,Constant_Expression* ce);
+Struct_Declarator* create_struct_declarator_obj(Declarator* d);
 Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 string create_type(Declaration_Specifiers* ds,Declarator* d);
 vector<string> get_func_params(Declarator* d);
@@ -78,7 +79,7 @@ vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Ini
 vector<string> get_const_params(Parameter_List* p);
 vector<pair<string,string>> get_params(Parameter_List* p);
 void add_params_to_map(Parameter_List* pl);
-Direct_Declarator* create_direct_declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
+Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd);
 struct Symbol_Info{
     string name;
@@ -95,7 +96,7 @@ struct Symbol_Info{
 class Global_Symbol_Table{
     public:
     vector<Local_Symbol_Table*> children;
-    set<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
+    unordered_map<string,Local_Symbol_Table*> class_struct_union_info;
     unordered_map<string,Symbol_Info*> gst;
     Global_Symbol_Table();
 };
@@ -213,6 +214,8 @@ class Struct_Declaration: public Node{
     Specifier_Qualifier_List* sql;
     Struct_Declarator_List* sdl;
     vector<pair<string,string>> name_type_list;
+    vector<string> prms;
+    bool isfunction;
     string scope;
     int level;
     string level_name; 
@@ -271,10 +274,10 @@ class Class_Member_Declaration:public Node{
 };
 class Member_Declaration: public Node{
     public:
-    Declaration_Specifiers* ds;
+    Specifier_Qualifier_List* ds;
     Declarator* dec;
     Function_Definition* fd;
-    Member_Declaration(Declaration_Specifiers* ds,  Declarator* dec,Function_Definition* fd);
+    Member_Declaration(Specifier_Qualifier_List* ds,  Declarator* dec,Function_Definition* fd);
 };
 class Constructor_Declaration: public Node{
     public:
@@ -370,6 +373,7 @@ class Type_Qualifier_List:public Node{
 class Parameter_List:public Node{
     public:
     vector<Parameter_Declaration*> pl;
+    bool ellipses;
     Parameter_List();
 };
 class Expression : public Node{

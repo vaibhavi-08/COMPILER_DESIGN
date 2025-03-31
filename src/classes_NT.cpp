@@ -10,7 +10,7 @@ stack<string> access_spec_stk;
 string func_ret_type;
 int current_level = 0; 
 set<string> labelset;
-set<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
+stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_class_struct_union_info(){
     if(!current_class_struct_union_info.empty()){
         auto z=current_class_struct_union_info.top();
@@ -43,7 +43,11 @@ string get_level_name(){
     }
     return ans;
 }
+<<<<<<< HEAD
 string create_type(Declaration_Specifiers* ds,Declarator* d){
+=======
+string create_type(Declaration_Specifiers* ds,Declarator* d,bool& check_f,vector<string>& fp){
+>>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
     string type="";
     bool isconst=false;
     bool isvolatile=false;
@@ -68,7 +72,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d){
     vector<Type_Specifier*> z=ds->ts;
     reverse(z.begin(),z.end());
     if(z.size()==3){
-        if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type="LONG"&&z[2]->string_type="LONG"){
+        if((z[0]->string_type=="UNSIGNED") && (z[1]->string_type=="LONG") && (z[2]->string_type=="LONG")){
             return type + "UNSIGNED LONG LONG";
         }
         else{
@@ -77,28 +81,28 @@ string create_type(Declaration_Specifiers* ds,Declarator* d){
         }
     }
     else if(z.size()==2){
-        if(z[0]->string_type="UNSIGNED"&&z[1].string_type="CHAR"){
+        if(z[0]->string_type=="UNSIGNED"&& z[1]->string_type=="CHAR"){
             type += " UNSIGNED CHAR";
         }
-        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="SHORT"){
+        else if(z[0]->string_type=="UNSIGNED"&& z[1]->string_type=="SHORT"){
             type +=" UNSIGNED SHORT";
         }
-        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="INT"){
+        else if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type=="INT"){
             type+=" UNSIGNED INT";
         }
-        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="LONG"){
+        else if(z[0]->string_type=="UNSIGNED"&& z[1]->string_type=="LONG"){
             type+=" UNSIGNED LONG";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="CHAR"){
+        else if(z[0]->string_type=="SIGNED"&& z[1]->string_type=="CHAR"){
             type+=" SIGNED CHAR";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="SHORT"){
+        else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="SHORT"){
             type+=" SIGNED SHORT";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="INT"){
+        else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="INT"){
             type+=" SIGNED INT";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="LONG"){
+        else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="LONG"){
             type+=" SIGNED LONG";
         }
         else{
@@ -107,7 +111,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d){
         }
     }
     else if(z.size()==1){
-        if(z->string_type=="class"||"struct"||"enum"||"union"){
+        if(z[0]->string_type=="class"||"struct"||"enum"||"union"){
             if(ds->scs.empty()&&ds->tq.empty()&&d==nullptr){
                 return z->string_type;
             }
@@ -129,10 +133,33 @@ string create_type(Declaration_Specifiers* ds,Declarator* d){
             type+='*';
             y=y->p;
         }
+        string dtype=d->check_declarator();
+        if(dtype=="array"){
+            Direct_Declarator* a=d->dd;
+            while(a->type=="array"){
+                type+='$';
+                a=a->dd;
+            }
+        }
+        else (dtype=="function"){
+            isfunction=true;
+            prms=get_func_prms(d);
+        }
+        else if(dtype=="function pointer"){
+            prms=get_func_prms(d);
+            Declarator* a=d->dd->d;
+            while(a->p!=nullptr){
+                type+='#';
+                a=a->p;
+            }
+        }
     }
+    check_f=isfunction;
+    fp=prms;
     return type;
      
 }
+<<<<<<< HEAD
 Type_Name::Type_Name(Specifier_Qualifier_List* sql, Abstract_Declarator* ad)
     : sql(sql), ad(ad) {
 }
@@ -147,7 +174,12 @@ Direct_Abstract_Declarator::Direct_Abstract_Declarator(string type, Abstract_Dec
 
 }
 string create_type(Specifier_Qualifier_List* ds,Declarator* d){
+=======
+string create_type(Specifier_Qualifier_List* ds,Declarator* d,bool& check_f,vector<string>& fp){
+>>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
     string type="";
+    bool isfunction=false;
+    vector<string> prms;
     bool isconst=false;
     bool isvolatile=false;
     for(auto i : ds->tq){
@@ -163,7 +195,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d){
     vector<Type_Specifier*> z=ds->ts;
     reverse(z.begin(),z.end());
     if(z.size()==3){
-        if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type="LONG"&&z[2]->string_type="LONG"){
+        if((z[0]->string_type=="UNSIGNED") && (z[1]->string_type=="LONG") && (z[2]->string_type=="LONG")){
             return type + "UNSIGNED LONG LONG";
         }
         else{
@@ -172,28 +204,28 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d){
         }
     }
     else if(z.size()==2){
-        if(z[0]->string_type="UNSIGNED"&&z[1].string_type="CHAR"){
+        if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type=="CHAR"){
             type += " UNSIGNED CHAR";
         }
-        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="SHORT"){
+        else if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type=="SHORT"){
             type +=" UNSIGNED SHORT";
         }
-        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="INT"){
+        else if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type=="INT"){
             type+=" UNSIGNED INT";
         }
-        else if(z[0]->string_type="UNSIGNED"&&z[1].string_type="LONG"){
+        else if(z[0]->string_type=="UNSIGNED"&&z[1]->string_type=="LONG"){
             type+=" UNSIGNED LONG";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="CHAR"){
+        else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="CHAR"){
             type+=" SIGNED CHAR";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="SHORT"){
+        else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="SHORT"){
             type+=" SIGNED SHORT";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="INT"){
+        else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="INT"){
             type+=" SIGNED INT";
         }
-        else if(z[0]->string_type="SIGNED"&&z[1].string_type="LONG"){
+        else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="LONG"){
             type+=" SIGNED LONG";
         }
         else{
@@ -224,10 +256,43 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d){
             type+='*';
             y=y->p;
         }
+        string dtype=d->check_declarator();
+        if(dtype=="array"){
+            Direct_Declarator* a=d->dd;
+            while(a->type=="array"){
+                type+='$';
+                a=a->dd;
+            }
+        }
+        else (dtype=="function"){
+            isfunction=true;
+            prms=get_func_prms(d);
+        }
+        else if(dtype=="function pointer"){
+            prms=get_func_prms(d);
+            Declarator* a=d->dd->d;
+            while(a->p!=nullptr){
+                type+='#';
+                a=a->p;
+            }
+        }
     }
+    check_f=isfunction;
+    fp=prms;
     return type;
 }
-vector<pair<string,string>> create_struct_name_type_list(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl){
+string get_type_exp(string s){
+    for(int i=0; i<s.length(); i++){
+        if(s[i]=='-'){
+            return "FLOAT";
+        }
+    }
+    return "INT";
+
+
+}
+
+void create_struct_name_type_list(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl,vector<pair<string,string>>& yy,bool& check_f,vector<string>& fp){
     vector<pair<string,string>> ans;
     if(sdl==nullptr){
         string type=check_type(sql,nullptr);
@@ -259,15 +324,15 @@ vector<pair<string,string>> create_struct_name_type_list(Specifier_Qualifier_Lis
             else {
                 cout << "error &&&" << endl;
             }
-            else return ans;
+            else yy=ans;
     }
     }
     for(auto i:sdl->sd){
-        string type=create_type(sql,i->d);
+        string type=create_type(sql,i->d,check_f,fp);
         string name=get_name(i->d);
         ans.push_back(make_pair(name,type));
     }
-    return ans;
+    yy=ans;
 }
 vector<string> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
@@ -285,6 +350,7 @@ vector<string> get_const_params(Parameter_List* p){
     }
     return ans;
 }
+<<<<<<< HEAD
 Expression::Expression(const std::string& type,const std::string& name)
     : type(type) , name(name) {  
 
@@ -355,15 +421,218 @@ string check_if_array_or_pointer(Expression* e){
     }
 }
 vector<pair<string,string>> get_params(Parameter_List* p){
+=======
+/*
+vector<pair<string,Symbol_Info>> get_params(Parameter_List* p){
+>>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
     vector<pair<string,string>> ans;
     if(p==nullptr)return ans;
     for(auto i:p->pl){
-        string type=create_type(i->ds,i->dec);
+        vector<string> prms;
+        bool isfunction;
+        string type=create_type(i->ds,i->dec,isfunction,prms);
         string name=get_name(i->dec);
+        if
+        Symbol_Info info;
         pair<string,string> x={type,name};
         ans.push_back(x);
     }
     return ans;
+}
+// Helper function to check if a type is a function pointer
+bool is_function_pointer(const string& type) {
+    return type.find("(*)") != string::npos;
+}
+
+// Helper function to check if a type is a class or struct
+bool is_class_or_struct(const string& type) {
+    return type.find("class") == 0 || type.find("struct") == 0;
+}
+
+// Helper function to check if a type is a base class of another type
+/*Steps to Check Inheritance
+Access the Global Symbol Table (gst):
+
+The Global_Symbol_Table (gst) contains information about all classes, structs, and other entities defined in the program.
+Each class in the gst has its inheritance information stored in the Inheritance_Specifier object.
+Retrieve the Class Information:
+
+For the param_type (expected type) and arg_type (actual type), check if they are class types.
+Look up the class information in the gst using the class_struct_union_info map.
+Check the Inheritance Relationship:
+
+If param_type is a base class, traverse the inheritance hierarchy of arg_type to see if param_type is one of its base classes.
+Use the Inheritance_Specifier and Base_Class_List objects to traverse the inheritance hierarchy.
+Return the Result:
+
+If param_type is found in the inheritance hierarchy of arg_type, the check passes.
+Otherwise, report a type mismatch.
+*/
+
+bool is_base_class(const string& base, const string& derived) {
+    // Check if both base and derived are valid class types in the global symbol table
+    if (gst->class_struct_union_info.find(derived) == gst->class_struct_union_info.end()) {
+        cerr << "Error: Derived class '" << derived << "' not found in symbol table." << endl;
+        return false;
+    }
+
+    if (gst->class_struct_union_info.find(base) == gst->class_struct_union_info.end()) {
+        cerr << "Error: Base class '" << base << "' not found in symbol table." << endl;
+        return false;
+    }
+
+    // Get the Local_Symbol_Table for the derived class
+    Local_Symbol_Table* derived_table = gst->class_struct_union_info[derived];
+    if (!derived_table) {
+        cerr << "Error: Derived class '" << derived << "' has no associated symbol table." << endl;
+        return false;
+    }
+
+    // Check if the derived class has an inheritance specifier
+    if (derived_table->inheritance_specifier == nullptr) {
+        return false; // No inheritance, so base is not a parent of derived
+    }
+
+    // Traverse the inheritance hierarchy
+    Inheritance_Specifier* inheritance = derived_table->inheritance_specifier;
+    for (Base_Class* base_class : inheritance->bcl->bc) {
+        if (base_class->id == base) {
+            return true; // Found the base class in the inheritance hierarchy
+        }
+
+        // Recursively check the base class's inheritance hierarchy
+        if (is_base_class(base, base_class->id)) {
+            return true;
+        }
+    }
+
+    return false; // Base class not found in the inheritance hierarchy
+}
+
+// Helper function to normalize type strings
+string normalize_type(const string& type) {
+    static unordered_map<string, string> type_equivalents = {
+        {"long", "long int"},
+        {"unsigned", "unsigned int"},
+        {"signed", "int"},
+        {"short", "short int"},
+        {"long long", "long long int"}
+    };
+
+    // Check if the type exists in the map and return its normalized form
+    if (type_equivalents.find(type) != type_equivalents.end()) {
+        return type_equivalents[type];
+    }
+
+    // If no normalization is needed, return the original type
+    return type;
+}
+
+// Function to check if arguments match the expected parameters
+void check_argument_with_params(vector<string> params, vector<string> args) {
+    // Step 1: Check if the number of parameters matches the number of arguments
+    if (params.size() != args.size()) {
+        cerr << "Error: Number of arguments (" << args.size() 
+             << ") does not match the number of parameters (" << params.size() << ")." << endl;
+        exit(1);
+    }
+
+    // Step 2: Iterate over parameters and arguments
+    for (size_t i = 0; i < params.size(); ++i) {
+        string param_type = normalize_type(params[i]); // Normalize parameter type
+        string arg_type = normalize_type(args[i]);     // Normalize argument type
+
+        // Step 3: Handle primitive types (direct match after normalization)
+        if (param_type == arg_type) {
+            continue;
+        } 
+        // Step 4: Handle function pointers
+        else if (is_function_pointer(param_type)) {
+            // Check if the argument is a valid function pointer
+            if (!is_function_pointer(arg_type)) {
+                cerr << "Error: Argument " << i + 1 << " is not a valid function pointer. Expected: " 
+                     << param_type << ", Got: " << arg_type << endl;
+                exit(1);
+            }
+        } 
+        // Step 5: Handle class or struct types
+        else if (is_class_or_struct(param_type)) {
+            // Check if the argument matches the expected class or struct type
+            if (param_type != arg_type) {
+                // Check for inheritance (polymorphism)
+                if (!is_base_class(param_type, arg_type)) {
+                    cerr << "Error: Argument " << i + 1 << " does not match the expected class/struct type. Expected: " 
+                         << param_type << ", Got: " << arg_type << endl;
+                    exit(1);
+                }
+            }
+        } 
+        // Step 6: Handle references and pointers
+        else if (param_type.back() == '&' || param_type.back() == '*') {
+            // Check if the argument matches the reference or pointer type
+            if (arg_type.back() != param_type.back()) {
+                cerr << "Error: Argument " << i + 1 << " does not match the expected reference/pointer type. Expected: " 
+                     << param_type << ", Got: " << arg_type << endl;
+                exit(1);
+            }
+        } 
+        // Step 7: Handle const and volatile qualifiers
+        else if (param_type.find("const") != string::npos || param_type.find("volatile") != string::npos) {
+            // Check if the argument respects const/volatile qualifiers
+            if (arg_type != param_type && arg_type.find("const") == string::npos) {
+                cerr << "Error: Argument " << i + 1 << " does not respect const/volatile qualifiers. Expected: " 
+                     << param_type << ", Got: " << arg_type << endl;
+                exit(1);
+            }
+        } 
+        // Step 8: Handle templates
+        else if (param_type.find('<') != string::npos && param_type.find('>') != string::npos) {
+            // Check if the argument matches the template type
+            if (param_type != arg_type) {
+                cerr << "Error: Argument " << i + 1 << " does not match the expected template type. Expected: " 
+                     << param_type << ", Got: " << arg_type << endl;
+                exit(1);
+            }
+        } 
+        // Step 9: Handle variadic functions
+        else if (param_type == "...") {
+            // Variadic functions accept any type for the remaining arguments
+            break;
+        } 
+        // Step 10: Handle unknown or mismatched types
+        else {
+            cerr << "Error: Argument " << i + 1 << " type mismatch. Expected: " 
+                 << param_type << ", Got: " << arg_type << endl;
+            exit(1);
+        }
+    }
+
+    //enum ka bhi check alag se karna padega?
+
+    // Step 11: If all checks pass
+    cout << "All arguments match their respective parameters." << endl;
+}
+
+
+
+
+
+void check_int_comp(string type){
+    bool flag=false;
+    for(int i=0; i<type.length(); i++){
+        if(type[i]=='INT' || type[i]=='CHAR' || type[i]=='SHORT' || type[i]=='LONG'){
+          flag=true;
+        }
+        if(type[i]=='$' || type[i]=='#'){
+        cout << "error: " << type << " is not valid type for comparison" << endl;
+        exit(1);
+        }
+    }
+    if(!flag){
+        cout << "error: " << type << " is not valid type for comparison" << endl;
+        exit(1);
+    }
+
 }
 string Declarator :: check_declarator(){
     //return which type of declarator
@@ -415,6 +684,9 @@ void Declarator :: check_for_func(){
         cout << "error : invalid function declarator " << this->id << endl;
         exit(0); 
     }
+}
+Pointer::Pointer(Type_Qualifier_List* tql, Pointer* p) 
+    : tql(tql), p(p) {
 }
 void add_params_to_map(Parameter_List* pl) {
     std::vector<std::pair<std::string, std::string>> params = get_params(pl);
@@ -596,10 +868,6 @@ void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd
     }
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
-    string access="PRIVATE";
-    if(!access_spec_stk.empty()){
-        access=access_spec_stk.top();
-    }
     for(auto i:d->name_type_list){
         Enumerator_List* z=nullptr;
         bool isenum=false;
@@ -607,16 +875,17 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
             isenum=true;
             z=d->dec_spec->ts.front()->enum_type->enuml;
         }
-        Symbol_Info info={i.first,i.second,d->level_name,d->level,d->scope,access,false,{},isenum,z};
+        Symbol_Info info={i.first,i.second,d->level_name,d->level,d->scope,"-",false,{},isenum,z};
         Symbol_Info* x=&info;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){
             cout << "error :" << "redeclaration of " << i.first << endl;
             exit(1);
         }
         current_table->lst[i.first]=x;
+        /*check if initializer is matching with type*/
     }
 }
-void add_to_local_table(Local_Symbol_Table* current_table,Declaration_Specifiers* ds,Declarator* d){
+void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_List* ds,Declarator* d){
     string access="PRIVATE";
     if(!access_spec_stk.empty()){
         access=access_spec_stk.top();
@@ -848,7 +1117,7 @@ Initializer::Initializer(string type, string name, Initializer_List* ini_lst, st
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
     this->sql = sql;                   
     this->sdl = sdl;                  
-    this->name_type_list = create_struct_name_type_list(sql,sdl);         
+    this->name_type_list = create_struct_name_type_list(sql,sdl,this->isfunction,this->prms);         
     this->scope = "local";                  
     this->level = current_level-lvl_name.size()+1;                  
     this->level_name = get_level_name();         

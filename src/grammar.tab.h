@@ -216,7 +216,10 @@ union YYSTYPE
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
 	Compound_Statement* comp_stmt;
+<<<<<<< HEAD
 	Expression* expr;
+=======
+>>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
 
 #line 222 "grammar.tab.h"
 

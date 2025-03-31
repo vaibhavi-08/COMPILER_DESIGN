@@ -122,7 +122,7 @@ vector<string> get_const_params(Parameter_List* p){
     }
     return ans;
 }
-vector<<pair<string,string>> get_params(Parameter_List* p){
+vector<pair<string,string>> get_params(Parameter_List* p){
     vector<pair<string,string>> ans;
     if(p==nullptr)return ans;
     for(auto i:p->pl){
@@ -276,7 +276,7 @@ vector<pair<string, string>> create_name_type_list(Declaration_Specifiers* ds, I
 }
 
 
-Direct_Declarator* create_direct_declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl){
+Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl){
     Direct_Declarator* z=new Direct_Declarator(type,id,d,dd,ce,pl);
     if(z->id==""){
         if(z->dd!=nullptr){
@@ -300,6 +300,10 @@ Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
         }
     }
     z->type=t;
+}
+
+Parameter_Declaration::Parameter_Declaration(Declaration_Specifiers* ds, Declarator* d)
+    : ds(ds), dec(d) {  
 }
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type){
     Local_Symbol_Table* x=current_table;
@@ -387,7 +391,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         current_table->lst[i.first]=x;
     }
 }
-Compound_Statement::Compound_Statement(Statement_List* st, Declaration_List* dl)
+Compound_Statement::Compound_Statement(Node* st, Declaration_List* dl)
     : st(st), dl(dl) { 
 }
 
@@ -642,7 +646,14 @@ Declaration_Specifiers* create_decl_spec_object(){
     return ds;
 }
 
-// In your .cpp file
+Class_Member_Declaration::Class_Member_Declaration(Member_Declaration* md, Constructor_Declaration* cd)
+    : md(md), cd(cd) { 
+}
+
+Member_Declaration::Member_Declaration(Declaration* d, Function_Definition* fd)
+    : d(d), fd(fd) {  // Member initializer list for direct initialization
+}
+
 Class_Specifier::Class_Specifier(const std::string class_name, Inheritance_Specifier* is, Class_Member_Declaration_List* cb)
     : class_name(class_name), 
       is(is),

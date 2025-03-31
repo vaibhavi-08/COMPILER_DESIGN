@@ -39,6 +39,10 @@ class Init_Declarator;
 class Class_Member_Declaration_List;
 class Class_Member_Declaration;
 class Parameter_List;
+class Pointer;
+class Direct_Declarator;
+class Type_Qualifier_List;
+class Parameter_Declaration;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,string> current_params_list;
 extern stack<string> lvl_name;
@@ -66,7 +70,7 @@ string get_level_name();
 string get_name(Declarator* d);
 vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl);
 vector<string> get_const_params(Parameter_List* p);
-vector<<pair<string,string>> get_params(Parameter_List* p);
+vector<pair<string,string>> get_params(Parameter_List* p);
 void add_params_to_map(Parameter_List* pl);
 Direct_Declarator* create_direct_declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd);
@@ -158,9 +162,9 @@ class Declaration_Specifiers : public Node{
 };
 class Compound_Statement : public Node{
     public:
-    Statement_List* st;
+    Node* st;
     Declaration_List* dl;
-    Compound_Statement(Statement_List* st,Declaration_List* dl);
+    Compound_Statement(Node* st,Declaration_List* dl);
 };
 
 class Type_Specifier: public Node{
@@ -330,7 +334,7 @@ class Parameter_Declaration:public Node{
     Declaration_Specifiers* ds;
     Declarator* dec;
     Parameter_Declaration(Declaration_Specifiers* ds,Declarator* d);
-}
+};
 // class Primary_expresssion{
 
 // };

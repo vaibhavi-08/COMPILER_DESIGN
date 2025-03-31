@@ -32,7 +32,11 @@
 	class Enumerator;
 	class Function_Declaration;
 	class Init_Declarator;
-	class parameter_List;
+	class Parameter_List;
+	class Pointer;
+	class Direct_Declarator;
+	class Type_Qualifier_List;
+	class Parameter_Declaration;
 
 }
 
@@ -71,7 +75,6 @@ Node* root;
 	Declaration_Specifiers* dec_spec;
 	Declarator* dec;
 	Declaration_List* dec_list;
-	Compound_Statement* comp_stmt;
 	Init_Declarator_List* init_dec_list;
 	Typedef_Specifier* typedef_spec;
 	Type_Specifier* type_spec;
@@ -95,6 +98,12 @@ Node* root;
 	char* str;
 	Class_Member_Declaration* class_mem_dec;
 	Class_Member_Declaration_List* class_mem_dec_list;
+	Pointer* point;
+	Direct_Declarator* dir_dec;
+	Parameter_List* pl;
+	Type_Qualifier_List* tql;
+	Parameter_Declaration* par_dec;
+	Compound_Statement* comp_stmt;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL 
 %token SIZEOF
@@ -110,12 +119,14 @@ Node* root;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 %type <node> translation_unit external_declaration
+%type <node> statement statement_list labeled_statement jump_statement
+%type <node> delete_statement selection_statement expression_statement iteration_statement
 %type <declaration> declaration
 %type <fun_def> function_definition
 %type <dec_spec> declaration_specifiers
 %type <dec> declarator
 %type <dec_list> declaration_list
-%type <comp_stmt> comp_stmt
+%type <comp_stmt> compound_statement
 %type <init_dec_list> init_declarator_list
 %type <str> storage_class_specifier class_name access_specifier
 %type<type_spec> type_specifier
@@ -131,16 +142,21 @@ Node* root;
 %type <bc> base_class
 %type <bcl> base_class_list
 %type <inh_spec> inheritance_specifier
-%type <node> constant_expression compound_statement
+%type <node> constant_expression initializer
 %type <class_mem_dec_list> class_body class_member_declaration_list
 %type <class_mem_dec> class_member_declaration
 %type <memd> member_declaration
-%type <constrdec> constructor_declaration parameter_list
+%type <constrdec> constructor_declaration
 %type <enum_spec> enum_specifier
 %type <enuml> enumerator_list
 %type <enumer> enumerator
+%type <point> pointer
+%type <dir_dec> direct_declarator
 %type <func_decl> function_declaration
-%type <init_dec> init_declarator initializer
+%type <init_dec> init_declarator 
+%type <pl> parameter_list parameter_type_list
+%type <tql> type_qualifier_list
+%type <par_dec> parameter_declaration
 %start translation_unit
 %%
 
@@ -473,18 +489,18 @@ type_qualifier
 	;
 
 declarator
-	: pointer direct_declarator ($$=create_new_declarator($1,$2);)
+	: pointer direct_declarator {$$=create_new_declarator($1,$2);}
 	| direct_declarator {$$=create_new_declarator(nullptr,$1);}/* check if is a function . if yes then add its name to stack */
 	;
 
 direct_declarator
-	: IDENTIFIER {$$=create_direct_declarator("id",$1,nullptr,nullptr,nullptr,nullptr);}
-	| '(' declarator ')' {$$=create_direct_declarator("declarator","",$2,nullptr,nullptr,nullptr);}
-	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator("array","",nullptr,$1,nullptr,nullptr);}
-	| direct_declarator '[' ']' {$$=create_direct_declarator("array","",nullptr,$1,nullptr,nullptr);}
-	| direct_declarator '(' parameter_type_list ')' {$$=create_direct_declarator("function","",nullptr,$1,nullptr,$3);}/* add parameters to current params list */
+	: IDENTIFIER {$$=create_direct_declarator(std::string("id"),$1,nullptr,nullptr,nullptr,nullptr);}
+	| '(' declarator ')' {$$=create_direct_declarator(std::string("declarator"),"",$2,nullptr,nullptr,nullptr);}
+	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);}
+	| direct_declarator '[' ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);}
+	| direct_declarator '(' parameter_type_list ')' {$$=create_direct_declarator(std::string("function"),"",nullptr,$1,nullptr,$3);}/* add parameters to current params list */
 /*	| direct_declarator '(' identifier_list ')' */
-	| direct_declarator '(' ')' {$$=create_direct_declarator("function","",nullptr,$1,nullptr,nullptr);}
+	| direct_declarator '(' ')' {$$=create_direct_declarator(std::string("function"),"",nullptr,$1,nullptr,nullptr);}
 	;
 
 pointer

@@ -89,7 +89,7 @@ extern int yydebug;
 	class Type_Name
 	class Abstract_Declarator
 	class Direct_Abstract_Declarator
-
+	class Type
 
 #line 95 "grammar.tab.h"
 
@@ -105,72 +105,76 @@ extern int yydebug;
     IDENTIFIER = 258,              /* IDENTIFIER  */
     CONSTANT = 259,                /* CONSTANT  */
     STRING_LITERAL = 260,          /* STRING_LITERAL  */
-    SIZEOF = 261,                  /* SIZEOF  */
-    PTR_OP = 262,                  /* PTR_OP  */
-    INC_OP = 263,                  /* INC_OP  */
-    DEC_OP = 264,                  /* DEC_OP  */
-    LEFT_OP = 265,                 /* LEFT_OP  */
-    RIGHT_OP = 266,                /* RIGHT_OP  */
-    LE_OP = 267,                   /* LE_OP  */
-    GE_OP = 268,                   /* GE_OP  */
-    EQ_OP = 269,                   /* EQ_OP  */
-    NE_OP = 270,                   /* NE_OP  */
-    AND_OP = 271,                  /* AND_OP  */
-    OR_OP = 272,                   /* OR_OP  */
-    MUL_ASSIGN = 273,              /* MUL_ASSIGN  */
-    DIV_ASSIGN = 274,              /* DIV_ASSIGN  */
-    MOD_ASSIGN = 275,              /* MOD_ASSIGN  */
-    ADD_ASSIGN = 276,              /* ADD_ASSIGN  */
-    SUB_ASSIGN = 277,              /* SUB_ASSIGN  */
-    LEFT_ASSIGN = 278,             /* LEFT_ASSIGN  */
-    RIGHT_ASSIGN = 279,            /* RIGHT_ASSIGN  */
-    AND_ASSIGN = 280,              /* AND_ASSIGN  */
-    XOR_ASSIGN = 281,              /* XOR_ASSIGN  */
-    OR_ASSIGN = 282,               /* OR_ASSIGN  */
-    TYPE_NAME = 283,               /* TYPE_NAME  */
-    TYPEDEF = 284,                 /* TYPEDEF  */
-    EXTERN = 285,                  /* EXTERN  */
-    STATIC = 286,                  /* STATIC  */
-    AUTO = 287,                    /* AUTO  */
-    REGISTER = 288,                /* REGISTER  */
-    CHAR = 289,                    /* CHAR  */
-    SHORT = 290,                   /* SHORT  */
-    INT = 291,                     /* INT  */
-    LONG = 292,                    /* LONG  */
-    SIGNED = 293,                  /* SIGNED  */
-    UNSIGNED = 294,                /* UNSIGNED  */
-    FLOAT = 295,                   /* FLOAT  */
-    DOUBLE = 296,                  /* DOUBLE  */
-    CONST = 297,                   /* CONST  */
-    VOLATILE = 298,                /* VOLATILE  */
-    VOID = 299,                    /* VOID  */
-    STRUCT = 300,                  /* STRUCT  */
-    UNION = 301,                   /* UNION  */
-    ENUM = 302,                    /* ENUM  */
-    ELLIPSIS = 303,                /* ELLIPSIS  */
-    CASE = 304,                    /* CASE  */
-    DEFAULT = 305,                 /* DEFAULT  */
-    IF = 306,                      /* IF  */
-    ELSE = 307,                    /* ELSE  */
-    SWITCH = 308,                  /* SWITCH  */
-    WHILE = 309,                   /* WHILE  */
-    DO = 310,                      /* DO  */
-    FOR = 311,                     /* FOR  */
-    GOTO = 312,                    /* GOTO  */
-    CONTINUE = 313,                /* CONTINUE  */
-    BREAK = 314,                   /* BREAK  */
-    RETURN = 315,                  /* RETURN  */
-    CLASS = 316,                   /* CLASS  */
-    DELETE = 317,                  /* DELETE  */
-    NEW = 318,                     /* NEW  */
-    PRIVATE = 319,                 /* PRIVATE  */
-    PUBLIC = 320,                  /* PUBLIC  */
-    PROTECTED = 321,               /* PROTECTED  */
-    THIS = 322,                    /* THIS  */
-    UNTIL = 323,                   /* UNTIL  */
-    BOOL = 324,                    /* BOOL  */
-    TRUE = 325,                    /* TRUE  */
-    FALSE = 326                    /* FALSE  */
+    CONST_FLOAT = 261,             /* CONST_FLOAT  */
+    CONST_CHAR = 262,              /* CONST_CHAR  */
+    CONST_EXP = 263,               /* CONST_EXP  */
+    SIZEOF = 264,                  /* SIZEOF  */
+    PTR_OP = 265,                  /* PTR_OP  */
+    INC_OP = 266,                  /* INC_OP  */
+    DEC_OP = 267,                  /* DEC_OP  */
+    LEFT_OP = 268,                 /* LEFT_OP  */
+    RIGHT_OP = 269,                /* RIGHT_OP  */
+    LE_OP = 270,                   /* LE_OP  */
+    GE_OP = 271,                   /* GE_OP  */
+    EQ_OP = 272,                   /* EQ_OP  */
+    NE_OP = 273,                   /* NE_OP  */
+    AND_OP = 274,                  /* AND_OP  */
+    OR_OP = 275,                   /* OR_OP  */
+    MUL_ASSIGN = 276,              /* MUL_ASSIGN  */
+    DIV_ASSIGN = 277,              /* DIV_ASSIGN  */
+    MOD_ASSIGN = 278,              /* MOD_ASSIGN  */
+    ADD_ASSIGN = 279,              /* ADD_ASSIGN  */
+    SUB_ASSIGN = 280,              /* SUB_ASSIGN  */
+    LEFT_ASSIGN = 281,             /* LEFT_ASSIGN  */
+    RIGHT_ASSIGN = 282,            /* RIGHT_ASSIGN  */
+    AND_ASSIGN = 283,              /* AND_ASSIGN  */
+    XOR_ASSIGN = 284,              /* XOR_ASSIGN  */
+    OR_ASSIGN = 285,               /* OR_ASSIGN  */
+    TYPE_NAME = 286,               /* TYPE_NAME  */
+    TYPEDEF = 287,                 /* TYPEDEF  */
+    EXTERN = 288,                  /* EXTERN  */
+    STATIC = 289,                  /* STATIC  */
+    AUTO = 290,                    /* AUTO  */
+    REGISTER = 291,                /* REGISTER  */
+    CHAR = 292,                    /* CHAR  */
+    SHORT = 293,                   /* SHORT  */
+    INT = 294,                     /* INT  */
+    LONG = 295,                    /* LONG  */
+    SIGNED = 296,                  /* SIGNED  */
+    UNSIGNED = 297,                /* UNSIGNED  */
+    FLOAT = 298,                   /* FLOAT  */
+    DOUBLE = 299,                  /* DOUBLE  */
+    CONST = 300,                   /* CONST  */
+    VOLATILE = 301,                /* VOLATILE  */
+    VOID = 302,                    /* VOID  */
+    STRUCT = 303,                  /* STRUCT  */
+    UNION = 304,                   /* UNION  */
+    ENUM = 305,                    /* ENUM  */
+    ELLIPSIS = 306,                /* ELLIPSIS  */
+    NULL = 307,                    /* NULL  */
+    CASE = 308,                    /* CASE  */
+    DEFAULT = 309,                 /* DEFAULT  */
+    IF = 310,                      /* IF  */
+    ELSE = 311,                    /* ELSE  */
+    SWITCH = 312,                  /* SWITCH  */
+    WHILE = 313,                   /* WHILE  */
+    DO = 314,                      /* DO  */
+    FOR = 315,                     /* FOR  */
+    GOTO = 316,                    /* GOTO  */
+    CONTINUE = 317,                /* CONTINUE  */
+    BREAK = 318,                   /* BREAK  */
+    RETURN = 319,                  /* RETURN  */
+    CLASS = 320,                   /* CLASS  */
+    DELETE = 321,                  /* DELETE  */
+    NEW = 322,                     /* NEW  */
+    PRIVATE = 323,                 /* PRIVATE  */
+    PUBLIC = 324,                  /* PUBLIC  */
+    PROTECTED = 325,               /* PROTECTED  */
+    THIS = 326,                    /* THIS  */
+    UNTIL = 327,                   /* UNTIL  */
+    BOOL = 328,                    /* BOOL  */
+    TRUE = 329,                    /* TRUE  */
+    FALSE = 330                    /* FALSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -216,12 +220,17 @@ union YYSTYPE
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
 	Compound_Statement* comp_stmt;
-<<<<<<< HEAD
 	Expression* expr;
-=======
->>>>>>> fffed73e09192fc175fa42f84e1006c77167d5af
+	vector<int> vec_int;
+	int int_value;
+	Type typ;
+	Argument_Expression_List* arg_ex_list;
+	Type_Name* ty_nm;
+	Abstract_Declarator* abs_d;
+	Direct_Abstract_Declarator* dir_ad;
+	Initializer_List* ini_lst;
 
-#line 222 "grammar.tab.h"
+#line 234 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

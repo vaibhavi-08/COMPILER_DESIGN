@@ -111,8 +111,12 @@ Node* root;
 	Expression* expr;
 	vector<int> vec_int;
 	int int_value;
-	Type type;
-
+	Type typ;
+	Argument_Expression_List* arg_ex_list;
+	Type_Name* ty_nm;
+	Abstract_Declarator* abs_d;
+	Direct_Abstract_Declarator* dir_ad;
+	Initializer_List* ini_lst;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL CONST_FLOAT CONST_CHAR CONST_EXP
 %token SIZEOF
@@ -132,10 +136,14 @@ Node* root;
 %type <init_value> delete_statement selection_statement expression_statement iteration_statement
 %type <declaration> declaration
 %type <fun_def> function_definition
+%type <ini_lst> initializer_list
 %type <dec_spec> declaration_specifiers
 %type <dec> declarator
+%type <arg_ex_list> argument_expression_list
 %type <dec_list> declaration_list
 %type <comp_stmt> compound_statement
+%type <abs_d> abstract_declarator
+%type <dir_ad> direct_abstract_declarator
 %type <init_dec_list> init_declarator_list
 %type <str> storage_class_specifier class_name access_specifier assignment_operator
 %type<type_spec> type_specifier
@@ -151,20 +159,20 @@ Node* root;
 %type <sd> struct_declarator
 %type <bc> base_class
 %type <bcl> base_class_list
+%type <ty_nm> type_name
 %type <inh_spec> inheritance_specifier
 %type <node> initializer
 %type <class_mem_dec_list> class_body class_member_declaration_list
 %type <class_mem_dec> class_member_declaration
 %type <memd> member_declaration
-%type <type> primary_expression postfix_expression assignment_expression
-%type <type> constant_expression unary_expression cast multiplicative_expression
-%type <type> additive_expression shift_expression relational_expression equality_expression
-%type <type> and_expression exclusive_or_expression inclusive_or_expression
-%type <type> logical_and_expression logical_or_expression conditional_expression
-%type <type> assignment_expression
+%type <typ> primary_expression postfix_expression assignment_expression expression
+%type <typ> constant_expression unary_expression cast multiplicative_expression
+%type <typ> additive_expression shift_expression relational_expression equality_expression
+%type <typ> and_expression exclusive_or_expression inclusive_or_expression cast_expression
+%type <typ> logical_and_expression logical_or_expression conditional_expression
 %type <constrdec> constructor_declaration
 %type <enum_spec> enum_specifier
-%type <enuml> enumerator_listcheck_inc_dec_op
+%type <enuml> enumerator_list 
 %type <enumer> enumerator
 %type <point> pointer
 %type <dir_dec> direct_declarator
@@ -177,13 +185,13 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER (Type t=get_type_id($1);$$=t;)
+	: IDENTIFIER {Type t=get_type_id($1);$$=t;}
 	| CONSTANT {Type t; t.basic=true;t.base="INT";$$=t;} 
 	| STRING_LITERAL {Type t; t.basic=true;t->base="CHAR";t.ptr_lvl=1;t.ptrtql.emplace_back(false,false);$$=t;}
 	| CONST_CHAR {Type t; t.basic=true;t.base="CHAR";$$=t;}
 	| CONST_FLOAT {Type t;t.basic=true;t.base="FLOAT";$$=t;}
 	| CONST_EXP {$$=get_type_exp($1);}
-	| '(' expression ')' {$$=$1;}
+	| '(' expression ')' {$$=$2;}
 	| NULL {Type t;t.isnull=true;$$=t;}
 	;
 
@@ -196,8 +204,8 @@ postfix_expression
 	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;}
 	| postfix_expression '(' ')' {Type t=check_if_function($1);check_argument_with_params($1->prms,vector<Type>());$$=t;}
 	| postfix_expression '(' argument_expression_list ')' {Type t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
-	| postfix_expression '.' IDENTIFIER {check_obj($1);Type type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/}
-	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);Type type=check_if_id_in_obj($1,$3);$$=type;/*check if $1 is an pointer to class struct or union*/}
+	| postfix_expression '.' IDENTIFIER {check_obj($1);Type type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
+	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);Type type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
 	| postfix_expression INC_OP /* later */ {check_inc_dec_op_right($1);$$=$1;}
 	| postfix_expression DEC_OP {check_inc_dec_op_right($1);$$=$1;}
 	;
@@ -555,16 +563,16 @@ type_name
 
 abstract_declarator
 	: pointer {Abstract_Declarator* x=new Abstract_Declarator($1,nullptr);$$=x;}
-	| direct_abstract_declarator {Abstract_Declarator* x=new Abstract_Declarator(nullptr,$2);$$=x;}
+	| direct_abstract_declarator {Abstract_Declarator* x=new Abstract_Declarator(nullptr,$1);$$=x;}
 	| pointer direct_abstract_declarator {Abstract_Declarator* x=new Abstract_Declarator($1,$2);$$=x;}
 	;
 
 direct_abstract_declarator
-	: '(' abstract_declarator ')' {$$=new Direct_Abstract_Declarator("abs_dec",$3,nullptr,nullptr,nullptr);}
+	: '(' abstract_declarator ')' {$$=new Direct_Abstract_Declarator("abs_dec",$2,nullptr,nullptr,nullptr);}
 	| '[' ']'						{$$=new Direct_Abstract_Declarator("array",nullptr,nullptr,nullptr,nullptr);}
 	| '[' constant_expression ']' {check_int_comp($2);$$=new Direct_Abstract_Declarator("array",nullptr,nullptr,$2,nullptr);}
 	| direct_abstract_declarator '[' ']' {$$=new Direct_Abstract_Declarator("array",nullptr,$1,nullptr,nullptr);}
-	| direct_abstract_declarator '[' constant_expression ']' {check_int_comp($2);$$=new Direct_Abstract_Declarator("array",nullptr,$1,$3,nullptr);}
+	| direct_abstract_declarator '[' constant_expression ']' {check_int_comp($3);$$=new Direct_Abstract_Declarator("array",nullptr,$1,$3,nullptr);}
 	| '(' ')'	{$$=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,nullptr);}
 	| '(' parameter_type_list ')'  {$$=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,$2);}
 	| direct_abstract_declarator '(' ')' {$$=new Direct_Abstract_Declarator("func",nullptr,$1,nullptr,nullptr);}
@@ -628,8 +636,8 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression ')' statement {$$=$4;}
-	| IF '(' expression ')' statement ELSE statement {$$=($4|$6);}
+	: IF '(' expression ')' statement {$$=$5;}
+	| IF '(' expression ')' statement ELSE statement {$$=($5|$7);}
 	| SWITCH '(' expression ')' statement {$$=$5;}
 	;
 
@@ -646,7 +654,7 @@ jump_statement
 	| CONTINUE ';' {$$=0;}
 	| BREAK ';' {$$=0;}
 	| RETURN ';' {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$1;}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$2;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */

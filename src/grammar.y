@@ -177,14 +177,14 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER {pair<string,string> x=get_type_id($1);$$=new Expression(x.first,x.second);}
-	| CONSTANT {$$=new Expression("INT","");} 
-	| STRING_LITERAL {$$=new Expression("CONST CHAR*","");}
-	| CONST_CHAR {$$=new Expression("CHAR","");}
-	| CONST_FLOAT {$$=new Expression("FLOAT","");}
-	| CONST_EXP {$$=new Expression(get_type_exp($1),"");}
-	| '(' expression ')' {$$=new Expression($1->type,"");}
-	| NULL {$$=new Expression("NULL","");}
+	: IDENTIFIER (Type t=get_type_id($1);$$=t;)
+	| CONSTANT {Type t; t.basic=true;t.base="INT";$$=t;} 
+	| STRING_LITERAL {Type t; t.basic=true;t->base="CHAR";t.ptr_lvl=1;t.ptrtql.emplace_back(false,false);$$=t;}
+	| CONST_CHAR {Type t; t.basic=true;t.base="CHAR";$$=t;}
+	| CONST_FLOAT {Type t;t.basic=true;t.base="FLOAT";$$=t;}
+	| CONST_EXP {$$=get_type_exp($1);}
+	| '(' expression ')' {$$=$1;}
+	| NULL {Type t;t.isnull=true;$$=t;}
 	;
 
 class_name
@@ -193,13 +193,13 @@ class_name
 
 postfix_expression
 	: primary_expression {$$=$1;}
-	| postfix_expression '[' expression ']' {string type=check_if_array_or_pointer($1);$$=new Expression(type,"");}
-	| postfix_expression '(' ')' {vector<Parameter_Declaration*> prms=check_if_function($1->name);check_argument_with_params($1,prms);$$=new Expression($1->type,"");}
-	| postfix_expression '(' argument_expression_list ')' {vector<Parameter_Declaration*> prms=check_if_function($1->name);check_argument_with_params($1,prms);$$=new Expression($1->type,"");}
-	| postfix_expression '.' IDENTIFIER {check_obj($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");}/*check if $1 is object and idenfier is the member of that class*/
-	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");/*check if $1 is an pointer to class struct or union*/}
-	| postfix_expression INC_OP /* later */ {type=check_inc_dec_op();$$=new Expression(type,"");}
-	| postfix_expression DEC_OP {type=check_inc_dec_op();$$=new Expression(type,"");}
+	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;}
+	| postfix_expression '(' ')' {Type t=check_if_function($1);check_argument_with_params($1->prms,vector<Type>());$$=t;}
+	| postfix_expression '(' argument_expression_list ')' {Type t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
+	| postfix_expression '.' IDENTIFIER {check_obj($1);Type type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/}
+	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);Type type=check_if_id_in_obj($1,$3);$$=type;/*check if $1 is an pointer to class struct or union*/}
+	| postfix_expression INC_OP /* later */ {check_inc_dec_op_right($1);$$=$1;}
+	| postfix_expression DEC_OP {check_inc_dec_op_right($1);$$=$1;}
 	;
 
 argument_expression_list
@@ -209,11 +209,11 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression {$$=$1;}
-	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$1;}
-	| DEC_OP unary_expression  {($2);$$=$1;}
+	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;}
+	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;}
 	| unary_operator cast_expression {Type type=get_type_unary_expression($1,$2);$$=type;}
-	| SIZEOF unary_expression {check_for_sizeof($2->type); $$=new Expression("UNSIGNED INT","");}/* void , functiions */
-	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);$$=new Expression("UNSIGNED INT","");}
+	| SIZEOF unary_expression {check_for_sizeof($2); Type t;t.basic=true;t.base="INT";$$=t}/* void , functiions */
+	| SIZEOF '(' type_name ')' {check_for_sizeof($3.type);Type t;t.basic=true;t.base="INT";$$=t}
 	;
 
 unary_operator
@@ -227,7 +227,7 @@ unary_operator
 
 cast_expression
 	: unary_expression {$$=$1;}
-	| '(' type_name ')' cast_expression {check_typecast_compatibility($2->type,$4);$$=new Expression($2->type,"");}
+	| '(' type_name ')' cast_expression {check_typecast_compatibility($2->type,$4);$$=$2;}
 	;
 
 multiplicative_expression
@@ -251,16 +251,16 @@ shift_expression
 
 relational_expression
 	: shift_expression {$$=$1;}
-	| relational_expression '<' shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
-	| relational_expression '>' shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
-	| relational_expression LE_OP shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
-	| relational_expression GE_OP shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
+	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
+	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
+	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
 	;
 
 equality_expression
 	: relational_expression {$$=$1;}
-	| equality_expression EQ_OP relational_expression {Type t=check_for_eq_op($1,$3);$$=t;}
-	| equality_expression NE_OP relational_expression {Type t=check_for_eq_op($1,$3);$$=t;}
+	| equality_expression EQ_OP relational_expression {Type type=check_for_eq_op($1,$3);$$=type;}
+	| equality_expression NE_OP relational_expression {Type type=check_for_eq_op($1,$3);$$=type;}
 	;
 
 and_expression
@@ -290,12 +290,12 @@ logical_or_expression
 
 conditional_expression
 	: logical_or_expression {$$=$1;}
-	| logical_or_expression '?' expression ':' conditional_expression   {Type type=check_for_assign($3,$5);$$=type;}
+	| logical_or_expression '?' expression ':' conditional_expression   {Type type=check_assign_comp($3,$5,"=");$$=type;}
 	;
 
 assignment_expression
 	: conditional_expression  {$$=$1;}
-	| unary_expression assignment_operator assignment_expression  {Type type=check_for_assign($1,$3,$2);$$=type;}
+	| unary_expression assignment_operator assignment_expression  {check_for_assign($1,$3,$2);$$=$1;}
 	;
 
 assignment_operator
@@ -313,8 +313,8 @@ assignment_operator
 	;
 
 expression
-	: assignment_expression 
-	| expression ',' assignment_expression
+	: assignment_expression {$$=$1;}
+	| expression ',' assignment_expression {Type t;$$=t;}
 	;
 
 constant_expression
@@ -507,7 +507,7 @@ declarator
 direct_declarator
 	: IDENTIFIER {$$=create_direct_declarator(std::string("id"),$1,nullptr,nullptr,nullptr,nullptr);}
 	| '(' declarator ')' {$$=create_direct_declarator(std::string("declarator"),"",$2,nullptr,nullptr,nullptr);}
-	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);check_int_comp($3->type);}
+	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);check_int_comp($3);}
 	| direct_declarator '[' ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);}
 	| direct_declarator '(' parameter_type_list ')' {$$=create_direct_declarator(std::string("function"),"",nullptr,$1,nullptr,$3);}/* add parameters to current params list */
 /*	| direct_declarator '(' identifier_list ')' */
@@ -562,9 +562,9 @@ abstract_declarator
 direct_abstract_declarator
 	: '(' abstract_declarator ')' {$$=new Direct_Abstract_Declarator("abs_dec",$3,nullptr,nullptr,nullptr);}
 	| '[' ']'						{$$=new Direct_Abstract_Declarator("array",nullptr,nullptr,nullptr,nullptr);}
-	| '[' constant_expression ']' {check_int_comp($1->type);$$=new Direct_Abstract_Declarator("array",nullptr,nullptr,$2,nullptr);}
+	| '[' constant_expression ']' {check_int_comp($2);$$=new Direct_Abstract_Declarator("array",nullptr,nullptr,$2,nullptr);}
 	| direct_abstract_declarator '[' ']' {$$=new Direct_Abstract_Declarator("array",nullptr,$1,nullptr,nullptr);}
-	| direct_abstract_declarator '[' constant_expression ']' {new Direct_Abstract_Declarator("array",nullptr,$1,$3,nullptr);}
+	| direct_abstract_declarator '[' constant_expression ']' {check_int_comp($2);$$=new Direct_Abstract_Declarator("array",nullptr,$1,$3,nullptr);}
 	| '(' ')'	{$$=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,nullptr);}
 	| '(' parameter_type_list ')'  {$$=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,$2);}
 	| direct_abstract_declarator '(' ')' {$$=new Direct_Abstract_Declarator("func",nullptr,$1,nullptr,nullptr);}
@@ -659,7 +659,7 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);string t=create_type($1,$2);$2->check_for_func();$$=x;func_ret_type=t; lvl_name.push(get_name($2));}
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type type;string t=create_type($1,$2,type);$2->check_for_func();$$=x;func_ret_type=type; lvl_name.push(get_name($2));}
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}}*/ /* create function definition object.parameter. assign type. assign size. */

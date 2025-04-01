@@ -46,12 +46,12 @@ class Type_Name;
 class Abstract_Declarator;
 class Direct_Abstract_Declarator;
 extern Global_Symbol_Table* gst;
-extern unordered_map<string,string> current_params_list;
+extern unordered_map<string,Type> current_params_list;
 extern stack<string> lvl_name;
 extern Local_Symbol_Table* current_table;
 extern int current_level;
 extern stack<string> access_spec_stk;
-extern string func_ret_type;
+extern Type func_ret_type;
 extern set<string> labelset;
 extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
@@ -88,10 +88,7 @@ struct Symbol_Info{
     int level;
     string scope;
     string access;
-    bool isfunction;// indicate if symbol is function 
-    vector<string> function_parameters;// store parameter types in order if symbol is function
-    bool isenum;
-    Enumerator_List* enumerator_list;
+    Type t;
 };
 class Global_Symbol_Table{
     public:
@@ -149,10 +146,11 @@ class Function_Definition : public Node{
     Compound_Statement* cs;
     string name;
     string type;
+    Type t;
     string level_name; 
     int level; // level in any function or struct;
     string scope; //global/local
-    vector<string> parameters;
+    vector<Type> parameters;
     Function_Definition(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 };
 class Function_Declaration: public Node{
@@ -163,7 +161,7 @@ class Function_Declaration: public Node{
 };
 class Declaration : public Node{
     public:
-    vector<pair<string,string>> name_type_list;
+    vector<pair<string,pair<string,Type>>> name_type_list;
     string level_name;
     int level;
     string scope;
@@ -182,7 +180,7 @@ class Init_Declarator_List: public Node{
 };
 class Argument_Expression_List: public Node{
     public:
-    vector<Type*> vec_exp;
+    vector<Type> vec_exp;
     Argument_Expression_List();
 };
 class Declaration_Specifiers : public Node{
@@ -238,7 +236,7 @@ class Struct_Declaration: public Node{
     public:
     Specifier_Qualifier_List* sql;
     Struct_Declarator_List* sdl;
-    vector<pair<string,string>> name_type_list;
+    vector<pair<string,pair<string,Type>>> name_type_list;
     vector<string> prms;
     bool isfunction;
     string scope;
@@ -308,7 +306,7 @@ class Constructor_Declaration: public Node{
     public:
     string class_name;
     Parameter_List* params;
-    vector<string> pvec;/*=get_const_params(this->params) do this in constructor*/
+    vector<Type> pvec;/*=get_const_params(this->params) do this in constructor*/
     Compound_Statement* cs;
     Constructor_Declaration(const std::string& class_name,Parameter_List* params,Compound_Statement* cs);
 };
@@ -326,11 +324,11 @@ class Enumerator_List:public Node{
 };
 class Type_Name : public Node{
     public:
-    string type;
+    Type type;
     Specifier_Qualifier_List* sql;
     Abstract_Declarator* ad;
     Type_Name(Specifier_Qualifier_List* sql,Abstract_Declarator* ad);
-    string create_type(Specifier_Qualifier_List* sql,Abstract_Declarator* ad);
+    Type create_type(Specifier_Qualifier_List* sql,Abstract_Declarator* ad);
 };
 class Abstract_Declarator : public Node{
     public:
@@ -361,6 +359,10 @@ class Enumerator:public Node{
     Constant_Expression* ce;
     Enumerator(const std::string& id, Constant_Expression* ce);
 };
+struct Tq{
+    bool isconst;
+    bool isvol;
+}
 class Declarator: public Node{
     public:
     Pointer* p;
@@ -368,7 +370,7 @@ class Declarator: public Node{
     string type;
     string id;
     Initializer* ini;
-    vector<pair<string,string>> prms;
+    vector<Type> prms;
     bool isfunction;
     void check_declarator();
     void check_for_func();
@@ -397,14 +399,46 @@ class Type_Qualifier_List:public Node{
 };
 class Parameter_List:public Node{
     public:
-    vector<Parameter_Declaration*> pl;
+    vector<Type> pl;
     bool ellipses;
     Parameter_List();
+};
+struct Type {
+    public:
+    bool isconst=false;
+    bool isvoid=false;
+    bool isvolatile=false;
+    bool isfunction=false;
+    bool isbasic=false;
+    bool isobj=false;
+    bool isstatic=false;
+    bool isauto=false;
+    bool isextern=false;
+    bool isregister=false;
+    bool isigned=false;
+    bool isunsigned=false;
+    bool isnull=false;
+    bool iseum=false;
+    Type func_ret_type;
+    Enumerator_List* el;
+    vector<Type> prms;
+    string base="";
+    string objtype="";
+    string obj_class="";
+    vector<Base_Class*> base_classes;
+    int array_dim=0;
+    int ptr_level=0;
+    int func_ptr_lev=0;
+    vector<Tq> ptrtql;
 };
 class Parameter_Declaration:public Node{
     public:
     Declaration_Specifiers* ds;
     Declarator* dec;
+    string type;
+    string name;
+    bool isfunction;
+    vector<Type> prms;
     Parameter_Declaration(Declaration_Specifiers* ds,Declarator* d);
 };
 #endif

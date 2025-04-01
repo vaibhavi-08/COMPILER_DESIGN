@@ -42,7 +42,6 @@ class Pointer;
 class Direct_Declarator;
 class Type_Qualifier_List;
 class Parameter_Declaration;
-class Expression;
 class Type_Name;
 class Abstract_Declarator;
 class Direct_Abstract_Declarator;
@@ -63,6 +62,7 @@ Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,D
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
 void add_to_local_class_struct_union_info();
+void check_inc_dec_op(Type* e);
 Declaration_Specifiers* create_decl_spec_object();
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
@@ -99,6 +99,31 @@ class Global_Symbol_Table{
     unordered_map<string,Local_Symbol_Table*> class_struct_union_info;
     unordered_map<string,Symbol_Info*> gst;
     Global_Symbol_Table();
+};
+struct Type {
+    public:
+    bool isconst=false;
+    bool isvoid=false;
+    bool isvolatile=false;
+    bool isfunction=false;
+    bool isbasic=false;
+    bool isobj=false;
+    bool isstatic=false;
+    bool isauto=false;
+    bool isextern=false;
+    bool isregister=false;
+    bool isigned=false;
+    bool isunsigned=false;
+    Type func_ret_type;
+    vector<Type> prms;
+    string base="";
+    string objtype="";
+    string obj_class="";
+    vector<Base_Class*> base_classes;
+    int array_dim=0;
+    int ptr_level=0;
+    int func_ptr_lev=0;
+    vector<Tq> ptrtql;
 };
 class Local_Symbol_Table{
     public:
@@ -157,7 +182,7 @@ class Init_Declarator_List: public Node{
 };
 class Argument_Expression_List: public Node{
     public:
-    vector<Expression*> vec_exp;
+    vector<Type*> vec_exp;
     Argument_Expression_List();
 };
 class Declaration_Specifiers : public Node{
@@ -375,12 +400,6 @@ class Parameter_List:public Node{
     vector<Parameter_Declaration*> pl;
     bool ellipses;
     Parameter_List();
-};
-class Expression : public Node{
-    public:
-    string type;
-    string name;
-    Expression(const std::string& type,const std::string& name);
 };
 class Parameter_Declaration:public Node{
     public:

@@ -41,6 +41,7 @@
 	class Type_Name
 	class Abstract_Declarator
 	class Direct_Abstract_Declarator
+	class Type
 }
 
 %{
@@ -110,6 +111,8 @@ Node* root;
 	Expression* expr;
 	vector<int> vec_int;
 	int int_value;
+	Type type;
+
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL CONST_FLOAT CONST_CHAR CONST_EXP
 %token SIZEOF
@@ -153,12 +156,12 @@ Node* root;
 %type <class_mem_dec_list> class_body class_member_declaration_list
 %type <class_mem_dec> class_member_declaration
 %type <memd> member_declaration
-%type <expr> primary_expression postfix_expression assignment_expression
-%type <expr> constant_expression unary_expression cast multiplicative_expression
-%type <expr> additive_expression shift_expression relational_expression equality_expression
-%type <expr> and_expression exclusive_or_expression inclusive_or_expression
-%type <expr> logical_and_expression logical_or_expression conditional_expression
-%type <expr> assignment_expression
+%type <type> primary_expression postfix_expression assignment_expression
+%type <type> constant_expression unary_expression cast multiplicative_expression
+%type <type> additive_expression shift_expression relational_expression equality_expression
+%type <type> and_expression exclusive_or_expression inclusive_or_expression
+%type <type> logical_and_expression logical_or_expression conditional_expression
+%type <type> assignment_expression
 %type <constrdec> constructor_declaration
 %type <enum_spec> enum_specifier
 %type <enuml> enumerator_listcheck_inc_dec_op
@@ -195,8 +198,8 @@ postfix_expression
 	| postfix_expression '(' argument_expression_list ')' {vector<Parameter_Declaration*> prms=check_if_function($1->name);check_argument_with_params($1,prms);$$=new Expression($1->type,"");}
 	| postfix_expression '.' IDENTIFIER {check_obj($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");}/*check if $1 is object and idenfier is the member of that class*/
 	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");/*check if $1 is an pointer to class struct or union*/}
-	| postfix_expression INC_OP /* later */ {type=check_inc_dec_op_right();$$=new Expression(type,"");}
-	| postfix_expression DEC_OP {type=check_inc_dec_op_right();$$=new Expression(type,"");}
+	| postfix_expression INC_OP /* later */ {type=check_inc_dec_op();$$=new Expression(type,"");}
+	| postfix_expression DEC_OP {type=check_inc_dec_op();$$=new Expression(type,"");}
 	;
 
 argument_expression_list

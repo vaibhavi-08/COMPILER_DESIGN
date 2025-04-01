@@ -8,7 +8,7 @@ std::stack<std::string> lvl_name; // Definition
 Local_Symbol_Table* current_table = nullptr; // Definition
 stack<string> access_spec_stk;
 string func_ret_type;
-int current_level = 0; 
+int current_level = 0;
 set<string> labelset;
 int line_num=1;
 stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
@@ -289,7 +289,7 @@ string get_type_exp(string s){
 void create_struct_name_type_list(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl,vector<pair<string,string>>& yy,bool& check_f,vector<string>& fp){
     vector<pair<string,string>> ans;
     if(sdl==nullptr){
-        string type=check_type(sql,nullptr);
+        string type=create_type(sql,nullptr);
         if(type=="class"||type=="struct"||type=="union"||type=="enum"){
             if(sql->ts[0]->string_type=="class"){
                 
@@ -383,6 +383,124 @@ vector<string> check_if_function(string name){
     cerr << "Error: Identifier '" << id << "' not found in any symbol table" <<"in line :"<< line_num<< endl;
     exit(1);
 }
+
+
+void check_inc_dec_op(Type tp) {
+    // Const qualification check
+    if (tp.isconst) {
+        cout << "Error: INC_OP/DEC_OP cannot be applied to const-qualified type"<<"in line :"<< line_num<<endl;
+        exit(1);
+    }
+    // Check for invalid base types
+    if (tp.isvoid) {
+        cout << "Error: INC_OP/DEC_OP not allowed for type 'void'"<<"in line :"<< line_num<<endl;
+        exit(1);
+    }
+    if (tp.isnull) {
+        cout << "Error: INC_OP/DEC_OP not allowed for nullptr type"<<"in line :"<< line_num<<endl;
+        exit(1);
+    }
+    // Object type checks
+    if (tp.isobj) {
+        static const unordered_set<string> invalid_obj = {"enum", "struct", "class", "union"};
+        if (invalid_obj.count(tp.obj_class)) {
+            cout << "Error: INC_OP/DEC_OP not allowed for " << tp.obj_class << " type\n";
+            exit(1);
+        }
+    }
+    // Special type checks
+    if (tp.func_ptr_lev > 0 || tp.array_dim > 0 || tp.isfunction) {
+        const char* type_name = "";
+        if (tp.func_ptr_lev > 0) type_name = "function pointers";
+        else if (tp.array_dim > 0) type_name = "array types";
+        else if (tp.isfunction) type_name = "function types";
+        
+        cout << "Error: Cannot use INC_OP/DEC_OP on " << type_name <<"in line :"<< line_num<<endl;
+        exit(1);
+    }
+}
+
+void check_for_shift_op(Type e1, Type e2) {
+    auto check_operand = [](Type* tp, const string& side) {
+        if (tp.isnull) {
+            cout << "Error: Invalid " << side << " operand for shift operator (nullptr type)"<<"in line :"<< line_num<<endl;
+            exit(1);
+        }
+        if (tp.isvoid) {
+            cout << "Error: Invalid " << side << " operand for shift operator (void type)"<<"in line :"<< line_num<<endl;
+            exit(1);
+        }
+        if (tp.isobj) {
+            static const unordered_set<string> invalid_obj = {"enum", "struct", "class", "union"};
+            if (invalid_obj.count(tp.obj_class)) {
+                cout << "Error: Invalid " << side << " operand for shift operator (" 
+                     << tp.obj_class << " type)\n";
+                exit(1);
+            }
+        }
+        if (tp.isbasic && (tp.base == "float" || tp.base == "double")) {
+            cout << "Error: Invalid " << side << " operand for shift operator ("
+                 << tp.base << " type)\n";
+            exit(1);
+        }
+        if (tp.func_ptr_lev > 0) {
+            cout << "Error: Invalid " << side << " operand for shift operator (function pointer)"<<"in line :"<< line_num<<endl;
+            exit(1);
+        }
+        if (tp.array_dim > 0) {
+            cout << "Error: Invalid " << side << " operand for shift operator (array type)"<<"in line :"<< line_num<<endl;
+            exit(1);
+        }
+        if (tp.isfunction) {
+            cout << "Error: Invalid " << side << " operand for shift operator (function type)"<<"in line :"<< line_num<<endl;
+            exit(1);
+        }
+        if (tp.ptr_level > 0) {
+            cout << "Error: Invalid " << side << " operand for shift operator (pointer type)"<<"in line :"<< line_num<<endl;
+            exit(1);
+        }
+    };
+    check_operand(e1, "left");
+    check_operand(e2, "right");
+}
+
+void check_for_assign(Type t1, Type t2,string op) {
+
+    if(op=="="){
+        // Check if both types are basic
+        if (!t1.isbasic || !t2.isbasic) {
+            cout << "Error: Invalid assignment between non-basic types\n";
+            exit(1);
+        }
+
+        const string& base1 = t1.base;
+        const string& base2 = t2.base;
+
+        // Check allowed type pairs from specification
+        static const unordered_set<pair<string, string>, PairHash> valid_pairs = {
+            {"int", "double"}, {"double", "int"},
+            {"float", "int"}, {"long", "short"},
+            {"int", "char"}, {"bool", "int"},
+            {"int", "bool"}
+        };
+
+        // Check for allowed conversions
+        if (!(base1 == base2 || valid_pairs.count({base1, base2}))) {
+            cout << "Error: Incompatible types for assignment ("
+                << base1 << " vs " << base2 << ")\n";
+            exit(1);
+        }
+    }
+    else{
+        check_for_arithmatic_op(t1,t2);
+    }
+}
+
+void check_typecast_compatibility(Type t1,Type t2){
+    check_for_assign(t1,t2,"=");
+}
+
+
 
 pair<string,string> get_type_id(string id) {
     Local_Symbol_Table* temp = current_table;
@@ -880,7 +998,7 @@ vector<pair<string, string>> create_name_type_list(Declaration_Specifiers* ds, I
     vector<pair<string, string>> result;
     if (!idl) {
          if (!idl){
-        string type=check_type(ds,nullptr);
+        string type=create_type(ds,nullptr);
         if(type=="class"||type=="struct"||type=="union"||type=="enum"){
             if(ds->ts[0]->string_type=="class"){
                 
@@ -1049,7 +1167,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_Li
     if(!access_spec_stk.empty()){
         access=access_spec_stk.top();
     }
-    string type=check_type(ds,d);
+    string type=create_type(ds,d);
     string name=get_name(d);
     Enumerator_List* z=nullptr;
     bool isenum=false;

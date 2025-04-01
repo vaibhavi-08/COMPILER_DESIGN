@@ -125,7 +125,7 @@ Node* root;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 %type <node> translation_unit external_declaration
-%type <init_value> statement statement_list labeled_statement jump_statement
+%type <init_value> statement labeled_statement jump_statement
 %type <init_value> delete_statement selection_statement expression_statement iteration_statement
 %type <declaration> declaration
 %type <fun_def> function_definition
@@ -161,7 +161,7 @@ Node* root;
 %type <expr> assignment_expression
 %type <constrdec> constructor_declaration
 %type <enum_spec> enum_specifier
-%type <enuml> enumerator_list
+%type <enuml> enumerator_listcheck_inc_dec_op
 %type <enumer> enumerator
 %type <point> pointer
 %type <dir_dec> direct_declarator
@@ -174,7 +174,7 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER (pair<string,string> x=get_type_id($1);$$=new Expression(x.first,x.second);)
+	: IDENTIFIER {pair<string,string> x=get_type_id($1);$$=new Expression(x.first,x.second);}
 	| CONSTANT {$$=new Expression("INT","");} 
 	| STRING_LITERAL {$$=new Expression("CONST CHAR*","");}
 	| CONST_CHAR {$$=new Expression("CHAR","");}
@@ -193,7 +193,7 @@ postfix_expression
 	| postfix_expression '[' expression ']' {string type=check_if_array_or_pointer($1);$$=new Expression(type,"");}
 	| postfix_expression '(' ')' {vector<Parameter_Declaration*> prms=check_if_function($1->name);check_argument_with_params($1,prms);$$=new Expression($1->type,"");}
 	| postfix_expression '(' argument_expression_list ')' {vector<Parameter_Declaration*> prms=check_if_function($1->name);check_argument_with_params($1,prms);$$=new Expression($1->type,"");}
-	| postfix_expression '.' IDENTIFIER {check_obj($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");}/*check if $1 is object and idenfier is the member of that class*/}
+	| postfix_expression '.' IDENTIFIER {check_obj($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");}/*check if $1 is object and idenfier is the member of that class*/
 	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);string type=check_if_id_in_obj($1->type,$3);$$=new Expression(type,"");/*check if $1 is an pointer to class struct or union*/}
 	| postfix_expression INC_OP /* later */ {type=check_inc_dec_op_right();$$=new Expression(type,"");}
 	| postfix_expression DEC_OP {type=check_inc_dec_op_right();$$=new Expression(type,"");}
@@ -207,8 +207,8 @@ argument_expression_list
 unary_expression
 	: postfix_expression {$$=$1;}
 	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$1;}
-	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$1;}
-	| unary_operator cast_expression {string type=get_type_unary_expression($1,$2);$$=new Expression(type,"");}
+	| DEC_OP unary_expression  {($2);$$=$1;}
+	| unary_operator cast_expression {Type type=get_type_unary_expression($1,$2);$$=type;}
 	| SIZEOF unary_expression {check_for_sizeof($2->type); $$=new Expression("UNSIGNED INT","");}/* void , functiions */
 	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);$$=new Expression("UNSIGNED INT","");}
 	;
@@ -218,7 +218,7 @@ unary_operator
 	| '*' {$$="*";}//dereference
 	| '+' {$$="+";}
 	| '-' {$$="-";}
-	| '~' {$$=""~";}//bitwise not
+	| '~' {$$="~";}//bitwise not
 	| '!' {$$="!";} 
 	;
 
@@ -229,70 +229,70 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression {$$=$1;}
-	| multiplicative_expression '*' cast_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
-	| multiplicative_expression '/' cast_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
-	| multiplicative_expression '%' cast_expression	{string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| multiplicative_expression '*' cast_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| multiplicative_expression '/' cast_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| multiplicative_expression '%' cast_expression	{Type type=check_for_arithmatic_op($1,$3);$$=type;}
 	;
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
-	| additive_expression '+' multiplicative_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
-	| additive_expression '-' multiplicative_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| additive_expression '+' multiplicative_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| additive_expression '-' multiplicative_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
 	;
 
 shift_expression
 	: additive_expression {$$=$1;}
-	| shift_expression LEFT_OP additive_expression  {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
-	| shift_expression RIGHT_OP additive_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
+	| shift_expression LEFT_OP additive_expression  {Type type=check_for_shift_op($1,$3);$$=type;}
+	| shift_expression RIGHT_OP additive_expression {Type type=check_for_shift_op($1,$3);$$=type;}
 	;
 
 relational_expression
 	: shift_expression {$$=$1;}
-	| relational_expression '<' shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
-	| relational_expression '>' shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
-	| relational_expression LE_OP shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
-	| relational_expression GE_OP shift_expression {string type=check_for_arithmatic_op($1,$3);$$=new Expression(type,"");}
+	| relational_expression '<' shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| relational_expression '>' shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| relational_expression LE_OP shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| relational_expression GE_OP shift_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
 	;
 
 equality_expression
 	: relational_expression {$$=$1;}
-	| equality_expression EQ_OP relational_expression {string type=check_for_eq_op($1,$3);$$=new Expression(type,"");}
-	| equality_expression NE_OP relational_expression {string type=check_for_eq_op($1,$3);$$=new Expression(type,"");}
+	| equality_expression EQ_OP relational_expression {Type t=check_for_eq_op($1,$3);$$=t;}
+	| equality_expression NE_OP relational_expression {Type t=check_for_eq_op($1,$3);$$=t;}
 	;
 
 and_expression
 	: equality_expression {$$=$1;}
-	| and_expression '&' equality_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
+	| and_expression '&' equality_expression {Type type=check_for_shift_op($1,$3);$$=type;}
 	;
 
 exclusive_or_expression
 	: and_expression {$$=$1;}
-	| exclusive_or_expression '^' and_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
+	| exclusive_or_expression '^' and_expression {Type type=check_for_shift_op($1,$3);$$=type;}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$=$1;}
-	| inclusive_or_expression '|' exclusive_or_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
+	| inclusive_or_expression '|' exclusive_or_expression {Type type=check_for_shift_op($1,$3);$$=type;}
 	;
 
 logical_and_expression
 	: inclusive_or_expression {$$=$1;}
-	| logical_and_expression AND_OP inclusive_or_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
+	| logical_and_expression AND_OP inclusive_or_expression {Type type=check_for_shift_op($1,$3);$$=type;}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP logical_and_expression {string type=check_for_shift_op($1,$3);$$=new Expression(type,"");}
+	| logical_or_expression OR_OP logical_and_expression {Type type=check_for_shift_op($1,$3);$$=type;}
 	;
 
 conditional_expression
 	: logical_or_expression {$$=$1;}
-	| logical_or_expression '?' expression ':' conditional_expression   {string type=check_for_assign($3,$5);$$=new Expression(type,"");}
+	| logical_or_expression '?' expression ':' conditional_expression   {Type type=check_for_assign($3,$5);$$=type;}
 	;
 
 assignment_expression
 	: conditional_expression  {$$=$1;}
-	| unary_expression assignment_operator assignment_expression  {string type=check_for_assign($1,$3,$2);$$=new Expression(type,"");}
+	| unary_expression assignment_operator assignment_expression  {Type type=check_for_assign($1,$3,$2);$$=type;}
 	;
 
 assignment_operator
@@ -592,8 +592,8 @@ statement
 	;
 
 delete_statement
-	: DELETE IDENTIFIER (check_if_pointer();)
-	| DELETE '[' ']' IDENTIFIER (check_if_array();)
+	: DELETE IDENTIFIER {check_if_pointer();}
+	| DELETE '[' ']' IDENTIFIER {check_if_array();}
 	;
 
 labeled_statement
@@ -719,5 +719,6 @@ int main(int argc, char *argv[]){
     else{
         cout << "parsing successful" << endl;
     }
+
     return 0;
 }

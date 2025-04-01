@@ -273,7 +273,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
                     cout << "invalid return type for func" << endl;
                     exit(1);
                 }
-                t.prms=get_func_prms(d);
+                t.prms=get_func_params(d);
             }
             else{
                 cout << "function cannot be declared with other keywords" << endl;
@@ -281,7 +281,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
             }
         }
         else if(dtype=="function pointer"){
-            t.prms=get_func_prms(d);
+            t.prms=get_func_params(d);
             Type g;
             create_type(ds,nullptr,g);
             t.func_ret_type=g;
@@ -532,7 +532,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
                     cout << "invalid return type for func" << endl;
                     exit(1);
                 }
-                t.prms=get_func_prms(d);
+                t.prms=get_func_params(d);
             }
             else{
                 cout << "function cannot be declared with other keywords" << endl;
@@ -540,7 +540,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
             }
         }
         else if(dtype=="function pointer"){
-            t.prms=get_func_prms(d);
+            t.prms=get_func_params(d);
             Type g;
             create_type(ds,nullptr,g);
             t.func_ret_type=g;
@@ -777,7 +777,7 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
                     cout << "invalid return type for func" << endl;
                     exit(1);
                 }
-                t.prms=get_func_prms(ad);
+                t.prms=get_func_params(ad);
             }
             else{
                 cout << "function cannot be declared with other keywords" << endl;
@@ -785,7 +785,7 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
             }
         }
         else if(dtype=="function pointer"){
-            t.prms=get_func_prms(ad);
+            t.prms=get_func_params(ad);
             Type g;
             create_type(ds,nullptr,g);
             t.func_ret_type=g;
@@ -1558,10 +1558,9 @@ vector<Type> get_func_params(Declarator* d){
 }
 
 
-vector<pair<string, pair<string,Type>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
+vector<pair<string, pair<string,Type>>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
     vector<pair<string, pair<string,Type>>> result;
-    if (!idl) {
-         if (!idl){
+        if (!idl){
         Type t;
         string type=create_type(ds,nullptr,t);
         if(type=="class"||type=="struct"||type=="union"||type=="enum"){
@@ -1592,10 +1591,10 @@ vector<pair<string, pair<string,Type>> create_name_type_list(Declaration_Specifi
             else {
                 cout << "error &&&" << endl;
             }
+        }
             else return result;
 
         }
-    }
 
     }
     for (Declarator* d : idl->idl) {
@@ -1800,8 +1799,7 @@ Function_Definition:: Function_Definition(Declaration_Specifiers* ds,Declarator*
     this->parameters={};
 }
 
-Declaration::Declaration(Declaration_Specifiers* ds,Init_Declarator_List* idl,Typedef_Specifier* ts) {
-    this->name_type_list = {};                 
+Declaration::Declaration(Declaration_Specifiers* ds,Init_Declarator_List* idl,Typedef_Specifier* ts) {               
     this->level_name = ""; 
     this->level = 0;     
     this->scope = ""; // assigning default scope
@@ -1949,7 +1947,7 @@ Initializer::Initializer(string type, string name, Initializer_List* ini_lst, st
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
     this->sql = sql;                   
     this->sdl = sdl;                  
-    this->name_type_list = create_struct_name_type_list(sql,sdl,this->isfunction,this->prms);         
+    this->name_type_list = create_struct_name_type_list(sql,sdl);         
     this->scope = "local";                  
     this->level = current_level-lvl_name.size()+1;                  
     this->level_name = get_level_name();         
@@ -2011,11 +2009,11 @@ Class_Member_Declaration::Class_Member_Declaration(Member_Declaration* md, Const
     : md(md), cd(cd) { 
 }
 
-Member_Declaration::Member_Declaration(Declaration* d, Function_Definition* fd)
-    : d(d), fd(fd) {  // Member initializer list for direct initialization
+Member_Declaration::Member_Declaration(Specifier_Qualifier_List* ds,  Declarator* dec,Function_Definition* fd)
+    : ds(ds) ,dec(dec), fd(fd) {  // Member initializer list for direct initialization
 }
 
-Class_Specifier::Class_Specifier(const std::string class_name, Inheritance_Specifier* is, Class_Member_Declaration_List* cb)
+Class_Specifier::Class_Specifier(const std::string &class_name, Inheritance_Specifier* is, Class_Member_Declaration_List* cb)
     : class_name(class_name), 
       is(is),
       cb(cb) {

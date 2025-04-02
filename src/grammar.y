@@ -608,8 +608,8 @@ statement
 	;
 
 delete_statement
-	: DELETE IDENTIFIER {check_if_pointer(get_type_id($1));}
-	| DELETE '[' ']' IDENTIFIER {check_if_array(get_type_id($2));}
+	: DELETE IDENTIFIER {check_if_pointer(get_type_id($2));}
+	| DELETE '[' ']' IDENTIFIER {check_if_array(get_type_id($4));}
 	;
 
 labeled_statement

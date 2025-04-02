@@ -2926,31 +2926,31 @@ yyreduce:
 
   case 191: /* initializer: assignment_expression  */
 #line 588 "grammar.y"
-                                 {(yyval.ini)=new Initializer((yyvsp[0].typ)->type,(yyvsp[0].typ)->name,nullptr,"",nullptr);}
+                                 {Initializer* x=new Initializer((yyvsp[0].typ),"",nullptr,"",nullptr);x->type=(yyvsp[0].typ);(yyval.ini)=x;}
 #line 2931 "grammar.tab.c"
     break;
 
   case 192: /* initializer: '{' initializer_list '}'  */
 #line 589 "grammar.y"
-                                   {(yyval.ini)=new Initializer("","",(yyvsp[-1].ini_lst),"",nullptr);}
+                                   {(yyval.ini)=new Initializer(new Type(),"",(yyvsp[-1].ini_lst),"",nullptr);}
 #line 2937 "grammar.tab.c"
     break;
 
   case 193: /* initializer: '{' initializer_list ',' '}'  */
 #line 590 "grammar.y"
-                                       {(yyval.ini)=new Initializer("","",(yyvsp[-2].ini_lst),"",nullptr);}
+                                       {(yyval.ini)=new Initializer(new Type(),"",(yyvsp[-2].ini_lst),"",nullptr);}
 #line 2943 "grammar.tab.c"
     break;
 
   case 194: /* initializer: NEW class_name '(' argument_expression_list ')'  */
 #line 591 "grammar.y"
-                                                          {(yyval.ini)=new Initializer("","",nullptr,(yyvsp[-3].str),(yyvsp[-1].arg_ex_list));}
+                                                          {Type* t=get_type_id((yyvsp[-3].str));check_if_constructor(t);check_argument_with_params(t->prms,(yyvsp[-1].arg_ex_list));Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=(yyvsp[-3].str);Initializer* gg=new Initializer(z,"",nullptr,(yyvsp[-3].str),(yyvsp[-1].arg_ex_list));(yyval.ini)=gg;}
 #line 2949 "grammar.tab.c"
     break;
 
   case 195: /* initializer: NEW class_name '(' ')'  */
 #line 592 "grammar.y"
-                                 {(yyval.ini)=new Initializer("","",nullptr,(yyvsp[-2].str),nullptr);}
+                                 {Type* t=get_type_id((yyvsp[-2].str));check_if_constructor(t);check_argument_with_params(t->prms,vector<Type*>());Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=(yyvsp[-2].str);Initializer* gg=new Initializer(z,"",nullptr,(yyvsp[-2].str),nullptr);(yyval.ini)=gg;}
 #line 2955 "grammar.tab.c"
     break;
 
@@ -2968,13 +2968,13 @@ yyreduce:
 
   case 205: /* delete_statement: DELETE IDENTIFIER  */
 #line 611 "grammar.y"
-                            {check_if_pointer();}
+                            {check_if_pointer(get_type_id((yyvsp[0].str)));}
 #line 2973 "grammar.tab.c"
     break;
 
   case 206: /* delete_statement: DELETE '[' ']' IDENTIFIER  */
 #line 612 "grammar.y"
-                                    {check_if_array();}
+                                    {check_if_array(get_type_id((yyvsp[0].str)));}
 #line 2979 "grammar.tab.c"
     break;
 

@@ -871,7 +871,39 @@ vector<pair<string,pair<string,Type*>>> create_struct_name_type_list(Specifier_Q
     }
     return result;
 }
-vector<Type*> get_const_params(Parameter_List* p){
+void check_if_pointer(Type* t){
+    if(t.ptr_level==0){
+        cout << "delete must be used with ptr" << endl;
+        exit(1);
+    }
+}
+void check_if_array(Type* t){
+    if(t.array_dim==0){
+        cout << "delete [] should be used with array" << endl;
+        exit(1);
+    }
+}
+void check_compatibility(Initializer* i,Type* t){
+    if(i->ini_lst!=nullptr){
+        if(t->array_dim>0){
+            for(auto j:i->ini_lst->iv){
+                t->array_dim--;
+                check_compatibility(j,t);
+                t->array_dim++;
+            }
+        }
+        else{
+            cout << "{} can be only used in array initilisation" << endl;
+            exit(1);
+        }
+    }
+    else{
+        check_for_assign(i->type,t);
+    }
+
+}
+
+vector<Type> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
     vector<Type*> ans;
     if(p==nullptr)return ans;
@@ -2027,6 +2059,13 @@ void add_to_local_table(Enumerator_List* e,Type* t){
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
     for(auto i:d->name_type_list){
+        if(d->init_dec_list!=nullptr){
+            for(auto j:d->init_dec_list->idl){
+                if(j->ini){
+                    check_compatibility(j->ini,i.second.second);
+                }
+            }
+        }
         Symbol_Info info={i.first,i.second.first,d->level_name,d->level,d->scope,"-",i.second.second};
         Symbol_Info* x=&info;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){
@@ -2254,7 +2293,7 @@ Declarator::Declarator(Pointer* p, Direct_Declarator* dd)
 Enumerator_List::Enumerator_List() : e() {
 }
 
-Initializer::Initializer(string type, string name, Initializer_List* ini_lst,string class_id, Argument_Expression_List* arg_exp_lst)
+Initializer::Initializer(Type* type, string name, Initializer_List* ini_lst,string class_id, Argument_Expression_List* arg_exp_lst)
     : type(type),          
       name(name),         
       ini_lst(ini_lst),   

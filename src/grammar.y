@@ -585,11 +585,11 @@ direct_abstract_declarator
 	;
 
 initializer
-	: assignment_expression  {$$=new Initializer($1->type,$1->name,nullptr,"",nullptr);}
-	| '{' initializer_list '}' {$$=new Initializer("","",$2,"",nullptr);} 
-	| '{' initializer_list ',' '}' {$$=new Initializer("","",$2,"",nullptr);} 
-	| NEW class_name '(' argument_expression_list ')' {$$=new Initializer("","",nullptr,$2,$4);} 
-	| NEW class_name '(' ')' {$$=new Initializer("","",nullptr,$2,nullptr);}
+	: assignment_expression  {Initializer* x=new Initializer($1,"",nullptr,"",nullptr);x->type=$1;$$=x;}
+	| '{' initializer_list '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
+	| '{' initializer_list ',' '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
+	| NEW class_name '(' argument_expression_list ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,$4);Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,$4);$$=gg;} 
+	| NEW class_name '(' ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,vector<Type*>());Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,nullptr);$$=gg;}
 	;
 
 initializer_list
@@ -608,8 +608,8 @@ statement
 	;
 
 delete_statement
-	: DELETE IDENTIFIER {check_if_pointer();}
-	| DELETE '[' ']' IDENTIFIER {check_if_array();}
+	: DELETE IDENTIFIER {check_if_pointer(get_type_id($1));}
+	| DELETE '[' ']' IDENTIFIER {check_if_array(get_type_id($2));}
 	;
 
 labeled_statement

@@ -260,12 +260,12 @@ class Struct_or_Union_Specifier: public Node{
 };
 class Initializer: public Node{
     public:
-    string type;
+    Type* type;
     string name;
     Initializer_List* ini_lst;
     string class_id;
     Argument_Expression_List* arg_exp_lst;
-    Initializer(string type,string name,Initializer_List* ini_lst,string class_id,Argument_Expression_List* arg_exp_lst);
+    Initializer(Type* type,string name,Initializer_List* ini_lst,string class_id,Argument_Expression_List* arg_exp_lst);
 };
 class Initializer_List:public Node{
     public:

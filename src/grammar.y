@@ -115,7 +115,7 @@ Node* root;
 	Compound_Statement* comp_stmt;
 	vector<int> vec_int;
 	int int_value;
-	Type typ;
+	Type* typ;
 	Argument_Expression_List* arg_ex_list;
 	Type_Name* ty_nm;
 	Abstract_Declarator* abs_d;
@@ -128,7 +128,7 @@ Node* root;
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
-%token XOR_ASSIGN OR_ASSIGN TYPE_NAME
+%token XOR_ASSIGN OR_ASSIGN TYPE_NAME 
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID 
@@ -190,14 +190,14 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER {Type t=get_type_id($1);$$=t;}
-	| CONSTANT {Type t; t.isbasic=true;t.base="INT";$$=t;} 
-	| STRING_LITERAL {Type t; t.isbasic=true;t.base="CHAR";t.ptr_level=1;t.ptrtql.emplace_back(false,false);$$=t;}
-	| CONST_CHAR {Type t; t.isbasic=true;t.base="CHAR";$$=t;}
-	| CONST_FLOAT {Type t;t.isbasic=true;t.base="FLOAT";$$=t;}
+	: IDENTIFIER {Type* t=get_type_id($1);$$=t;}
+	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";$$=t;} 
+	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);$$=t;}
+	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;}
+	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;}
 	| CONST_EXP {$$=get_type_exp($1);}
 	| '(' expression ')' {$$=$2;}
-	| NULL {Type t;t.isnull=true;$$=t;}
+	| NULL {Type* t=new Type();t->isnull=true;$$=t;}
 	;
 
 class_name
@@ -207,10 +207,10 @@ class_name
 postfix_expression
 	: primary_expression {$$=$1;}
 	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;}
-	| postfix_expression '(' ')' {Type t=check_if_function($1);check_argument_with_params($1.prms,vector<Type>());$$=t;}
-	| postfix_expression '(' argument_expression_list ')' {Type t=check_if_function($1);check_argument_with_params($1.prms,$3->vec_exp);$$=t;}
-	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
-	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
+	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());$$=t;}
+	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
+	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
+	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type* type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
 	| postfix_expression INC_OP /* later */ {check_inc_dec_op($1);$$=$1;}
 	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;}
 	;
@@ -224,9 +224,9 @@ unary_expression
 	: postfix_expression {$$=$1;}
 	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;}
 	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;}
-	| unary_operator cast_expression {Type type=get_type_unary_expression($1,$2);$$=type;}
-	| SIZEOF unary_expression {check_for_sizeof($2); Type t; t.isbasic=true; t.base="INT";$$=t;}/* void , functiions */
-	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type t;t.isbasic=true;t.base="INT";$$=t;}
+	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;}
+	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;}/* void , functiions */
+	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;}
 	;
 
 unary_operator
@@ -245,15 +245,15 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression {$$=$1;}
-	| multiplicative_expression '*' cast_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
-	| multiplicative_expression '/' cast_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
-	| multiplicative_expression '%' cast_expression	{Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
+	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
+	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3);$$=type;}
 	;
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
-	| additive_expression '+' multiplicative_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
-	| additive_expression '-' multiplicative_expression {Type type=check_for_arithmatic_op($1,$3);$$=type;}
+	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
+	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
 	;
 
 shift_expression
@@ -264,16 +264,16 @@ shift_expression
 
 relational_expression
 	: shift_expression {$$=$1;}
-	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
-	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
-	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
-	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3);Type type;type.isbasic=true;type.base="INT";$$=type;}
+	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";$$=type;}
+	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";$$=type;}
+	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";$$=type;}
+	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";$$=type;}
 	;
 
 equality_expression
 	: relational_expression {$$=$1;}
-	| equality_expression EQ_OP relational_expression {Type type=check_for_eq_op($1,$3);$$=type;}
-	| equality_expression NE_OP relational_expression {Type type=check_for_eq_op($1,$3);$$=type;}
+	| equality_expression EQ_OP relational_expression {Type* type=check_for_eq_op($1,$3);$$=type;}
+	| equality_expression NE_OP relational_expression {Type* type=check_for_eq_op($1,$3);$$=type;}
 	;
 
 and_expression
@@ -303,12 +303,12 @@ logical_or_expression
 
 conditional_expression
 	: logical_or_expression {$$=$1;}
-	| logical_or_expression '?' expression ':' conditional_expression   {Type type=check_for_assign($3,$5,"=");$$=type;}
+	| logical_or_expression '?' expression ':' conditional_expression   {Type* type=check_for_assign($3,$5,"=");$$=type;}
 	;
 
 assignment_expression
 	: conditional_expression  {$$=$1;}
-	| unary_expression assignment_operator assignment_expression  {Type t=check_for_assign($1,$3,$2);$$=t;}
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);$$=t;}
 	;
 
 assignment_operator
@@ -327,7 +327,7 @@ assignment_operator
 
 expression
 	: assignment_expression {$$=$1;}
-	| expression ',' assignment_expression {Type t;$$=t;}
+	| expression ',' assignment_expression {Type* t=new Type();$$=t;}
 	;
 
 constant_expression
@@ -493,7 +493,7 @@ member_declaration
 
 enum_specifier
 	/*: ENUM '{' enumerator_list '}' {$$=new Enum_Specifier(std::string(""),$3);}*/
-	: ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);Type t;t.isenum=true;t.isobj=true;t.obj_class=$2;t.objtype="enum";add_to_local_table($3,t);}
+	: ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);Type* t=new Type();t->isenum=true;t->isobj=true;t->obj_class=$2;t->objtype="enum";add_to_local_table($4,t);}
 	| ENUM IDENTIFIER {$$=new Enum_Specifier(std::string($2),nullptr);check_if_declared(current_table,std::string($2),"enum");}
 	;
 
@@ -672,7 +672,7 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type type;string t=create_type($1,$2,type);$2->check_for_func();$$=x;func_ret_type=type; lvl_name.push(get_name($2));}
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);$2->check_for_func();$$=x;func_ret_type=type; lvl_name.push(get_name($2));}
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}}*/ /* create function definition object.parameter. assign type. assign size. */

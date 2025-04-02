@@ -227,7 +227,7 @@ union YYSTYPE
 	Compound_Statement* comp_stmt;
 	vector<int> vec_int;
 	int int_value;
-	Type typ;
+	Type* typ;
 	Argument_Expression_List* arg_ex_list;
 	Type_Name* ty_nm;
 	Abstract_Declarator* abs_d;

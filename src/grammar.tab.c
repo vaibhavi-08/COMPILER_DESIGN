@@ -1804,25 +1804,25 @@ yyreduce:
 
   case 3: /* primary_expression: CONSTANT  */
 #line 189 "grammar.y"
-                   {Type t; t.basic=true;t.base="INT";(yyval.typ)=t;}
+                   {Type t; t.isbasic=true;t.base="INT";(yyval.typ)=t;}
 #line 1809 "grammar.tab.c"
     break;
 
   case 4: /* primary_expression: STRING_LITERAL  */
 #line 190 "grammar.y"
-                         {Type t; t.basic=true;t->base="CHAR";t.ptr_lvl=1;t.ptrtql.emplace_back(false,false);(yyval.typ)=t;}
+                         {Type t; t.isbasic=true;t.base="CHAR";t.ptr_level=1;t.ptrtql.emplace_back(false,false);(yyval.typ)=t;}
 #line 1815 "grammar.tab.c"
     break;
 
   case 5: /* primary_expression: CONST_CHAR  */
 #line 191 "grammar.y"
-                     {Type t; t.basic=true;t.base="CHAR";(yyval.typ)=t;}
+                     {Type t; t.isbasic=true;t.base="CHAR";(yyval.typ)=t;}
 #line 1821 "grammar.tab.c"
     break;
 
   case 6: /* primary_expression: CONST_FLOAT  */
 #line 192 "grammar.y"
-                      {Type t;t.basic=true;t.base="FLOAT";(yyval.typ)=t;}
+                      {Type t;t.isbasic=true;t.base="FLOAT";(yyval.typ)=t;}
 #line 1827 "grammar.tab.c"
     break;
 
@@ -1846,7 +1846,7 @@ yyreduce:
 
   case 10: /* class_name: IDENTIFIER  */
 #line 199 "grammar.y"
-                            { (yyval.str) = (yyvsp[0].str); lvl_name.push("class " + (yyvsp[0].str));current_class_struct_union_info.push(std::make_pair((yyvsp[0].str), nullptr) ); }
+                            { (yyval.str) = (yyvsp[0].str); string s="class "; s+=(yyvsp[0].str);lvl_name.push(s);current_class_struct_union_info.push(std::make_pair((yyvsp[0].str), nullptr) ); }
 #line 1851 "grammar.tab.c"
     break;
 
@@ -1864,37 +1864,37 @@ yyreduce:
 
   case 13: /* postfix_expression: postfix_expression '(' ')'  */
 #line 205 "grammar.y"
-                                     {Type t=check_if_function((yyvsp[-2].typ));check_argument_with_params((yyvsp[-2].typ)->prms,vector<Type>());(yyval.typ)=t;}
+                                     {Type t=check_if_function((yyvsp[-2].typ));check_argument_with_params((yyvsp[-2].typ).prms,vector<Type>());(yyval.typ)=t;}
 #line 1869 "grammar.tab.c"
     break;
 
   case 14: /* postfix_expression: postfix_expression '(' argument_expression_list ')'  */
 #line 206 "grammar.y"
-                                                              {Type t=check_if_function((yyvsp[-3].typ));check_argument_with_params((yyvsp[-3].typ)->prms,(yyvsp[-1].arg_ex_list)->vec_exp);(yyval.typ)=t;}
+                                                              {Type t=check_if_function((yyvsp[-3].typ));check_argument_with_params((yyvsp[-3].typ).prms,(yyvsp[-1].arg_ex_list)->vec_exp);(yyval.typ)=t;}
 #line 1875 "grammar.tab.c"
     break;
 
   case 15: /* postfix_expression: postfix_expression '.' IDENTIFIER  */
 #line 207 "grammar.y"
-                                            {check_obj((yyvsp[-2].typ));Type type=check_if_id_in_obj((yyvsp[-2].typ),(yyvsp[0].str));(yyval.typ)=type;(yyval.typ)=type;}
+                                            {check_if_obj((yyvsp[-2].typ));Type type=check_if_id_in_obj((yyvsp[-2].typ),(yyvsp[0].str));(yyval.typ)=type;(yyval.typ)=type;}
 #line 1881 "grammar.tab.c"
     break;
 
   case 16: /* postfix_expression: postfix_expression PTR_OP IDENTIFIER  */
 #line 208 "grammar.y"
-                                               {check_obj_ptr((yyvsp[-2].typ));Type type=check_if_id_in_obj((yyvsp[-2].typ),(yyvsp[0].str));(yyval.typ)=type;}
+                                               {check_if_obj_ptr((yyvsp[-2].typ));Type type=check_if_id_in_obj((yyvsp[-2].typ),(yyvsp[0].str));(yyval.typ)=type;}
 #line 1887 "grammar.tab.c"
     break;
 
   case 17: /* postfix_expression: postfix_expression INC_OP  */
 #line 209 "grammar.y"
-                                                {check_inc_dec_op_right((yyvsp[-1].typ));(yyval.typ)=(yyvsp[-1].typ);}
+                                                {check_inc_dec_op((yyvsp[-1].typ));(yyval.typ)=(yyvsp[-1].typ);}
 #line 1893 "grammar.tab.c"
     break;
 
   case 18: /* postfix_expression: postfix_expression DEC_OP  */
 #line 210 "grammar.y"
-                                    {check_inc_dec_op_right((yyvsp[-1].typ));(yyval.typ)=(yyvsp[-1].typ);}
+                                    {check_inc_dec_op((yyvsp[-1].typ));(yyval.typ)=(yyvsp[-1].typ);}
 #line 1899 "grammar.tab.c"
     break;
 
@@ -1936,13 +1936,13 @@ yyreduce:
 
   case 25: /* unary_expression: SIZEOF unary_expression  */
 #line 223 "grammar.y"
-                                  {check_for_sizeof((yyvsp[0].typ)); Type t;t.basic=true;t.base="INT";(yyval.typ)=t}
+                                  {check_for_sizeof((yyvsp[0].typ)); Type t; t.isbasic=true; t.base="INT";(yyval.typ)=t;}
 #line 1941 "grammar.tab.c"
     break;
 
   case 26: /* unary_expression: SIZEOF '(' type_name ')'  */
 #line 224 "grammar.y"
-                                   {check_for_sizeof((yyvsp[-1].ty_nm).type);Type t;t.basic=true;t.base="INT";(yyval.typ)=t}
+                                   {check_for_sizeof((yyvsp[-1].ty_nm)->type);Type t;t.isbasic=true;t.base="INT";(yyval.typ)=t;}
 #line 1947 "grammar.tab.c"
     break;
 
@@ -1990,7 +1990,7 @@ yyreduce:
 
   case 34: /* cast_expression: '(' type_name ')' cast_expression  */
 #line 238 "grammar.y"
-                                            {check_typecast_compatibility((yyvsp[-2].ty_nm)->type,(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].ty_nm);}
+                                            {check_typecast_compatibility((yyvsp[-2].ty_nm)->type,(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].ty_nm)->type;}
 #line 1995 "grammar.tab.c"
     break;
 
@@ -2044,13 +2044,13 @@ yyreduce:
 
   case 43: /* shift_expression: shift_expression LEFT_OP additive_expression  */
 #line 256 "grammar.y"
-                                                        {Type type=check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
 #line 2049 "grammar.tab.c"
     break;
 
   case 44: /* shift_expression: shift_expression RIGHT_OP additive_expression  */
 #line 257 "grammar.y"
-                                                        {Type type=check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
 #line 2055 "grammar.tab.c"
     break;
 
@@ -2110,7 +2110,7 @@ yyreduce:
 
   case 54: /* and_expression: and_expression '&' equality_expression  */
 #line 276 "grammar.y"
-                                                 {Type type=check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                 {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
 #line 2115 "grammar.tab.c"
     break;
 
@@ -2122,7 +2122,7 @@ yyreduce:
 
   case 56: /* exclusive_or_expression: exclusive_or_expression '^' and_expression  */
 #line 281 "grammar.y"
-                                                     {Type type=check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                     {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
 #line 2127 "grammar.tab.c"
     break;
 
@@ -2134,7 +2134,7 @@ yyreduce:
 
   case 58: /* inclusive_or_expression: inclusive_or_expression '|' exclusive_or_expression  */
 #line 286 "grammar.y"
-                                                              {Type type=check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                              {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
 #line 2139 "grammar.tab.c"
     break;
 
@@ -2146,7 +2146,7 @@ yyreduce:
 
   case 60: /* logical_and_expression: logical_and_expression AND_OP inclusive_or_expression  */
 #line 291 "grammar.y"
-                                                                {Type type=check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                                {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
 #line 2151 "grammar.tab.c"
     break;
 
@@ -2158,7 +2158,7 @@ yyreduce:
 
   case 62: /* logical_or_expression: logical_or_expression OR_OP logical_and_expression  */
 #line 296 "grammar.y"
-                                                             {Type type=check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                             {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
 #line 2163 "grammar.tab.c"
     break;
 
@@ -2170,7 +2170,7 @@ yyreduce:
 
   case 64: /* conditional_expression: logical_or_expression '?' expression ':' conditional_expression  */
 #line 301 "grammar.y"
-                                                                            {Type type=check_assign_comp((yyvsp[-2].typ),(yyvsp[0].typ),"=");(yyval.typ)=type;}
+                                                                            {check_for_assign((yyvsp[-2].typ),(yyvsp[0].typ),"=");(yyval.typ)=(yyvsp[-2].typ);}
 #line 2175 "grammar.tab.c"
     break;
 
@@ -3112,13 +3112,13 @@ yyreduce:
 
   case 231: /* jump_statement: RETURN ';'  */
 #line 656 "grammar.y"
-                     {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);}(yyval.init_value)=1;}
+                     {if(current_level==lvl_name.size()){Type t=check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);}(yyval.init_value)=1;}
 #line 3117 "grammar.tab.c"
     break;
 
   case 232: /* jump_statement: RETURN initializer ';'  */
 #line 657 "grammar.y"
-                                 {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility((yyvsp[-1].node),func_ret_type);(yyval.init_value)=(yyvsp[-1].node);}
+                                 {if(current_level==lvl_name.size()){Type t=check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility((yyvsp[-1].node),func_ret_type);(yyval.init_value)=(yyvsp[-1].node);}
 #line 3123 "grammar.tab.c"
     break;
 

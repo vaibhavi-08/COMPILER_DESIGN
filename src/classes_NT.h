@@ -56,14 +56,17 @@ extern Type func_ret_type;
 extern set<string> labelset;
 extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
-pair<string,bool> get_type_id(string id);
+Type get_type_id(string id);
+Type get_type_exp(string s);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
 Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
 void add_to_local_class_struct_union_info();
-void check_inc_dec_op(Type* e);
+void check_inc_dec_op(Type e);
+void check_for_sizeof(Type t);
+Type get_type_unary_expression(string t1, Type t2);
 Declaration_Specifiers* create_decl_spec_object();
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
@@ -71,15 +74,29 @@ Struct_or_Union_Specifier* create_struct_union_spec_obj(const std::string& sou, 
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
 Struct_Declarator* create_struct_declarator_obj(Declarator* d);
+void check_if_obj_ptr(Type s);
+void check_if_obj(Type s);
+void check_if_array_or_pointer(Type& t);
+Type check_if_id_in_obj(Type& t,string id);
+void check_argument_with_params(vector<Type> prms,vector<Type> args);
 Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 string create_type(Declaration_Specifiers* ds,Declarator* d);
 vector<Type> get_func_params(Declarator* d);
 string get_level_name();
 string get_name(Declarator* d);
 vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl);
-vector<string> get_const_params(Parameter_List* p);
-vector<pair<string,string>> get_params(Parameter_List* p);
+vector<Type> get_const_params(Parameter_List* p);
+vector<pair<string,Type>> get_params(Parameter_List* p);
+void check_for_shift_op(Type t1, Type t2);
+void check_for_assign(Type t1, Type t2,string op);
+Type check_for_arithmatic_op(Type s1, Type s2);
 void add_params_to_map(Parameter_List* pl);
+Type check_for_eq_op(Type s1, Type s2);
+void check_int_comp(Type type);
+void check_typecast_compatibility(Type t1,Type t2);
+Type check_if_function(Type t);
+vector<Type> get_func_params(Abstract_Declarator* ad);
+
 Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd);
 struct Symbol_Info{
@@ -98,31 +115,42 @@ class Global_Symbol_Table{
     unordered_map<string,Symbol_Info*> gst;
     Global_Symbol_Table();
 };
-struct Type {
-    public:
-    bool isconst=false;
-    bool isvoid=false;
-    bool isvolatile=false;
-    bool isfunction=false;
-    bool isbasic=false;
-    bool isobj=false;
-    bool isstatic=false;
-    bool isauto=false;
-    bool isextern=false;
-    bool isregister=false;
-    bool isigned=false;
-    bool isunsigned=false;
-    Type func_ret_type;
-    vector<Type> prms;
-    string base="";
-    string objtype="";
-    string obj_class="";
-    vector<Base_Class*> base_classes;
-    int array_dim=0;
-    int ptr_level=0;
-    int func_ptr_lev=0;
-    vector<Tq> ptrtql;
+struct Tq{
+    bool isconst;
+    bool isvol;
 };
+
+struct Type {
+public:
+    bool isconst = false;
+    bool isvoid = false;
+    bool isvolatile = false;
+    bool isfunction = false;
+    bool isbasic = false;
+    bool isobj = false;
+    bool isstatic = false;
+    bool isauto = false;
+    bool isextern = false;
+    bool isregister = false;
+    bool isigned = false;
+    bool isunsigned = false;
+    bool isnull = false;
+
+    Type func_ret_type;  // Now this will work, as Type is fully defined here
+    vector<Type> prms;
+
+    string base = "";
+    string objtype = "";
+    string obj_class = "";
+    vector<Base_Class*> base_classes;
+    int array_dim = 0;
+    int ptr_level = 0;
+    int func_ptr_lev = 0;
+    vector<Tq> ptrtql;  // Now this will work, assuming Tq is defined earlier
+
+    Type() : ptrtql() {}
+};
+
 class Local_Symbol_Table{
     public:
     vector<Local_Symbol_Table*> children;
@@ -360,10 +388,7 @@ class Enumerator:public Node{
     Constant_Expression* ce;
     Enumerator(const std::string& id, Constant_Expression* ce);
 };
-struct Tq{
-    bool isconst;
-    bool isvol;
-}
+
 class Declarator: public Node{
     public:
     Pointer* p;
@@ -373,7 +398,7 @@ class Declarator: public Node{
     Initializer* ini;
     vector<pair<string,Type>> prms;
     bool isfunction;
-    void check_declarator();
+    string check_declarator();
     void check_for_func();
     Declarator(Pointer* p,Direct_Declarator* dd);
 };
@@ -400,7 +425,7 @@ class Type_Qualifier_List:public Node{
 };
 class Parameter_List:public Node{
     public:
-    vector<Type> pl;
+    vector<Parameter_Declaration*> pl;
     bool ellipses;
     Parameter_List();
 };

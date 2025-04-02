@@ -186,28 +186,28 @@ Node* root;
 
 primary_expression
 	: IDENTIFIER {Type t=get_type_id($1);$$=t;}
-	| CONSTANT {Type t; t.basic=true;t.base="INT";$$=t;} 
-	| STRING_LITERAL {Type t; t.basic=true;t->base="CHAR";t.ptr_lvl=1;t.ptrtql.emplace_back(false,false);$$=t;}
-	| CONST_CHAR {Type t; t.basic=true;t.base="CHAR";$$=t;}
-	| CONST_FLOAT {Type t;t.basic=true;t.base="FLOAT";$$=t;}
+	| CONSTANT {Type t; t.isbasic=true;t.base="INT";$$=t;} 
+	| STRING_LITERAL {Type t; t.isbasic=true;t.base="CHAR";t.ptr_level=1;t.ptrtql.emplace_back(false,false);$$=t;}
+	| CONST_CHAR {Type t; t.isbasic=true;t.base="CHAR";$$=t;}
+	| CONST_FLOAT {Type t;t.isbasic=true;t.base="FLOAT";$$=t;}
 	| CONST_EXP {$$=get_type_exp($1);}
 	| '(' expression ')' {$$=$2;}
 	| NULL {Type t;t.isnull=true;$$=t;}
 	;
 
 class_name
-    : IDENTIFIER /* pass */ { $$ = $1; lvl_name.push("class " + $1);current_class_struct_union_info.push(std::make_pair($1, nullptr) ); }
+    : IDENTIFIER /* pass */ { $$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) ); }
     ;
 
 postfix_expression
 	: primary_expression {$$=$1;}
 	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;}
-	| postfix_expression '(' ')' {Type t=check_if_function($1);check_argument_with_params($1->prms,vector<Type>());$$=t;}
-	| postfix_expression '(' argument_expression_list ')' {Type t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
-	| postfix_expression '.' IDENTIFIER {check_obj($1);Type type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
-	| postfix_expression PTR_OP IDENTIFIER {check_obj_ptr($1);Type type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
-	| postfix_expression INC_OP /* later */ {check_inc_dec_op_right($1);$$=$1;}
-	| postfix_expression DEC_OP {check_inc_dec_op_right($1);$$=$1;}
+	| postfix_expression '(' ')' {Type t=check_if_function($1);check_argument_with_params($1.prms,vector<Type>());$$=t;}
+	| postfix_expression '(' argument_expression_list ')' {Type t=check_if_function($1);check_argument_with_params($1.prms,$3->vec_exp);$$=t;}
+	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
+	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
+	| postfix_expression INC_OP /* later */ {check_inc_dec_op($1);$$=$1;}
+	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;}
 	;
 
 argument_expression_list
@@ -220,8 +220,8 @@ unary_expression
 	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;}
 	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;}
 	| unary_operator cast_expression {Type type=get_type_unary_expression($1,$2);$$=type;}
-	| SIZEOF unary_expression {check_for_sizeof($2); Type t;t.basic=true;t.base="INT";$$=t}/* void , functiions */
-	| SIZEOF '(' type_name ')' {check_for_sizeof($3.type);Type t;t.basic=true;t.base="INT";$$=t}
+	| SIZEOF unary_expression {check_for_sizeof($2); Type t; t.isbasic=true; t.base="INT";$$=t;}/* void , functiions */
+	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type t;t.isbasic=true;t.base="INT";$$=t;}
 	;
 
 unary_operator
@@ -235,7 +235,7 @@ unary_operator
 
 cast_expression
 	: unary_expression {$$=$1;}
-	| '(' type_name ')' cast_expression {check_typecast_compatibility($2->type,$4);$$=$2;}
+	| '(' type_name ')' cast_expression {check_typecast_compatibility($2->type,$4);$$=$2->type;}
 	;
 
 multiplicative_expression
@@ -253,8 +253,8 @@ additive_expression
 
 shift_expression
 	: additive_expression {$$=$1;}
-	| shift_expression LEFT_OP additive_expression  {Type type=check_for_shift_op($1,$3);$$=type;}
-	| shift_expression RIGHT_OP additive_expression {Type type=check_for_shift_op($1,$3);$$=type;}
+	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);$$=$1;}
+	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);$$=$1;}
 	;
 
 relational_expression
@@ -273,32 +273,32 @@ equality_expression
 
 and_expression
 	: equality_expression {$$=$1;}
-	| and_expression '&' equality_expression {Type type=check_for_shift_op($1,$3);$$=type;}
+	| and_expression '&' equality_expression {check_for_shift_op($1,$3);$$=$1;}
 	;
 
 exclusive_or_expression
 	: and_expression {$$=$1;}
-	| exclusive_or_expression '^' and_expression {Type type=check_for_shift_op($1,$3);$$=type;}
+	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);$$=$1;}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$=$1;}
-	| inclusive_or_expression '|' exclusive_or_expression {Type type=check_for_shift_op($1,$3);$$=type;}
+	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);$$=$1;}
 	;
 
 logical_and_expression
 	: inclusive_or_expression {$$=$1;}
-	| logical_and_expression AND_OP inclusive_or_expression {Type type=check_for_shift_op($1,$3);$$=type;}
+	| logical_and_expression AND_OP inclusive_or_expression {check_for_shift_op($1,$3);$$=$1;}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP logical_and_expression {Type type=check_for_shift_op($1,$3);$$=type;}
+	| logical_or_expression OR_OP logical_and_expression {check_for_shift_op($1,$3);$$=$1;}
 	;
 
 conditional_expression
 	: logical_or_expression {$$=$1;}
-	| logical_or_expression '?' expression ':' conditional_expression   {Type type=check_assign_comp($3,$5,"=");$$=type;}
+	| logical_or_expression '?' expression ':' conditional_expression   {check_for_assign($3,$5,"=");$$=$3;}
 	;
 
 assignment_expression
@@ -653,8 +653,8 @@ jump_statement
 	: GOTO IDENTIFIER ';' {$$=0;}
 	| CONTINUE ';' {$$=0;}
 	| BREAK ';' {$$=0;}
-	| RETURN ';' {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$2;}
+	| RETURN ';' {if(current_level==lvl_name.size()){Type t=check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){Type t=check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$2;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */

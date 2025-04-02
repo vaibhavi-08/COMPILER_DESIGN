@@ -66,7 +66,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
         if(ds->scs[0]=="STATIC")t.isstatic=true;
         else if(ds->scs[0]=="AUTO")t.isauto=true;
         else if(ds->scs[0]=="EXTERN")t.isextern=true;
-        else (ds->scs[0]=="REGISTER")t.isregister=true;
+        else if (ds->scs[0]=="REGISTER")t.isregister=true;
     }
     else if(ds->scs.size()!=0){
         cout << "incorrect storage class specs in type of " << d->id <<"in line :"<< line_num << endl;
@@ -118,19 +118,19 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
             type+=" SIGNED CHAR";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="SHORT"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="SHORT";
             type+=" SIGNED SHORT";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="INT"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="INT";
             type+=" SIGNED INT";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="LONG"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="LONG";
             type+=" SIGNED LONG";
@@ -143,7 +143,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
     else if(z.size()==1){
         if(z[0]->string_type=="class"||"struct"||"enum"||"union"){
             if(ds->scs.empty()&&ds->tq.empty()&&d==nullptr){
-                t.objtype=z[0].string_type;
+                t.objtype=z[0]->string_type;
                 if(z[0]->string_type=="class"){
                     auto c=z[0]->class_type;
                     if(c->is!=nullptr){
@@ -151,7 +151,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
                     }
                 }
                 else if(z[0]->string_type=="enum"){
-                    t.isenum=true;
+                    t.objtype="enum";
                     t.el=z->enum_type->enuml;
                 }
                 return z[0]->string_type;
@@ -175,37 +175,37 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
                 exit(1);
             }
         }
-        else if(z[0]->sring_type=="CHAR"){
+        else if(z[0]->string_type=="CHAR"){
             t.isbasic=true;
             t.base="CHAR";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="SHORT"){
+        else if(z[0]->string_type=="SHORT"){
             t.isbasic=true;
             t.base="SHORT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="INT"){
+        else if(z[0]->string_type=="INT"){
             t.isbasic=true;
             t.base="INT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="LONG"){
+        else if(z[0]->string_type=="LONG"){
             t.isbasic=true;
             t.base="LONG";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="FLOAT"){
+        else if(z[0]->string_type=="FLOAT"){
             t.isbasic=true;
             t.base="FLOAT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="DOUBLE"){
+        else if(z[0]->string_type=="DOUBLE"){
             t.isbasic=true;
             t.base="DOUBLE";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="SIGNED"){
+        else if(z[0]->string_type=="SIGNED"){
             cout << "just signed type not allowed" << endl;
             exit(1);
         }
@@ -216,25 +216,25 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
         else if(z[0]->string_type.find("struct")!=string::npos){
             t.isobj=true;
             t.objtype="struct";
-            t.objclass=z->string_type.substr(7);
+            t.obj_class=z->string_type.substr(7);
             type+=z[0]->string_type;
 
         }
         else if(z[0]->string_type.find("union")!=string::npos){
             t.isobj=true;
             t.objtype="union";
-            t.objclass=z[0]->string_type.substr(6);
+            t.obj_class=z[0]->string_type.substr(6);
             type+=z[0]->string_type;
         }
         else if(z[0]->string_type.find("enum")!=string::npos){
             t.objtype="enum";
-            t.objclass=z[0]->string_type.substr(5);
+            t.obj_class=z[0]->string_type.substr(5);
             type+=z[0]->string_type;
         }
         else if(z[0]->string_type.find("class")!=string::npos){
             t.isobj=true;
             t.objtype="class";
-            t.objclass=z[0]->string_type.substr(6);
+            t.obj_class=z[0]->string_type.substr(6);
             type+=z[0]->string_type;
         }
         else{
@@ -251,7 +251,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
         Pointer* y=d->p;
         while(y!=nullptr){
             type+='*';
-            t->ptr_level++;
+            t.ptr_level++;
             y=y->p;
         }
         string dtype=d->check_declarator();
@@ -263,7 +263,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
                 a=a->dd;
             }
         }
-        else (dtype=="function"){
+        else if(dtype=="function"){
             if(ds->scs.empty()&&ds->tq.empty()){
                 t.isfunction=true;
                 Type g;
@@ -300,6 +300,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
     }
     return type;
 }
+
 Type_Name::Type_Name(Specifier_Qualifier_List* sql, Abstract_Declarator* ad)
     : sql(sql), ad(ad) {
         this->type=this->create_type(this->sql,this->ad);
@@ -377,19 +378,19 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
             type+=" SIGNED CHAR";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="SHORT"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="SHORT";
             type+=" SIGNED SHORT";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="INT"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="INT";
             type+=" SIGNED INT";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="LONG"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="LONG";
             type+=" SIGNED LONG";
@@ -402,7 +403,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
     else if(z.size()==1){
         if(z[0]->string_type=="class"||"struct"||"enum"||"union"){
             if(ds->scs.empty()&&ds->tq.empty()&&d==nullptr){
-                t.objtype=z[0].string_type;
+                t.objtype=z[0]->string_type;
                 if(z[0]->string_type=="class"){
                     auto c=z[0]->class_type;
                     if(c->is!=nullptr){
@@ -410,7 +411,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
                     }
                 }
                 else if(z[0]->string_type=="enum"){
-                    t.isenum=true;
+                    t.objtype="enum";
                     t.el=z->enum_type->enuml;
                 }
                 return z[0]->string_type;
@@ -434,37 +435,37 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
                 exit(1);
             }
         }
-        else if(z[0]->sring_type=="CHAR"){
+        else if(z[0]->string_type=="CHAR"){
             t.isbasic=true;
             t.base="CHAR";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="SHORT"){
+        else if(z[0]->string_type=="SHORT"){
             t.isbasic=true;
             t.base="SHORT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="INT"){
+        else if(z[0]->string_type=="INT"){
             t.isbasic=true;
             t.base="INT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="LONG"){
+        else if(z[0]->string_type=="LONG"){
             t.isbasic=true;
             t.base="LONG";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="FLOAT"){
+        else if(z[0]->string_type=="FLOAT"){
             t.isbasic=true;
             t.base="FLOAT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="DOUBLE"){
+        else if(z[0]->string_type=="DOUBLE"){
             t.isbasic=true;
             t.base="DOUBLE";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="SIGNED"){
+        else if(z[0]->string_type=="SIGNED"){
             cout << "just signed type not allowed" << endl;
             exit(1);
         }
@@ -475,25 +476,25 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
         else if(z[0]->string_type.find("struct")!=string::npos){
             t.isobj=true;
             t.objtype="struct";
-            t.objclass=z->string_type.substr(7);
+            t.obj_class=z->string_type.substr(7);
             type+=z[0]->string_type;
 
         }
         else if(z[0]->string_type.find("union")!=string::npos){
             t.isobj=true;
             t.objtype="union";
-            t.objclass=z[0]->string_type.substr(6);
+            t.obj_class=z[0]->string_type.substr(6);
             type+=z[0]->string_type;
         }
         else if(z[0]->string_type.find("enum")!=string::npos){
             t.objtype="enum";
-            t.objclass=z[0]->string_type.substr(5);
+            t.obj_class=z[0]->string_type.substr(5);
             type+=z[0]->string_type;
         }
         else if(z[0]->string_type.find("class")!=string::npos){
             t.isobj=true;
             t.objtype="class";
-            t.objclass=z[0]->string_type.substr(6);
+            t.obj_class=z[0]->string_type.substr(6);
             type+=z[0]->string_type;
         }
         else{
@@ -510,7 +511,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
         Pointer* y=d->p;
         while(y!=nullptr){
             type+='*';
-            t->ptr_level++;
+            t.ptr_level++;
             y=y->p;
         }
         string dtype=d->check_declarator();
@@ -522,7 +523,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
                 a=a->dd;
             }
         }
-        else (dtype=="function"){
+        else if (dtype=="function"){
             if(ds->scs.empty()&&ds->tq.empty()){
                 t.isfunction=true;
                 Type g;
@@ -583,10 +584,10 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
             t.isunsigned=true;
             t.isbasic=true;
             t.base="LONG LONG";
-            return type + "UNSIGNED LONG LONG";
+            return (type.push_back("UNSIGNED LONG LONG"));
         }
         else{
-            cout << "incorrect type specs in type of " << d->id << endl;
+            cout << "incorrect type specs in type of " << d->ad << endl;
             exit(1);
         }
     }
@@ -622,32 +623,32 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
             type+=" SIGNED CHAR";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="SHORT"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="SHORT";
             type+=" SIGNED SHORT";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="INT"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="INT";
             type+=" SIGNED INT";
         }
         else if(z[0]->string_type=="SIGNED"&&z[1]->string_type=="LONG"){
-            t.issigned=true;
+            t.isigned=true;
             t.isbasic=true;
             t.base="LONG";
             type+=" SIGNED LONG";
         }
         else{
-            cout << "incorrect type specs in type of " << d->id << endl;
+            cout << "incorrect type specs in type of " << ad->id << endl;
             exit(1);
         }
     }
     else if(z.size()==1){
         if(z[0]->string_type=="class"||"struct"||"enum"||"union"){
-            if(ds->scs.empty()&&ds->tq.empty()&&d==nullptr){
-                t.objtype=z[0].string_type;
+            if(ds->scs.empty()&&ds->tq.empty()&&ad==nullptr){
+                t.objtype=z[0]->string_type;
                 if(z[0]->string_type=="class"){
                     auto c=z[0]->class_type;
                     if(c->is!=nullptr){
@@ -655,7 +656,7 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
                     }
                 }
                 else if(z[0]->string_type=="enum"){
-                    t.isenum=true;
+                    t.objtype="enum";
                     t.el=z->enum_type->enuml;
                 }
                 return z[0]->string_type;
@@ -668,7 +669,7 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
         else if(z[0]->string_type=="VOID"){
             if(ds->scs.empty()&&ds->tq.empty()){
                 t.isvoid=true;
-                if(d->check_abstract_declarator()!="function"){
+                if(ad->check_abstract_declarator()!="function"){
                     cout << "only functions can be declared void" << endl;
                     exit(1);
                 }
@@ -679,37 +680,37 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
                 exit(1);
             }
         }
-        else if(z[0]->sring_type=="CHAR"){
+        else if(z[0]->string_type=="CHAR"){
             t.isbasic=true;
             t.base="CHAR";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="SHORT"){
+        else if(z[0]->string_type=="SHORT"){
             t.isbasic=true;
             t.base="SHORT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="INT"){
+        else if(z[0]->string_type=="INT"){
             t.isbasic=true;
             t.base="INT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="LONG"){
+        else if(z[0]->string_type=="LONG"){
             t.isbasic=true;
             t.base="LONG";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="FLOAT"){
+        else if(z[0]->string_type=="FLOAT"){
             t.isbasic=true;
             t.base="FLOAT";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="DOUBLE"){
+        else if(z[0]->string_type=="DOUBLE"){
             t.isbasic=true;
             t.base="DOUBLE";
             type+=z[0]->string_type;
         }
-        else if(z[0]->sring_type=="SIGNED"){
+        else if(z[0]->string_type=="SIGNED"){
             cout << "just signed type not allowed" << endl;
             exit(1);
         }
@@ -720,25 +721,25 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
         else if(z[0]->string_type.find("struct")!=string::npos){
             t.isobj=true;
             t.objtype="struct";
-            t.objclass=z->string_type.substr(7);
+            t.obj_class=z->string_type.substr(7);
             type+=z[0]->string_type;
 
         }
         else if(z[0]->string_type.find("union")!=string::npos){
             t.isobj=true;
             t.objtype="union";
-            t.objclass=z[0]->string_type.substr(6);
+            t.obj_class=z[0]->string_type.substr(6);
             type+=z[0]->string_type;
         }
         else if(z[0]->string_type.find("enum")!=string::npos){
             t.objtype="enum";
-            t.objclass=z[0]->string_type.substr(5);
+            t.obj_class=z[0]->string_type.substr(5);
             type+=z[0]->string_type;
         }
         else if(z[0]->string_type.find("class")!=string::npos){
             t.isobj=true;
             t.objtype="class";
-            t.objclass=z[0]->string_type.substr(6);
+            t.obj_class=z[0]->string_type.substr(6);
             type+=z[0]->string_type;
         }
         else{
@@ -748,14 +749,14 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
 
     }
     else if(z.size()>3||z.size()==0) {
-        cout << "incorrect type specs in type of " << d->id << endl;
+        cout << "incorrect type specs in type of " << ad->id << endl;
         exit(1);
     }
     if(ad!=nullptr){
         Pointer* y=ad->p;
         while(y!=nullptr){
             type+='*';
-            t->ptr_level++;
+            t.ptr_level++;
             y=y->p;
         }
         string dtype=ad->check_abstract_declarator();
@@ -767,7 +768,7 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
                 a=a->dad;
             }
         }
-        else (dtype=="function"){
+        else if (dtype=="function"){
             if(ds->scs.empty()&&ds->tq.empty()){
                 t.isfunction=true;
                 Type g;
@@ -802,11 +803,11 @@ Type Type_Name::create_type(Specifier_Qualifier_List* ds,Abstract_Declarator* ad
 
         }
     }
-    return type;
+    return t;
 }
 Type get_type_exp(string s){
     Type t;
-    t.basic=true;
+    t.isbasic=true;
     for(int i=0; i<s.length(); i++){
         if(s[i]=='-'){
             t.base="FLOAT";
@@ -863,22 +864,22 @@ vector<pair<string,pair<string,Type>>> create_struct_name_type_list(Specifier_Qu
 }
 vector<Type> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
-    vector<string> ans;
+    vector<Type> ans;
     if(p==nullptr)return ans;
     vector<pair<string,Type>> prms=get_params(p);
     set<string> s;
     for(auto i:prms){
-        Type alpha=i.second.second;
+        Type alpha=i.second;
         if(alpha.isfunction){
             cout << "function params cannot contain function" << endl;
             exit(1);
         }
-        else(alpha.isobj==false&&alpha.objtype!=""){
+        else if(alpha.isobj==false&&alpha.objtype!=""){
             cout << "function cannot have whole class declaration as parameter" << endl;
             exit(1);
         }
         s.insert(i.first);
-        ans.push_back(i.second.second);
+        ans.push_back(alpha);
     }
     if(s.size()!=prms.size()){
         cout << "error: " << "all parameters should have unique name" <<"in line :"<< line_num<< endl;
@@ -887,14 +888,14 @@ vector<Type> get_const_params(Parameter_List* p){
     return ans;
 }
 
-void check_argument_with_params(vector<Type>& prms,vector<Type>& args){
+void check_argument_with_params(vector<Type> prms,vector<Type> args){
     if(args.size()!=prms.size()){
         cout << "number of args !=number of prms" << endl;
         exit(1);
     }
     int n=args.size();
     for(int i=0;i<n;i++){
-        check_for_assign(prms[i],args[i]);
+        check_for_assign(prms[i],args[i],"=");
     }
 }
 void check_inc_dec_op(Type tp) {
@@ -931,48 +932,49 @@ void check_inc_dec_op(Type tp) {
         exit(1);
     }
 }
+
 void check_for_shift_op(Type e1, Type e2) {
     auto check_operand = [](Type* tp, const string& side) {
-        if (tp.isnull) {
-            cout << "Error: Invalid " << side << " operand for shift operator (nullptr type)"<<"in line :"<< line_num<<endl;
+        if (tp->isnull) {
+            cout << "Error: Invalid " << side << " operand for shift operator (nullptr type)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp.isvoid) {
-            cout << "Error: Invalid " << side << " operand for shift operator (void type)"<<"in line :"<< line_num<<endl;
+        if (tp->isvoid) {
+            cout << "Error: Invalid " << side << " operand for shift operator (void type)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp.isobj) {
+        if (tp->isobj) {
             static const unordered_set<string> invalid_obj = {"enum", "struct", "class", "union"};
-            if (invalid_obj.count(tp.obj_class)) {
-                cout << "Error: Invalid " << side << " operand for shift operator (" 
-                     << tp.obj_class << " type)\n";
+            if (invalid_obj.count(tp->obj_class)) {
+                cout << "Error: Invalid " << side << " operand for shift operator ("
+                     << tp->obj_class << " type)\n";
                 exit(1);
             }
         }
-        if (tp.isbasic && (tp.base == "float" || tp.base == "double")) {
+        if (tp->isbasic && (tp->base == "float" || tp->base == "double")) {
             cout << "Error: Invalid " << side << " operand for shift operator ("
-                 << tp.base << " type)\n";
+                 << tp->base << " type)\n";
             exit(1);
         }
-        if (tp.func_ptr_lev > 0) {
-            cout << "Error: Invalid " << side << " operand for shift operator (function pointer)"<<"in line :"<< line_num<<endl;
+        if (tp->func_ptr_lev > 0) {
+            cout << "Error: Invalid " << side << " operand for shift operator (function pointer)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp.array_dim > 0) {
-            cout << "Error: Invalid " << side << " operand for shift operator (array type)"<<"in line :"<< line_num<<endl;
+        if (tp->array_dim > 0) {
+            cout << "Error: Invalid " << side << " operand for shift operator (array type)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp.isfunction) {
-            cout << "Error: Invalid " << side << " operand for shift operator (function type)"<<"in line :"<< line_num<<endl;
+        if (tp->isfunction) {
+            cout << "Error: Invalid " << side << " operand for shift operator (function type)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp.ptr_level > 0) {
-            cout << "Error: Invalid " << side << " operand for shift operator (pointer type)"<<"in line :"<< line_num<<endl;
+        if (tp->ptr_level > 0) {
+            cout << "Error: Invalid " << side << " operand for shift operator (pointer type)" << " in line: " << line_num << endl;
             exit(1);
         }
     };
-    check_operand(e1, "left");
-    check_operand(e2, "right");
+    check_operand(&e1, "left");
+    check_operand(&e2, "right");
 }
 
 Type check_if_id_in_obj(Type& t,string id){
@@ -981,8 +983,8 @@ Type check_if_id_in_obj(Type& t,string id){
     Local_Symbol_Table* cct=current_table;
     while(ccl>=0){
     if(ccl>copy.size()){
-        if(cct!=nullptr&&cct->class_struct_union_info->lst.find(t.obj_class)!=nullptr){
-            Local_Symbol_Table* x=cct->class_struct_union_info->lst[t.obj_class];
+        if(cct != nullptr && cct->class_struct_union_info.find(t.obj_class) != cct->class_struct_union_info.end()){
+            Local_Symbol_Table* x=cct->class_struct_union_info[t.obj_class];
             if(x->lst.find(id)!=nullptr){
                 Symbol_Info* z=x->lst[id];
                 Type y=z->t;
@@ -1005,7 +1007,7 @@ Type check_if_id_in_obj(Type& t,string id){
         }
         else if(cct==nullptr){
             Global_Symbol_Table* ccg=gst;
-            Local_Symbol_Table* x=ccg->class_struct_union_info->lst[t.obj_class];
+            Local_Symbol_Table* x=ccg->class_struct_union_info[t.obj_class];
             if(x->lst.find(id)!=nullptr){
                 Symbol_Info* z=x->lst[id];
                 Type y=z->t;
@@ -1070,39 +1072,6 @@ Argument_Expression_List :: Argument_Expression_List(){
 }
 
 
-
-void check_for_assign(Type t1, Type t2,string op) {
-
-    if(op=="="){
-        // Check if both types are basic
-        if (!t1.isbasic || !t2.isbasic) {
-            cout << "Error: Invalid assignment between non-basic types\n";
-            exit(1);
-        }
-
-        const string& base1 = t1.base;
-        const string& base2 = t2.base;
-
-        // Check allowed type pairs from specification
-        static const unordered_set<pair<string, string>, PairHash> valid_pairs = {
-            {"int", "double"}, {"double", "int"},
-            {"float", "int"}, {"long", "short"},
-            {"int", "char"}, {"bool", "int"},
-            {"int", "bool"}
-        };
-
-        // Check for allowed conversions
-        if (!(base1 == base2 || valid_pairs.count({base1, base2}))) {
-            cout << "Error: Incompatible types for assignment ("
-                << base1 << " vs " << base2 << ")\n";
-            exit(1);
-        }
-    }
-    else{
-        check_for_arithmatic_op(t1,t2);
-    }
-}
-
 void check_typecast_compatibility(Type t1,Type t2){
     check_for_assign(t1,t2,"=");
 }
@@ -1153,11 +1122,11 @@ Return the Result:
 If param_type is found in the inheritance hierarchy of arg_type, the check passes.
 Otherwise, report a type mismatch.
 */
-Type check_if_function(Type& t){
+Type check_if_function(Type t){
     if(t.isfunction){
         return t.func_ret_type;
     }
-    else if(t.func_ptr_lev==0&&!t.isobj&&t.objtype==""&&t.obj_class!=nullptr){
+    else if(t.func_ptr_lev==0&&!t.isobj&&t.objtype==""&&!t.obj_class.empty()){
         Type z;
         z.isobj=true;
         z.ptr_level++;
@@ -1209,7 +1178,7 @@ string Abstract_Declarator:: check_abstract_declarator(){
             return "array";
         }
         else{
-            cout << "error: " << z->id << "is not valid declarator" << endl;
+            cout << "error: " << z->type << "is not valid declarator at line no" <<line_num << endl;
             exit(1);
         }
     }
@@ -1268,7 +1237,7 @@ void check_if_array_or_pointer(Type& t){
     }
     else if(t.ptr_level){
         t.ptr_level--;
-        t.ptr_tql.pop_back();
+        t.ptrtql.pop_back();
     }
     else{
         cout << "only pointer or array and be used with square braces" << endl;
@@ -1287,31 +1256,33 @@ vector<pair<string,Type>> get_params(Parameter_List* p){
         string name=get_name(i->dec);
         ans.push_back(make_pair(name,t));
     }
+
+    
     return ans;
 }
-Type check_for_arithmatic_op(Type s1, Types s2){
+Type check_for_arithmatic_op(Type s1, Type s2){
     Type t;
     if(s1.isobj || s2.isobj){
         if((s1.objtype=="enum" && s2.objtype=="INT") || (s1.objtype=="enum" && s2.base=="INT") || (s1.base=="INT" && s2.objtype=="enum")){
             t.base="INT";
         }
         else{
-            cout << "error: " << s1->name << " and " << s2->name << " not valid for arithmatic operation" <<"in line :"<< line_num<< endl;
+            cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<< endl;
             exit(1);
         }
     }
     if(s1.isbasic==false || s2.isbasic==false){
-        cout << "error: " << s1->name << " and " << s2->name << " not valid for arithmatic operation" <<"in line :"<< line_num<< endl;
+        cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<< endl;
         exit(1);
     }
     if(s1.base=="CHAR" && s2.base=="CHAR"){
-        t->base="CHAR";
+        t.base="CHAR";
     }
     else if(s1.base=="SHORT" && s2.base=="SHORT" || (s1.base=="SHORT" && s2.base=="CHAR") || (s1.base=="CHAR" && s2.base=="SHORT")){
-        t->base="SHORT";
+        t.base="SHORT";
     }
     else if((s1.base=="INT" && s2.base=="INT") || (s1.base=="SHORT" && s2.base=="INT") || (s1.base=="INT" && s2.base=="SHORT") || (s1.base=="CHAR" && s2.base=="INT") || (s1.base=="INT" && s2.base=="CHAR")){
-        t->base="INT";
+        t.base="INT";
     }
     else if((s1.base=="FLOAT" || s2.base=="FLOAT") || 
    (s1.base == "INT" && s2.base == "FLOAT") || (s1.base == "FLOAT" && s2.base == "INT") || 
@@ -1349,7 +1320,7 @@ Type check_for_arithmatic_op(Type s1, Types s2){
     }
     
     else {
-    cout << "error: " << s1.name << " and " << s2.name << " not valid for arithmetic operation" <<"in line :"<< line_num<< endl;
+    cout << "error:  not valid for arithmetic operation" <<"in line :"<< line_num<< endl;
     exit(1);
     }
     return t;
@@ -1368,7 +1339,7 @@ void check_if_obj(Type s){
 void check_int_comp(Type type){
 
     if(type.isbasic==false){
-        cout << "error: " << type.name << " not valid type for comparison" <<"in line :"<< line_num<< endl;
+        cout << "error:  not valid type for comparison" <<"in line :"<< line_num<< endl;
         exit(1);
     }
  
@@ -1376,7 +1347,7 @@ void check_int_comp(Type type){
 
 Type check_for_eq_op(Type s1, Type s2) {
     Type t;
-    unordered_set<std::pair<std::string, std::string>, pair_hash> validPairs = {
+     vector<pair<string, string>> validPairs = {
         {"CHAR", "CHAR"}, {"INT", "INT"}, {"SHORT", "SHORT"}, {"LONG", "LONG"}, {"FLOAT", "FLOAT"}, {"DOUBLE", "DOUBLE"},
         {"INT", "CHAR"}, {"CHAR", "INT"}, {"INT", "SHORT"}, {"SHORT", "INT"}, {"LONG", "INT"}, {"INT", "LONG"},
         {"LONG", "SHORT"}, {"SHORT", "LONG"}, {"FLOAT", "INT"}, {"INT", "FLOAT"}, {"FLOAT", "SHORT"}, {"SHORT", "FLOAT"},
@@ -1385,10 +1356,15 @@ Type check_for_eq_op(Type s1, Type s2) {
         {"LONG LONG", "LONG LONG"}, {"LONG LONG", "LONG"}, {"LONG", "LONG LONG"}, {"LONG LONG", "INT"}, {"INT", "LONG LONG"}
     };
 
-    if (validPairs.find({s1.base, s2.base}) != validPairs.end()) {
-        t.isbasic = true;
-        t.base = "INT";
-    } else if (s1.isobj && s2.isobj) {
+    for (auto& pair : validPairs) {
+        if ((pair.first == s1.base && pair.second == s2.base) ||
+            (pair.first == s2.base && pair.second == s1.base)) {
+            t.isbasic = true;
+            t.base = "INT";
+            return t;
+        }
+    }
+    if (s1.isobj && s2.isobj) {
         if (s1.base == "INT" && s2.objtype == "enum") {
             t.base = "INT";
         } else if (s1.objtype == "enum" && s2.base== "INT") {
@@ -1430,7 +1406,7 @@ Type check_for_eq_op(Type s1, Type s2) {
     return t;
 }
 void check_if_obj_ptr(Type s) {
-    if(s.obj=="enum"){
+    if(s.objtype=="enum"){
         cout << "error:  is an enum not object pointer" <<"in line :"<< line_num<< endl;
         exit(1);
     }
@@ -1481,11 +1457,11 @@ string Declarator :: check_declarator(){
     if(z->type=="function"){
         Direct_Declarator* nxt=z->dd;
         assert(nxt!=nullptr);
-        if(nxt->type="id"){
+        if(nxt->type=="id"){
             return "function";
         }
-        else if(nxt->type="declarator"){
-            if(nxt->d->dd->type="id"&&nxt->d->p!=nullptr){
+        else if(nxt->type=="declarator"){
+            if(nxt->d->dd->type=="id"&&nxt->d->p!=nullptr){
                 return "function pointer";
             }
             else{
@@ -1520,7 +1496,7 @@ string Declarator :: check_declarator(){
     }
 }
 void Declarator :: check_for_func(){
-    string t=this->check_declarator()
+    string t=this->check_declarator();
     if(t!="function"){
         cout << "error : invalid function declarator " << this->id <<"in line :"<< line_num<< endl;
         exit(0); 
@@ -1530,11 +1506,15 @@ Pointer::Pointer(Type_Qualifier_List* tql, Pointer* p)
     : tql(tql), p(p) {
 }
 void add_params_to_map(Parameter_List* pl) {
-    std::vector<std::pair<std::string, Type T>> params = get_params(pl);
+    vector<pair<string, Type >> params = get_params(pl);
     
     for (const auto& param : params) {
         if (current_params_list.find(param.first) != current_params_list.end()) {
-            std::cerr << "error: parameter '" << param.second 
+            string t=param.second.base;
+            if(t==""){
+                t=param.second.objtype;
+            }
+            std::cerr << "error: parameter " << t
                       << "' of type '" << param.first 
                       << "' conflicts with previous declaration of type '" 
                       <<param.first  <<"in line :"<< line_num;
@@ -1556,57 +1536,60 @@ vector<Type> get_func_params(Declarator* d){
     Parameter_List* tpl = d->dd->pl;
     return get_const_params(tpl);
 }
+vector<Type> get_func_params(Abstract_Declarator* ad){
+    if (!ad->isfunction) {
+        cerr << "error: declarator is not a function"<<"in line :"<< line_num<< endl;
+        exit(1);
+    }
+    Parameter_List* tpl = ad->dad->pl;
+    return get_const_params(tpl);
 
+}
 
-vector<pair<string, pair<string,Type>>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
-    vector<pair<string, pair<string,Type>>> result;
-        if (!idl){
+vector<pair<string, pair<string, Type>>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
+    vector<pair<string, pair<string, Type>>> result;
+
+    if (!idl) {
         Type t;
-        string type=create_type(ds,nullptr,t);
-        if(type=="class"||type=="struct"||type=="union"||type=="enum"){
-            if(ds->ts[0]->string_type=="class"){
-                
-                    string name=ds->ts[0]->class_type->class_name;
-                    result.push_back(make_pair(name,make_pair("class",t)));
-                
-            }
-            else if(ds->ts[0]->string_type=="struct"){
-                
-                    string name=ds->ts[0]->struct_union_type->name;
-                    result.push_back(make_pair(name,make_pair("struct",t)));
-            
-                
-            }
-            else if(ds->ts[0]->string_type=="union"){
-               
-                    string name=ds->ts[0]->struct_union_type->name;
-                    result.push_back(make_pair(name,make_pair("union",t)));
-                
-            }
-            else if(ds->ts[0]->string_type=="enum"){
-                
-                    string name=ds->ts[0]->enum_type->id;
-                   result.push_back(make_pair(name,make_pair("enum",t)));
-            }
+        string type = create_type(ds, nullptr, t);
+        
+        if (type == "class" || type == "struct" || type == "union" || type == "enum") {
+            if (ds->ts[0]->string_type == "class") {
+                string name = ds->ts[0]->class_type->class_name;
+                result.push_back(make_pair(name, make_pair("class", t)));
+            } 
+            else if (ds->ts[0]->string_type == "struct") {
+                string name = ds->ts[0]->struct_union_type->name;
+                result.push_back(make_pair(name, make_pair("struct", t)));
+            } 
+            else if (ds->ts[0]->string_type == "union") {
+                string name = ds->ts[0]->struct_union_type->name;
+                result.push_back(make_pair(name, make_pair("union", t)));
+            } 
+            else if (ds->ts[0]->string_type == "enum") {
+                string name = ds->ts[0]->enum_type->id;
+                result.push_back(make_pair(name, make_pair("enum", t)));
+            } 
             else {
                 cout << "error &&&" << endl;
             }
         }
-            else return result;
-
-        }
-
+        return result;  // Return early if idl is null
     }
+
     for (Declarator* d : idl->idl) {
         Type t;
-        string type = create_type(ds, d,t);
-        if(type=="class"||type=="struct"||type=="union"||type=="enum"){
-            cout << "error: can't define objects like this for " << d->id <<"in line :"<< line_num<< endl;
+        string type = create_type(ds, d, t);
+
+        if (type == "class" || type == "struct" || type == "union" || type == "enum") {
+            cout << "error: can't define objects like this for " << d->id << " in line :" << line_num << endl;
             exit(1);
         }
+
         string name = d->id;
-        result.push_back(make_pair(name,make_pair(type,t)));
+        result.push_back(make_pair(name, make_pair(type, t)));
     }
+
     return result;
 }
 
@@ -1626,7 +1609,7 @@ Direct_Declarator* create_direct_declarator(const string& type,const string& id,
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
     Declarator* z=new Declarator(p,dd);
     z->id=z->dd->id;
-    string t=check_declarator();
+    string t=z->check_declarator();
     if(t=="function"){
         z->isfunction=true;
         z->prms=get_params(dd->pl);
@@ -1635,7 +1618,10 @@ Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
         }
     }
     z->type=t;
+    return z;
 }
+
+
 
 Direct_Declarator::Direct_Declarator(string& type, string& id, Declarator* d, Direct_Declarator* dd, Constant_Expression* ce, Parameter_List* pl)
     : type(type), id(id), d(d), dd(dd), ce(ce), pl(pl) {
@@ -1736,9 +1722,6 @@ Compound_Statement::Compound_Statement(Node* st, Declaration_List* dl)
 
 Declaration_List :: Declaration_List(){
     this->dv={};
-}
-Struct_Declarator_List::Struct_Declarator_List() : sd() {
-    
 }
 
 Function_Declaration::Function_Declaration(Declaration_Specifiers* ds, Declarator* d)
@@ -1930,7 +1913,7 @@ Enum_Specifier::Enum_Specifier(const std::string& id, Enumerator_List* enuml)
 
 Declarator::Declarator(Pointer* p, Direct_Declarator* dd)
     : p(p), dd(dd), type(""), id(""), prms(), isfunction(false) {
-        this->check_declarator();
+    this->type = this->check_declarator();  // Store the result of check_declarator()
 }
 
 Enumerator_List::Enumerator_List() : e() {

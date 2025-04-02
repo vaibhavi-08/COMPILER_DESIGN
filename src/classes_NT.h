@@ -94,12 +94,16 @@ void check_argument_with_params(vector<Type*> prms,vector<Type*> args);
 Type* check_for_arithmatic_op(Type* s1, Type* s2);
 Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 string create_type(Declaration_Specifiers* ds,Declarator* d);
-string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type*& t);
+string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t);
+string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t);
 vector<Type*> get_func_params(Declarator* d);
+void check_compatibility(Initializer* i,Type* t);
+void check_if_pointer(Type* t);
+void check_if_array(Type* t);
+void check_if_constructor(Type* t);
 string get_level_name();
-Type::Type(const char*str);
 string get_name(Declarator* d);
-vector<pair<string,pair<string,Type*>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl);
+vector<pair<string,pair<string,Type*>>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl);
 vector<Type*> get_const_params(Parameter_List* p);
 vector<pair<string,Type*>> get_params(Parameter_List* p);
 void check_for_shift_op(Type* t1, Type* t2);
@@ -389,8 +393,8 @@ class Direct_Abstract_Declarator : public Node{
     Abstract_Declarator* ad;
     Direct_Abstract_Declarator* dad;
     Parameter_List* pl;
-    Constant_Expression* con_exp;
-    Direct_Abstract_Declarator(string type,Abstract_Declarator* ad,Direct_Abstract_Declarator* dad,Constant_Expression* con_exp,Parameter_List* pl);
+    Type* con_exp;
+    Direct_Abstract_Declarator(string type,Abstract_Declarator* ad,Direct_Abstract_Declarator* dad,Type* con_exp,Parameter_List* pl);
 };
 class Declaration_List:public Node{
     public:
@@ -401,8 +405,8 @@ class Declaration_List:public Node{
 class Enumerator:public Node{
     public:
     string id;
-    Constant_Expression* ce;
-    Enumerator(const std::string& id, Constant_Expression* ce);
+    Type* ce;
+    Enumerator(const std::string& id, Type* ce);
 };
 
 class Declarator: public Node{

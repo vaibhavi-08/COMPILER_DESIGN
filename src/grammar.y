@@ -103,7 +103,6 @@ Node* root;
 	Enumerator_List* enuml;
 	Enumerator* enumer;
 	Function_Declaration* func_decl;
-	Init_Declarator* init_dec;
 	char* str;
 	Class_Member_Declaration* class_mem_dec;
 	Class_Member_Declaration_List* class_mem_dec_list;
@@ -143,7 +142,7 @@ Node* root;
 %type <fun_def> function_definition
 %type <ini_lst> initializer_list
 %type <dec_spec> declaration_specifiers
-%type <dec> declarator
+%type <dec> declarator init_declarator
 %type <arg_ex_list> argument_expression_list
 %type <dec_list> declaration_list
 %type <comp_stmt> compound_statement
@@ -563,7 +562,7 @@ identifier_list
 */
 type_name
 	: specifier_qualifier_list  { $$=new Type_Name($1,nullptr);}
-	| specifier_qualifier_list abstract_declarator {$$=new Type_Name($1,$2);$1->type=$1->check_abstract_declarator();}
+	| specifier_qualifier_list abstract_declarator {$$=new Type_Name($1,$2);$2->type=$2->check_abstract_declarator();}
 	;
 
 abstract_declarator
@@ -588,7 +587,7 @@ initializer
 	: assignment_expression  {Initializer* x=new Initializer($1,"",nullptr,"",nullptr);x->type=$1;$$=x;}
 	| '{' initializer_list '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
 	| '{' initializer_list ',' '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
-	| NEW class_name '(' argument_expression_list ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,$4);Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,$4);$$=gg;} 
+	| NEW class_name '(' argument_expression_list ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,$4->vec_exp);Type* z=new Type();z->isobj=true;z->objtype="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,$4);$$=gg;} 
 	| NEW class_name '(' ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,vector<Type*>());Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,nullptr);$$=gg;}
 	;
 
@@ -659,7 +658,7 @@ jump_statement
 	| CONTINUE ';' {$$=0;}
 	| BREAK ';' {$$=0;}
 	| RETURN ';' {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$2;}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=1;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */

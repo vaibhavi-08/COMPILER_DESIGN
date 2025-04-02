@@ -318,7 +318,7 @@ Abstract_Declarator :: Abstract_Declarator(Pointer* p,Direct_Abstract_Declarator
     this->dad=dad;
     this->type="";
 }
-Direct_Abstract_Declarator::Direct_Abstract_Declarator(string type, Abstract_Declarator* ad, Direct_Abstract_Declarator* dad, Constant_Expression* con_exp,Parameter_List* pl)
+Direct_Abstract_Declarator::Direct_Abstract_Declarator(string type, Abstract_Declarator* ad, Direct_Abstract_Declarator* dad,Type* con_exp,Parameter_List* pl)
 : type(type), ad(ad), dad(dad), con_exp(con_exp),pl(pl)  {
 
 }
@@ -667,7 +667,7 @@ Type* Type_Name::create_type_tn(Specifier_Qualifier_List* ds,Abstract_Declarator
                     t->objtype="enum";
                     t->el=z[0]->enum_type->enuml;
                 }
-                return z[0]->string_type;
+                return t;
             }
             else{
                 cout << "error incorrect declaration ^struct^union^enum^class" << endl;
@@ -872,13 +872,23 @@ vector<pair<string,pair<string,Type*>>> create_struct_name_type_list(Specifier_Q
     return result;
 }
 void check_if_pointer(Type* t){
-    if(t.ptr_level==0){
+    if(t->ptr_level==0){
         cout << "delete must be used with ptr" << endl;
         exit(1);
     }
 }
+
+void check_if_constructor(Type* t){
+    if(t->obj_class!=""&&t->isobj==false){
+
+    }
+    else{
+        cout<<"only constructor is called with new"<<endl;
+        exit(1);
+    }
+}
 void check_if_array(Type* t){
-    if(t.array_dim==0){
+    if(t->array_dim==0){
         cout << "delete [] should be used with array" << endl;
         exit(1);
     }
@@ -898,12 +908,12 @@ void check_compatibility(Initializer* i,Type* t){
         }
     }
     else{
-        check_for_assign(i->type,t);
+        check_for_assign(i->type,t,"=");
     }
 
 }
 
-vector<Type> get_const_params(Parameter_List* p){
+vector<Type*> get_const_params(Parameter_List* p){
     /*for each parameter declaration get type from declaration specifiers and declarator or abstract declarator*/
     vector<Type*> ans;
     if(p==nullptr)return ans;
@@ -1150,7 +1160,7 @@ Argument_Expression_List :: Argument_Expression_List(){
 Type* check_for_assign(Type* t1, Type* t2,string op) {
     if(op=="="){
         bool isconst=false;
-        if(t1->ptr_level>0)isconst=t1->ptrtql.back()->isconst;
+        if(t1->ptr_level>0)isconst=t1->ptrtql.back().isconst;
         else isconst=t1->isconst;
         if(t1->isfunction){
             cout << "functions cannot be assigned a value" << endl;
@@ -1786,9 +1796,6 @@ void check_for_sizeof(Type* t) {
     }
 }
 
-Type* myFunction() {
-    return Type*("VOID"); // Ensure Type* has a matching constructor
-}
 string Declarator :: check_declarator(){
     //return which type of declarator
     Direct_Declarator* z=this->dd;
@@ -2317,7 +2324,7 @@ Struct_Declarator_List::Struct_Declarator_List() {
    this->sd={};
 }
 
-Enumerator::Enumerator(const std::string& id, Constant_Expression* ce)
+Enumerator::Enumerator(const std::string& id, Type* ce)
     : id(id), ce(ce) { 
 }
 

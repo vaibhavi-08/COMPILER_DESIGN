@@ -2848,7 +2848,7 @@ yyreduce:
 
   case 178: /* type_name: specifier_qualifier_list abstract_declarator  */
 #line 566 "grammar.y"
-                                                       {(yyval.ty_nm)=new Type_Name((yyvsp[-1].sql),(yyvsp[0].abs_d));(yyvsp[-1].sql)->type=(yyvsp[-1].sql)->check_abstract_declarator();}
+                                                       {(yyval.ty_nm)=new Type_Name((yyvsp[-1].sql),(yyvsp[0].abs_d));(yyvsp[0].abs_d)->type=(yyvsp[0].abs_d)->check_abstract_declarator();}
 #line 2853 "grammar.tab.c"
     break;
 
@@ -2944,7 +2944,7 @@ yyreduce:
 
   case 194: /* initializer: NEW class_name '(' argument_expression_list ')'  */
 #line 591 "grammar.y"
-                                                          {Type* t=get_type_id((yyvsp[-3].str));check_if_constructor(t);check_argument_with_params(t->prms,(yyvsp[-1].arg_ex_list));Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=(yyvsp[-3].str);Initializer* gg=new Initializer(z,"",nullptr,(yyvsp[-3].str),(yyvsp[-1].arg_ex_list));(yyval.ini)=gg;}
+                                                          {Type* t=get_type_id((yyvsp[-3].str));check_if_constructor(t);check_argument_with_params(t->prms,(yyvsp[-1].arg_ex_list)->vec_exp);Type* z=new Type();z->isobj=true;z->objtype="class";z->obj_class=(yyvsp[-3].str);Initializer* gg=new Initializer(z,"",nullptr,(yyvsp[-3].str),(yyvsp[-1].arg_ex_list));(yyval.ini)=gg;}
 #line 2949 "grammar.tab.c"
     break;
 
@@ -3118,7 +3118,7 @@ yyreduce:
 
   case 232: /* jump_statement: RETURN initializer ';'  */
 #line 662 "grammar.y"
-                                 {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility((yyvsp[-1].ini),func_ret_type);(yyval.int_value)=(yyvsp[-1].ini);}
+                                 {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility((yyvsp[-1].ini),func_ret_type);(yyval.int_value)=1;}
 #line 3123 "grammar.tab.c"
     break;
 

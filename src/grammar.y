@@ -38,10 +38,15 @@
 	class Type_Qualifier_List;
 	class Parameter_Declaration;
 	class Expression;
-	class Type_Name
-	class Abstract_Declarator
-	class Direct_Abstract_Declarator
-	class Type
+	class Type_Name;
+	class Abstract_Declarator;
+	class Direct_Abstract_Declarator;
+	class Type;
+	class Initializer;
+	class Initializer_List;
+	class Argument_Expression_List;
+	class Init_Declarator_List;
+
 }
 
 %{
@@ -108,7 +113,6 @@ Node* root;
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
 	Compound_Statement* comp_stmt;
-	Expression* expr;
 	vector<int> vec_int;
 	int int_value;
 	Type typ;
@@ -117,6 +121,7 @@ Node* root;
 	Abstract_Declarator* abs_d;
 	Direct_Abstract_Declarator* dir_ad;
 	Initializer_List* ini_lst;
+	Initializer* ini;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL CONST_FLOAT CONST_CHAR CONST_EXP
 %token SIZEOF
@@ -132,8 +137,8 @@ Node* root;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 %type <node> translation_unit external_declaration
-%type <init_value> statement labeled_statement jump_statement
-%type <init_value> delete_statement selection_statement expression_statement iteration_statement
+%type <int_value> statement labeled_statement jump_statement
+%type <int_value> delete_statement selection_statement expression_statement iteration_statement
 %type <declaration> declaration
 %type <fun_def> function_definition
 %type <ini_lst> initializer_list
@@ -161,7 +166,7 @@ Node* root;
 %type <bcl> base_class_list
 %type <ty_nm> type_name
 %type <inh_spec> inheritance_specifier
-%type <node> initializer
+%type <ini> initializer
 %type <class_mem_dec_list> class_body class_member_declaration_list
 %type <class_mem_dec> class_member_declaration
 %type <memd> member_declaration
@@ -588,7 +593,7 @@ initializer
 	;
 
 initializer_list
-	: initializer {Initializer_List* x=new Initializer_List();x->iv.push_back($1);$$=$1;}
+	: initializer {Initializer_List* x=new Initializer_List();x->iv.push_back($1);$$=x;}
 	| initializer_list ',' initializer {$1->iv.push_back($3);$$=$1;}
 	;
 
@@ -614,19 +619,19 @@ labeled_statement
 	;
 
 compound_statement
-	: '{' '}' {Compound_Statement* x=new Compound_Statement(nullptr,nullptr);}
+	: '{' '}' {Compound_Statement* x=new Compound_Statement({},nullptr);}
 	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement($2,nullptr);for(int i:$2){if(i==1)x->have_ret=1;}}
-	| '{' declaration_list '}' {Compound_Statement* x=new Compound_Statement(nullptr,$2);}
+	| '{' declaration_list '}' {Compound_Statement* x=new Compound_Statement({},$2);}
 	| '{' declaration_list statement_list '}' {Compound_Statement* x=new Compound_Statement($3,$2);for(int i:$3){if(i==1)x->have_ret=1;}}
 	;
 
 declaration_list
-	: declaration {Declaration_list* x=new Declaration_List();x->dv.push_back($1);$$=x;current_level++;current_table->get_parent();add_to_local_table(current_table,$1);}
+	: declaration {Declaration_List* x=new Declaration_List();x->dv.push_back($1);$$=x;current_level++;current_table->get_parent();add_to_local_table(current_table,$1);}
 	| declaration_list declaration {$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
 	;
 
 statement_list
-	: statement {vector<int> z;z.push_back($1);$$=$1;}
+	: statement {vector<int>z;z.push_back($1);$$=z;}
 	| statement_list statement {$1.push_back($2);$$=$1;}
 	;
 
@@ -644,7 +649,7 @@ selection_statement
 iteration_statement
 	: WHILE '(' expression ')' statement {$$=$5;}
 	| UNTIL '(' expression ')' statement {$$=$5;}
-	| DO statement WHILE '(' expression ')' ';' {$$=$5;}
+	| DO statement WHILE '(' expression ')' ';' {$$=$2;}
 	| FOR '(' expression_statement expression_statement ')' statement {$$=$6;}
 	| FOR '(' expression_statement expression_statement expression ')' statement {$$=$7;}
 	;
@@ -653,8 +658,8 @@ jump_statement
 	: GOTO IDENTIFIER ';' {$$=0;}
 	| CONTINUE ';' {$$=0;}
 	| BREAK ';' {$$=0;}
-	| RETURN ';' {if(current_level==lvl_name.size()){Type t=check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){Type t=check_if_function(lvl_name.top());}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$2;}
+	| RETURN ';' {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=$2;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
@@ -672,7 +677,7 @@ function_declaration
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}}*/ /* create function definition object.parameter. assign type. assign size. */
 	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);current_params_list.clear();lvl_name.pop();}/*same as above */
-	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above */
+	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
 	;
 
@@ -717,7 +722,6 @@ int main(int argc, char *argv[]){
 	gst=new Global_Symbol_Table();
 	current_params_list.clear();
 	labelset.clear();
-	func_ret_type="";
 	while (!lvl_name.empty()){
     lvl_name.pop();
 	}

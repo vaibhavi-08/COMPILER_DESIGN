@@ -45,6 +45,10 @@ class Parameter_Declaration;
 class Type_Name;
 class Abstract_Declarator;
 class Direct_Abstract_Declarator;
+class Initializer;
+class Initializer_List;
+class Argument_Expression_List;
+class Init_Declarator_List;
 struct Type;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,Type> current_params_list;
@@ -56,11 +60,17 @@ extern Type func_ret_type;
 extern set<string> labelset;
 extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
+void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* fd);
+void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d);
+void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_List* ds,Declarator* d);
+void add_to_local_table(Local_Symbol_Table* current_table,Constructor_Declaration* cd);
 Type get_type_id(string id);
 Type get_type_exp(string s);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
-Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
+void check_if_array_or_pointer(Type& t);
+Type check_if_function(Type& t);
+Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
 void add_to_local_class_struct_union_info();
@@ -79,6 +89,7 @@ void check_if_obj(Type s);
 void check_if_array_or_pointer(Type& t);
 Type check_if_id_in_obj(Type& t,string id);
 void check_argument_with_params(vector<Type> prms,vector<Type> args);
+Type check_for_arithmatic_op(Type s1, Type s2);
 Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 string create_type(Declaration_Specifiers* ds,Declarator* d);
 vector<Type> get_func_params(Declarator* d);
@@ -89,7 +100,6 @@ vector<Type> get_const_params(Parameter_List* p);
 vector<pair<string,Type>> get_params(Parameter_List* p);
 void check_for_shift_op(Type t1, Type t2);
 void check_for_assign(Type t1, Type t2,string op);
-Type check_for_arithmatic_op(Type s1, Type s2);
 void add_params_to_map(Parameter_List* pl);
 Type check_for_eq_op(Type s1, Type s2);
 void check_int_comp(Type type);
@@ -121,24 +131,24 @@ struct Tq{
 };
 
 struct Type {
-public:
-    bool isconst = false;
-    bool isvoid = false;
-    bool isvolatile = false;
-    bool isfunction = false;
-    bool isbasic = false;
-    bool isobj = false;
-    bool isstatic = false;
-    bool isauto = false;
-    bool isextern = false;
-    bool isregister = false;
-    bool isigned = false;
-    bool isunsigned = false;
-    bool isnull = false;
-
-    Type func_ret_type;  // Now this will work, as Type is fully defined here
+    public:
+    bool isconst=false;
+    bool isvoid=false;
+    bool isvolatile=false;
+    bool isfunction=false;
+    bool isbasic=false;
+    bool isobj=false;
+    bool isstatic=false;
+    bool isauto=false;
+    bool isextern=false;
+    bool isregister=false;
+    bool isigned=false;
+    bool isunsigned=false;
+    bool isnull=false;
+    bool iseum=false;
+    Type func_ret_type;
     vector<Type> prms;
-
+    Enumerator_List* el;
     string base = "";
     string objtype = "";
     string obj_class = "";
@@ -171,7 +181,6 @@ class Function_Definition : public Node{
     public:
     Declaration_Specifiers* dec_spec;
     Declarator* decl;
-    Declaration_List* decl_list;
     Compound_Statement* cs;
     string name;
     string type;
@@ -221,10 +230,10 @@ class Declaration_Specifiers : public Node{
 };
 class Compound_Statement : public Node{
     public:
-    Node* st;
+    vector<int> st;
     int have_ret;
     Declaration_List* dl;
-    Compound_Statement(Node* st,Declaration_List* dl);
+    Compound_Statement(vector<int> st,Declaration_List* dl);
 };
 
 class Type_Specifier: public Node{
@@ -404,13 +413,13 @@ class Declarator: public Node{
 };
 class Direct_Declarator:public Node{
     public:
-    string type;
-    string id;
+    string type;  
+    string id;     
     Declarator* d;
     Direct_Declarator* dd;
     Constant_Expression* ce;
     Parameter_List* pl;
-    Direct_Declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
+    Direct_Declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
 };
 class Pointer:public Node{
     public:

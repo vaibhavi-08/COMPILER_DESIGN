@@ -934,41 +934,41 @@ void check_inc_dec_op(Type tp) {
 }
 
 void check_for_shift_op(Type e1, Type e2) {
-    auto check_operand = [](Type* tp, const string& side) {
-        if (tp->isnull) {
-            cout << "Error: Invalid " << side << " operand for shift operator (nullptr type)" << " in line: " << line_num << endl;
+    auto check_operand = [](Type tp, const string& side) {
+        if (tp.isnull) {
+            cout << "Error: Invalid " << side << " operand for shift operator (nullptr type)"<<"in line :"<< line_num<<endl;
             exit(1);
         }
-        if (tp->isvoid) {
+        if (tp.isvoid) {
             cout << "Error: Invalid " << side << " operand for shift operator (void type)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp->isobj) {
+        if (tp.isobj) {
             static const unordered_set<string> invalid_obj = {"enum", "struct", "class", "union"};
-            if (invalid_obj.count(tp->obj_class)) {
+            if (invalid_obj.count(tp.obj_class)) {
                 cout << "Error: Invalid " << side << " operand for shift operator ("
-                     << tp->obj_class << " type)\n";
+                     << tp.obj_class << " type)\n";
                 exit(1);
             }
         }
-        if (tp->isbasic && (tp->base == "float" || tp->base == "double")) {
+        if (tp.isbasic && (tp.base == "float" || tp.base == "double")) {
             cout << "Error: Invalid " << side << " operand for shift operator ("
-                 << tp->base << " type)\n";
+                 << tp.base << " type)\n";
             exit(1);
         }
-        if (tp->func_ptr_lev > 0) {
+        if (tp.func_ptr_lev > 0) {
             cout << "Error: Invalid " << side << " operand for shift operator (function pointer)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp->array_dim > 0) {
+        if (tp.array_dim > 0) {
             cout << "Error: Invalid " << side << " operand for shift operator (array type)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp->isfunction) {
+        if (tp.isfunction) {
             cout << "Error: Invalid " << side << " operand for shift operator (function type)" << " in line: " << line_num << endl;
             exit(1);
         }
-        if (tp->ptr_level > 0) {
+        if (tp.ptr_level > 0) {
             cout << "Error: Invalid " << side << " operand for shift operator (pointer type)" << " in line: " << line_num << endl;
             exit(1);
         }
@@ -981,9 +981,9 @@ Type check_if_id_in_obj(Type& t,string id){
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
     int ccl=current_level;
     Local_Symbol_Table* cct=current_table;
-    while(ccl>=0){
+    while(ccl->=0){
     if(ccl>copy.size()){
-        if(cct != nullptr && cct->class_struct_union_info.find(t.obj_class) != cct->class_struct_union_info.end()){
+        if(cct!=nullptr&&cct->class_struct_union_info.find(t.obj_class)!=nullptr){
             Local_Symbol_Table* x=cct->class_struct_union_info[t.obj_class];
             if(x->lst.find(id)!=nullptr){
                 Symbol_Info* z=x->lst[id];
@@ -1151,7 +1151,7 @@ string Abstract_Declarator:: check_abstract_declarator(){
         if(nxt=nullptr){
             return "function";
         }
-        else if(nxt->type="abs_dec"){
+        else if(nxt->type=="abs_dec"){
             if(nxt->ad->dad==nullptr&&nxt->ad->p!=nullptr){
                 return "function pointer";
             }
@@ -1390,7 +1390,7 @@ Type check_for_eq_op(Type s1, Type s2) {
         }
     } else if (s1.func_ptr_lev > 0) {
         if (s1.func_ptr_lev == s2.func_ptr_lev) {
-            check_argument_with_params({s1.func_ret_type}, {s2.func_ret_type});
+            check_argument_with_params({s1.prms}, {s2.prms});
             check_argument_with_params(s1.prms, s2.prms);
             t.base = "INT";
         } else {
@@ -1546,52 +1546,57 @@ vector<Type> get_func_params(Abstract_Declarator* ad){
 
 }
 
-vector<pair<string, pair<string, Type>>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
-    vector<pair<string, pair<string, Type>>> result;
-
+vector<pair<string, pair<string,Type>>> create_name_type_list(Declaration_Specifiers* ds, Init_Declarator_List* idl) {
+    vector<pair<string, pair<string,Type>>> result;
+    
     if (!idl) {
         Type t;
         string type = create_type(ds, nullptr, t);
         
-        if (type == "class" || type == "struct" || type == "union" || type == "enum") {
-            if (ds->ts[0]->string_type == "class") {
+        if(type == "class" || type == "struct" || type == "union" || type == "enum") {
+            if(ds->ts[0]->string_type == "class") {
                 string name = ds->ts[0]->class_type->class_name;
                 result.push_back(make_pair(name, make_pair("class", t)));
-            } 
-            else if (ds->ts[0]->string_type == "struct") {
+            }
+            else if(ds->ts[0]->string_type == "struct") {
                 string name = ds->ts[0]->struct_union_type->name;
                 result.push_back(make_pair(name, make_pair("struct", t)));
-            } 
-            else if (ds->ts[0]->string_type == "union") {
+            }
+            else if(ds->ts[0]->string_type == "union") {
                 string name = ds->ts[0]->struct_union_type->name;
                 result.push_back(make_pair(name, make_pair("union", t)));
-            } 
-            else if (ds->ts[0]->string_type == "enum") {
+            }
+            else if(ds->ts[0]->string_type == "enum") {
                 string name = ds->ts[0]->enum_type->id;
                 result.push_back(make_pair(name, make_pair("enum", t)));
-            } 
+            }
             else {
                 cout << "error &&&" << endl;
             }
         }
-        return result;  // Return early if idl is null
-    }
-
-    for (Declarator* d : idl->idl) {
-        Type t;
-        string type = create_type(ds, d, t);
-
-        if (type == "class" || type == "struct" || type == "union" || type == "enum") {
-            cout << "error: can't define objects like this for " << d->id << " in line :" << line_num << endl;
-            exit(1);
+        else {
+            return result;
         }
-
-        string name = d->id;
-        result.push_back(make_pair(name, make_pair(type, t)));
     }
-
+    // Properly placed loop outside initial if-block
+    if (idl) {  // Add null check for safety
+        for (Declarator* d : idl->idl) {
+            Type t;
+            string type = create_type(ds, d, t);
+            
+            if(type == "class" || type == "struct" || type == "union" || type == "enum") {
+                cout << "error: can't define objects like this for " << d->id << " in line :" << line_num << endl;
+                exit(1);
+            }
+            
+            string name = d->id;
+            result.push_back(make_pair(name, make_pair(type, t)));
+        }
+    }
+    
     return result;
 }
+
 
 
 Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl){
@@ -1622,8 +1627,7 @@ Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
 }
 
 
-
-Direct_Declarator::Direct_Declarator(string& type, string& id, Declarator* d, Direct_Declarator* dd, Constant_Expression* ce, Parameter_List* pl)
+Direct_Declarator::Direct_Declarator(const string& type,const string& id, Declarator* d, Direct_Declarator* dd, Constant_Expression* ce, Parameter_List* pl)
     : type(type), id(id), d(d), dd(dd), ce(ce), pl(pl) {
 }
 
@@ -1716,8 +1720,8 @@ void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_Li
     current_table->lst[name]=x;
 
 }
-Compound_Statement::Compound_Statement(Node* st, Declaration_List* dl)
-    : st(st), dl(dl),have_ret(0) { 
+Compound_Statement::Compound_Statement(vector<int> st, Declaration_List* dl)
+    : st(), dl(dl),have_ret(0) { 
 }
 
 Declaration_List :: Declaration_List(){
@@ -1768,10 +1772,9 @@ Init_Declarator_List::Init_Declarator_List() {
 void Node::add_child(Node* child){
     this->children.push_back(child);
 }
-Function_Definition:: Function_Definition(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
+Function_Definition:: Function_Definition(Declaration_Specifiers* ds,Declarator* dc,Compound_Statement* cs){
     this->dec_spec=ds;
     this->decl=dc;
-    this->decl_list=dl;
     this->cs=cs;
     this->name="";
     this->name="";
@@ -1815,8 +1818,8 @@ Declaration_Specifiers::Declaration_Specifiers() {
     this->tq = {}; 
 }
 
-Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs){
-    Function_Definition* fd=new Function_Definition(ds,dc,dl,cs);
+Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Compound_Statement* cs){
+    Function_Definition* fd=new Function_Definition(ds,dc,cs);
     Type t;
     fd->type=create_type(ds,dc,t);
     fd->t=t;
@@ -1919,12 +1922,15 @@ Declarator::Declarator(Pointer* p, Direct_Declarator* dd)
 Enumerator_List::Enumerator_List() : e() {
 }
 
-Initializer::Initializer(string type, string name, Initializer_List* ini_lst, string class_id, Argument_Expression_List* arg_exp_lst)
+Initializer::Initializer(string type, string name, Initializer_List* ini_lst,string class_id, Argument_Expression_List* arg_exp_lst)
     : type(type),          
       name(name),         
       ini_lst(ini_lst),   
       class_id(class_id),  
       arg_exp_lst(arg_exp_lst) {  
+}
+
+Initializer_List::Initializer_List() {
 }
 
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {

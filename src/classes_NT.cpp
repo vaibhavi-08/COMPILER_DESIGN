@@ -258,6 +258,18 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
         while(y!=nullptr){
             type+='*';
             t->ptr_level++;
+            Tq rr={false,false};
+            if(y->tql){
+                for(auto i:y->tql->tq){
+                    if(i=="CONST"){
+                        rr.isconst=true;
+                    }
+                    if(i=="VOLATILE"){
+                        rr.isvol=true;
+                    }
+                }
+            }
+            t->ptrtql.push_back(rr);
             y=y->p;
         }
         string dtype=d->check_declarator();
@@ -527,6 +539,18 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
         while(y!=nullptr){
             type+='*';
             t->ptr_level++;
+            Tq rr={false,false};
+            if(y->tql){
+                for(auto i:y->tql->tq){
+                    if(i=="CONST"){
+                        rr.isconst=true;
+                    }
+                    if(i=="VOLATILE"){
+                        rr.isvol=true;
+                    }
+                }
+            }
+            t->ptrtql.push_back(rr);
             y=y->p;
         }
         string dtype=d->check_declarator();
@@ -772,6 +796,18 @@ Type* Type_Name::create_type_tn(Specifier_Qualifier_List* ds,Abstract_Declarator
         Pointer* y=ad->p;
         while(y!=nullptr){
             type+='*';
+            Tq rr={false,false};
+            if(y->tql){
+                for(auto i:y->tql->tq){
+                    if(i=="CONST"){
+                        rr.isconst=true;
+                    }
+                    if(i=="VOLATILE"){
+                        rr.isvol=true;
+                    }
+                }
+            }
+            t->ptrtql.push_back(rr);
             t->ptr_level++;
             y=y->p;
         }
@@ -1168,7 +1204,10 @@ Argument_Expression_List :: Argument_Expression_List(){
 Type* check_for_assign(Type* t1, Type* t2,string op) {
     if(op=="="){
         bool isconst=false;
-        if(t1->ptr_level>0)isconst=t1->ptrtql.back().isconst;
+        if(t1->ptr_level>0){
+            Tq ss=t1->ptrtql.back();
+            isconst=ss.isconst;
+        }
         else isconst=t1->isconst;
         if(t1->isfunction){
             cout << "functions cannot be assigned a value" << endl;

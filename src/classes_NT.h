@@ -50,6 +50,7 @@ class Initializer_List;
 class Argument_Expression_List;
 class Init_Declarator_List;
 class Type;
+struct Tq;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,Type*> current_params_list;
 extern stack<string> lvl_name;
@@ -136,13 +137,9 @@ class Global_Symbol_Table{
     Global_Symbol_Table();
 };
 struct Tq{
-    bool isconst;
-    bool isvol;
-// Optional member to store the bool value
-
-    Tq() = default; // Default constructor
-    Tq(bool val) : isconst(val) {} // Constructor accepting a bool
-    Tq(bool val1, bool val2) : isconst(val1), isvol(val2) {}
+    bool isconst{false};
+    bool isvol{false};
+    Tq(bool v1,bool v2):isconst(v1),isvol(v2){}
 };
 
 class Type {

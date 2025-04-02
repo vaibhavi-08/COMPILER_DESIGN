@@ -95,7 +95,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d);
 vector<Type> get_func_params(Declarator* d);
 string get_level_name();
 string get_name(Declarator* d);
-vector<pair<string,string>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl);
+vector<pair<string,pair<string,Type>> create_name_type_list(Declaration_Specifiers* ds,Init_Declarator_List* idl);
 vector<Type> get_const_params(Parameter_List* p);
 vector<pair<string,Type>> get_params(Parameter_List* p);
 void check_for_shift_op(Type t1, Type t2);

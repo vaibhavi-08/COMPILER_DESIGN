@@ -303,12 +303,12 @@ logical_or_expression
 
 conditional_expression
 	: logical_or_expression {$$=$1;}
-	| logical_or_expression '?' expression ':' conditional_expression   {check_for_assign($3,$5,"=");$$=$3;}
+	| logical_or_expression '?' expression ':' conditional_expression   {Type type=check_for_assign($3,$5,"=");$$=type;}
 	;
 
 assignment_expression
 	: conditional_expression  {$$=$1;}
-	| unary_expression assignment_operator assignment_expression  {check_for_assign($1,$3,$2);$$=$1;}
+	| unary_expression assignment_operator assignment_expression  {Type t=check_for_assign($1,$3,$2);$$=t;}
 	;
 
 assignment_operator
@@ -493,7 +493,7 @@ member_declaration
 
 enum_specifier
 	/*: ENUM '{' enumerator_list '}' {$$=new Enum_Specifier(std::string(""),$3);}*/
-	: ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);}
+	: ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);Type t;t.isenum=true;t.isobj=true;t.obj_class=$2;t.objtype="enum";add_to_local_table($3,t);}
 	| ENUM IDENTIFIER {$$=new Enum_Specifier(std::string($2),nullptr);check_if_declared(current_table,std::string($2),"enum");}
 	;
 
@@ -504,7 +504,7 @@ enumerator_list
 
 enumerator
 	: IDENTIFIER {$$=new Enumerator(std::string($1),nullptr);}
-	| IDENTIFIER '=' constant_expression {$$=new Enumerator(std::string($1),$3);}
+	| IDENTIFIER '=' constant_expression {$$=new Enumerator(std::string($1),$3);check_int_comp($3);}
 	;
 
 type_qualifier

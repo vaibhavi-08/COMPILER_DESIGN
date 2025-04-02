@@ -64,7 +64,13 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
         type+=ds->scs[0];
         type+=" ";
         if(ds->scs[0]=="STATIC")t.isstatic=true;
-        else if(ds->scs[0]=="AUTO")t.isauto=true;
+        else if(ds->scs[0]=="AUTO"){
+            t.isauto=true;
+            if(!ds->tq.empty()||!ds->ts.empty()){
+                cout << "auto cannot be combined with any other type" << endl;
+                exit(1); 
+            }
+        }
         else if(ds->scs[0]=="EXTERN")t.isextern=true;
         else if (ds->scs[0]=="REGISTER")t.isregister=true;
     }
@@ -243,7 +249,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type& t){
         }
 
     }
-    else if(z.size()>3||z.size()==0) {
+    else if(z.size()>3||(z.size()==0&&!t.isauto)) {
         cout << "incorrect type specs in type of " << d->id <<"in line :"<< line_num<< endl;
         exit(1);
     }
@@ -503,7 +509,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type& t){
         }
 
     }
-    else if(z.size()>3||z.size()==0) {
+    else if(z.size()>3||(z.size()==0)) {
         cout << "incorrect type specs in type of " << d->id << endl;
         exit(1);
     }
@@ -878,6 +884,10 @@ vector<Type> get_const_params(Parameter_List* p){
             cout << "function cannot have whole class declaration as parameter" << endl;
             exit(1);
         }
+        else if(alpha.isstatic||alpha.isauto||alpha.isextern||alpha.isregister){
+            cout << "storage class specs not allowed in function definition" << endl;
+            exit(1);
+        }
         s.insert(i.first);
         ans.push_back(alpha);
     }
@@ -1007,24 +1017,30 @@ Type check_if_id_in_obj(Type& t,string id){
         }
         else if(cct==nullptr){
             Global_Symbol_Table* ccg=gst;
-            Local_Symbol_Table* x=ccg->class_struct_union_info[t.obj_class];
-            if(x->lst.find(id)!=nullptr){
-                Symbol_Info* z=x->lst[id];
-                Type y=z->t;
-                if(y.isauto){
-                    cout << "cannot declare auto inside class" << endl;
-                    exit(1);
-                }
-                if(!y.isobj&&y.objtype!=""){
-                    cout << "cannot access a struct class or union declaration" << endl;
-                    exit(1);
+            if(ccg->class_struct_union_info.find(t.obj_class)!=nullptr){
+                Local_Symbol_Table* x=ccg->class_struct_union_info[t.obj_class];
+                if(x->lst.find(id)!=nullptr){
+                    Symbol_Info* z=x->lst[id];
+                    Type y=z->t;
+                    if(y.isauto){
+                        cout << "cannot declare auto inside class" << endl;
+                        exit(1);
+                    }
+                    if(!y.isobj&&y.objtype!=""){
+                        cout << "cannot access a struct class or union declaration" << endl;
+                        exit(1);
+                    }
+                    else{
+                        return y;
+                    }
                 }
                 else{
-                    return y;
+                    cout << "no such member in " << t.obj_class << endl;
+                    exit(1);
                 }
             }
             else{
-                cout << "no such member in " << t.obj_class << endl;
+                cout << "class not found" << endl;
                 exit(1);
             }
         }
@@ -1072,10 +1088,271 @@ Argument_Expression_List :: Argument_Expression_List(){
 }
 
 
+
+Type check_for_assign(Type t1, Type t2,string op) {
+    if(op=="="){
+        bool isconst=false;
+        if(t1.ptr_level>0)isconst=t1->ptr_tql.back().isconst;
+        else isconst=t1.isconst;
+        if(t1.isfunction){
+            cout << "functions cannot be assigned a value" << endl;
+            exit(0);
+        }
+        else if(isconst){
+            cout << "cannot change value of a constant" << endl;
+            exit(0);
+        }
+        else if(t1.isnull){
+            cout << "cannot assign value to nullptr" << endl;
+        }
+        else if(t2.isvoid||t2.isvoid){
+            cout << "cannot assign a void type to anything" << endl;
+            exit(0);
+        }
+        else if(t1.isauto){
+            return t2;
+        }
+        else if(t2.isauto){
+            cout << "first assign value to auto" << endl;
+        }
+        else if(t1.isenum){
+            if(!t2.isenum){
+                cout << "enum can be assigned only enum value" << endl;
+                exit(1);
+            }
+            else if(t1.obj_class!=t2.obj_class){
+                cout << "enum can be assigned only enum value" << endl;
+                exit(1);
+            }
+            else{
+                return t2;
+            }
+        }
+        else if(t1.func_ptr_lev>0||t2.func_ptr_lev>0||t2.isfunction){
+            if((t1.func_ptr_lev==1&&t2.isfunction)||(t1.func_ptr_lev==t2.func_ptr_lev+1)){
+                if(!is_equal(t1.func_ret_type,t2.func_ret_type)){
+                    cout << "return type not same" << endl;
+                    exit(1);
+                }
+                else{
+                    if(t1.prms.size()==t2.prms.size()){
+                        int n=t1.prms.size();
+                        for(int i=0;i<n;i++){
+                            check_for_assign(t1.prms[i],t2.prms[i],"=");
+                        }
+                        return t2;
+                    }
+                    else{
+                        cout << "function pointer prms not matching" << endl;
+                        exit(1);
+                    }
+                }
+            }
+            else {
+                cout << "invalid assigment for function pointer" << endl;
+            }
+        }
+        else if(t2.isfunction){
+            cout << "invalid assignment for func" << endl;
+            exit(1);
+        }
+        else if(t1.ptr_level>0&&t2.isnull){
+            return t2;
+        }
+        else if(t2.isenum){
+            if(t1.isbasic&&t1.base!="CHAR"&&t1.base!="SHORT"&&t1.ptr_level=0&&t.array_dim==0&&t1.func_ptr_lev==0){
+                return t2;
+            }
+            else{
+                cout << "enum cannot be asgined to this type" << endl;
+                exit(1);
+            }
+        }
+        else if(t1.array_dim>0||t2.array_dim>0){
+            if(is_equal(t1,t2)){
+                return t2;
+            }
+            else{
+                cout << "invalid assignment with arrays" << endl;
+            }
+        }
+        else if(t1.ptr_level>0||t2.ptr_level>0){
+            if(t1.isbasic||t2.isbasic){
+                if(is_equal(t1,t2)){
+                    return t2;
+                }
+                else{
+                    cout << "invalid assignment with ptrs" << endl;
+                    exit(1);
+                }
+            }
+            else{
+                if(t1.ptr_level==1&&t2.ptr_level==1){
+                    assert(t1.isobj);
+                    assert(t2.isobj);
+                    if(t1.objtype==t1.objtype){
+                        if(t1.objtype=="class"){
+                            if(t1.obj_class==t2.obj_class){
+                                return t2;
+                            }
+                            else{
+                                bool check=false;
+                                Type z2=get_type_id(t2.obj_class);
+                                bool check=false;
+                                for(auto i:z2.base_classes){
+                                    if(t1.obj_class==i->id){
+                                        check=true;
+                                        break;
+                                    }
+                                }
+                                if(check){
+                                    return t2;
+                                }
+                                else{
+                                    cout << "different classes " << endl;
+                                    exit(1);
+                                }
+                            }
+                        }
+                        else{
+                            if(t1.obj_class==t2.obj_class){
+                                return t2;
+                            }
+                            else{
+                                cout << "different struct/union" << endl;
+                                exit(1);
+                            }
+                        }
+                    }
+                    else{
+                        cout << "not proper assignment between objects:different inter assignment between struct union class" << endl;
+                        exit(1);
+                    }
+                }
+                else{
+                    if(is_equal(t1,t2)){
+                        return t2;
+                    }
+                    else{
+                        cout << "not proper assignment between objects pointers" << endl;
+                        exit(1);
+                    }
+                }
+            }
+        }
+        else{
+            if(t1.isbasic||t2.isbasic){
+                if(t1.isbasic&&t2.isbasic){
+                    if(t1.base==t2.base){
+                        return t2;
+                    }
+                    else if(t1.base=="LONG LONG"&&(t2.base=="INT"||t2.base=="SHORT"||t2.base=="LONG"||t2.base=="CHAR")){
+                        return t2;
+                    }
+                    else if(t1.base=="LONG"&&(t2.base=="INT"||t2.base=="SHORT"||t2.base=="CHAR")){
+                        return t2;
+                    }
+                    else if(t1.base=="FLOAT"&&(t2.base=="INT"||t2.base=="SHORT"||t2.base=="CHAR")){
+                        return t2;
+                    }
+                    else if(t1.base=="DOUBLE"&&(t2.base=="INT"||t2.base=="SHORT"||t2.base="LONG"||t2.base=="FLOAT"||t2.base=="CHAR")){
+                        return t2;
+                    }
+                    else if(t1.base=="INT"&&(t2.base=="CHAR"||t2.base=="SHORT")){
+                        return t2;
+                    }
+                    else{
+                        cout << "basic types not compatible for assignment" << endl;
+                        exit(1);
+                    }
+                }
+                else{
+                    cout << "basic types not compatible with obj types for assignment" << endl;
+                    exit(1);
+                }
+            }
+            else{
+                assert(t1.isobj);
+                assert(t2.isobj);
+                if(t1.objtype==t1.objtype){
+                    if(t1.objtype=="class"){
+                        if(t1.obj_class==t2.obj_class){
+                            return t2;
+                        }
+                        else{
+                            Type z2=get_type_id(t2.obj_class);
+                            bool check=false;
+                            for(auto i:z2.base_classes){
+                                if(t1.obj_class==i->id){
+                                    check=true;
+                                    break;
+                                }
+                            }
+                            if(check){
+                                return t2;
+                            }
+                            else{
+                                cout << "different classes " << endl;
+                                exit(1);
+                            }
+                        }
+                    }
+                    else{
+                        if(t1.obj_class==t2.obj_class){
+                            return t2;
+                        }
+                        else{
+                            cout << "different struct/union" << endl;
+                            exit(1);
+                        }
+                    }
+                }
+                else{
+                    cout << "not proper assignment between objects:different inter assignment between struct union class" << endl;
+                    exit(1);
+                }
+            }
+        }
+
+    }
+    else{
+        check_for_assign(t1,check_for_arithmatic_op(t1,t2));
+        return t1;
+    }
+}
+
 void check_typecast_compatibility(Type t1,Type t2){
     check_for_assign(t1,t2,"=");
 }
-
+bool is_equal(Type t1,Type t2){
+    bool check=true;
+    if(t1.prms.size()==t2.prms.size()){
+        int n=t1.prms.size();
+        for(int i=0;i<n;i++){
+            if(!is_equal(t1.prms[i],t2.prms[i])){
+                check=false;
+                break;
+            }
+        }
+    }
+    return (
+        check&&
+        t1.isfunction==t2.isfunction&&
+        t1.isbasic==t2.isbasic&&
+        t1.isobj==t2.isobj&&
+        t1.isauto==t2.isauto&&
+        t1.isnull==t2.isnull&&
+        t1.isenum==t2.isenum&&
+        is_equal(t1.func_ret_type,t2.func_ret_type)&&
+        t1.base==t2.base&&
+        t1.objtype==t2.objtype&&
+        t1.obj_class==t2.obj_class&&
+        t1.array_dim==t2.array_dim&&
+        t1.ptr_level==t2.ptr_level&&
+        t1.func_ptr_lev==t2.func_ptr_lev
+        
+    )
+}
 
 /*
 vector<pair<string,Symbol_Info>> get_params(Parameter_List* p){
@@ -1691,6 +1968,32 @@ void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd
             exit(1);
         }
         current_table->lst[i.first]=x;
+    }
+}
+void add_to_local_table(Enumerator_List* e,Type t){
+    string level_name=get_level_name();
+    int level=current_level-lvl_name.size()+1;
+    string scope;
+    if(current_level==0)scope="global";
+    else scope="local";
+    for(auto x:e->e){
+        if(current_table!=nullptr){
+            Symbol_Info info={x->id,"enum "+t.obj_class,level_name,level,scope,"-",t};
+            if(current_table->lst.find(x->id)!=current_table->lst.end()){
+                cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
+                exit(1);
+            }
+            current_table->lst[x->id]=&info;
+        }
+        else{
+            Symbol_Info info={x->id,"enum "+t.obj_class,level_name,level,scope,"-",t};
+            if(gst->gst.find(x->id)!=gst->gst.end()){
+                cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
+                exit(1);
+            }
+            gst->gst[x->id]=&info;
+        }
+        
     }
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){

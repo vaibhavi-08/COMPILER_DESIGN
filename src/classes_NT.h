@@ -45,6 +45,10 @@ class Parameter_Declaration;
 class Type_Name;
 class Abstract_Declarator;
 class Direct_Abstract_Declarator;
+class Initializer;
+class Initializer_List;
+class Argument_Expression_List;
+class Init_Declarator_List;
 struct Type;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,Type> current_params_list;
@@ -56,10 +60,16 @@ extern Type func_ret_type;
 extern set<string> labelset;
 extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
+void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* fd);
+void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d);
+void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_List* ds,Declarator* d);
+void add_to_local_table(Local_Symbol_Table* current_table,Constructor_Declaration* cd);
 pair<string,bool> get_type_id(string id);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
-Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Declaration_List* dl,Compound_Statement* cs);
+void check_if_array_or_pointer(Type& t);
+Type check_if_function(Type& t);
+Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst);
 void add_to_local_class_struct_union_info();
@@ -71,6 +81,7 @@ Struct_or_Union_Specifier* create_struct_union_spec_obj(const std::string& sou, 
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
 Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
 Struct_Declarator* create_struct_declarator_obj(Declarator* d);
+Type check_for_arithmatic_op(Type s1, Type s2);
 Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 string create_type(Declaration_Specifiers* ds,Declarator* d);
 vector<Type> get_func_params(Declarator* d);
@@ -102,6 +113,7 @@ struct Type {
     public:
     bool isconst=false;
     bool isvoid=false;
+    bool isnull=false;
     bool isvolatile=false;
     bool isfunction=false;
     bool isbasic=false;
@@ -143,7 +155,6 @@ class Function_Definition : public Node{
     public:
     Declaration_Specifiers* dec_spec;
     Declarator* decl;
-    Declaration_List* decl_list;
     Compound_Statement* cs;
     string name;
     string type;
@@ -193,10 +204,10 @@ class Declaration_Specifiers : public Node{
 };
 class Compound_Statement : public Node{
     public:
-    Node* st;
+    vector<int> st;
     int have_ret;
     Declaration_List* dl;
-    Compound_Statement(Node* st,Declaration_List* dl);
+    Compound_Statement(vector<int> st,Declaration_List* dl);
 };
 
 class Type_Specifier: public Node{
@@ -373,19 +384,19 @@ class Declarator: public Node{
     Initializer* ini;
     vector<pair<string,Type>> prms;
     bool isfunction;
-    void check_declarator();
+    string check_declarator();
     void check_for_func();
     Declarator(Pointer* p,Direct_Declarator* dd);
 };
 class Direct_Declarator:public Node{
     public:
-    string type;
-    string id;
+    string type;  
+    string id;     
     Declarator* d;
     Direct_Declarator* dd;
     Constant_Expression* ce;
     Parameter_List* pl;
-    Direct_Declarator(string& type,string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
+    Direct_Declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
 };
 class Pointer:public Node{
     public:

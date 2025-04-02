@@ -70,6 +70,7 @@ Type* get_type_id(string id);
 Type* get_type_exp(string s);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
+struct Tq;
 void check_if_array_or_pointer(Type* t);
 Type* check_if_function(Type* t);
 Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Compound_Statement* cs);
@@ -137,6 +138,11 @@ class Global_Symbol_Table{
 struct Tq{
     bool isconst;
     bool isvol;
+// Optional member to store the bool value
+
+    Tq() = default; // Default constructor
+    Tq(bool val) : isconst(val) {} // Constructor accepting a bool
+    Tq(bool val1, bool val2) : isconst(val1), isvol(val2) {}
 };
 
 class Type {

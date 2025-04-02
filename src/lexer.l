@@ -20,7 +20,7 @@ void comment();
 void count();
 int yylex();
 extern int yylex();
-int line_num;
+extern int line_num;
 extern bool iserror;
 
 %}

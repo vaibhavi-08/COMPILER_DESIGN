@@ -9,8 +9,8 @@ Local_Symbol_Table* current_table = nullptr; // Definition
 stack<string> access_spec_stk;
 Type* func_ret_type;
 int current_level = 0;
-set<string> labelset;
 int line_num=1;
+set<string> labelset;
 stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 void add_to_local_class_struct_union_info(){
     if(!current_class_struct_union_info.empty()){
@@ -321,6 +321,14 @@ Abstract_Declarator :: Abstract_Declarator(Pointer* p,Direct_Abstract_Declarator
 Direct_Abstract_Declarator::Direct_Abstract_Declarator(string type, Abstract_Declarator* ad, Direct_Abstract_Declarator* dad,Type* con_exp,Parameter_List* pl)
 : type(type), ad(ad), dad(dad), con_exp(con_exp),pl(pl)  {
 
+}
+
+Struct_Declaration_List::Struct_Declaration_List() {
+    // Constructor logic
+}
+
+Class_Member_Declaration_List::Class_Member_Declaration_List(){
+    // Constructor logic
 }
 
 string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
@@ -1849,6 +1857,9 @@ void Declarator :: check_for_func(){
 }
 Pointer::Pointer(Type_Qualifier_List* tql, Pointer* p) 
     : tql(tql), p(p) {
+}
+Type_Qualifier_List::Type_Qualifier_List(){
+    //
 }
 void add_params_to_map(Parameter_List* pl) {
     vector<pair<string, Type* >> params = get_params(pl);

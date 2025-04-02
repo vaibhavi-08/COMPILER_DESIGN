@@ -142,7 +142,7 @@ Node* root;
 %type <fun_def> function_definition
 %type <ini_lst> initializer_list
 %type <dec_spec> declaration_specifiers
-%type <dec> declarator init_declarator
+%type <dec> declarator 
 %type <arg_ex_list> argument_expression_list
 %type <dec_list> declaration_list
 %type <comp_stmt> compound_statement
@@ -694,7 +694,6 @@ extern FILE *yyin;
 extern FILE *yyout;
 // Define the global variables here
 bool iserror = false;
-int line_num = 1;
 vector<pair<string, int>> error;
 unordered_map<string, string> symtab;
 vector<string> program;

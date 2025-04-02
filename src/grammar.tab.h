@@ -156,7 +156,7 @@ extern int yydebug;
     UNION = 304,                   /* UNION  */
     ENUM = 305,                    /* ENUM  */
     ELLIPSIS = 306,                /* ELLIPSIS  */
-    NULL = 307,                    /* NULL  */
+    NULL_TOKEN = 307,              /* NULL_TOKEN  */
     CASE = 308,                    /* CASE  */
     DEFAULT = 309,                 /* DEFAULT  */
     IF = 310,                      /* IF  */
@@ -215,7 +215,6 @@ union YYSTYPE
 	Enumerator_List* enuml;
 	Enumerator* enumer;
 	Function_Declaration* func_decl;
-	Init_Declarator* init_dec;
 	char* str;
 	Class_Member_Declaration* class_mem_dec;
 	Class_Member_Declaration_List* class_mem_dec_list;
@@ -225,7 +224,7 @@ union YYSTYPE
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
 	Compound_Statement* comp_stmt;
-	vector<int> vec_int;
+	std::vector<int>* vec_int;
 	int int_value;
 	Type* typ;
 	Argument_Expression_List* arg_ex_list;
@@ -235,7 +234,7 @@ union YYSTYPE
 	Initializer_List* ini_lst;
 	Initializer* ini;
 
-#line 239 "grammar.tab.h"
+#line 238 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

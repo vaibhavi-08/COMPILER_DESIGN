@@ -49,7 +49,7 @@ class Initializer;
 class Initializer_List;
 class Argument_Expression_List;
 class Init_Declarator_List;
-struct Type;
+class Type;
 extern Global_Symbol_Table* gst;
 extern unordered_map<string,Type*> current_params_list;
 extern stack<string> lvl_name;

@@ -112,7 +112,7 @@ Node* root;
 	Type_Qualifier_List* tql;
 	Parameter_Declaration* par_dec;
 	Compound_Statement* comp_stmt;
-	vector<int> vec_int;
+	std::vector<int>* vec_int;
 	int int_value;
 	Type* typ;
 	Argument_Expression_List* arg_ex_list;
@@ -131,7 +131,7 @@ Node* root;
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID 
-%token STRUCT UNION ENUM ELLIPSIS NULL
+%token STRUCT UNION ENUM ELLIPSIS NULL_TOKEN
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
@@ -181,7 +181,7 @@ Node* root;
 %type <point> pointer
 %type <dir_dec> direct_declarator
 %type <func_decl> function_declaration
-%type <init_dec> init_declarator 
+%type <dec> init_declarator 
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
@@ -196,7 +196,7 @@ primary_expression
 	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;}
 	| CONST_EXP {$$=get_type_exp($1);}
 	| '(' expression ')' {$$=$2;}
-	| NULL {Type* t=new Type();t->isnull=true;$$=t;}
+	| NULL_TOKEN {Type* t=new Type();t->isnull=true;$$=t;}
 	;
 
 class_name
@@ -337,7 +337,7 @@ constant_expression
 /*check whether type is correct*/
 declaration
 	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
-	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);func_ret_type="";current_params_list.clear();}/* create object as above but add both fields*/
+	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);func_ret_type=nullptr;current_params_list.clear();}/* create object as above but add both fields*/
 /* thik karna hai action*/	/*| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}*//* same as above . check whether typedef specifier is there in typedef table. */
 	;
 
@@ -619,9 +619,9 @@ labeled_statement
 
 compound_statement
 	: '{' '}' {Compound_Statement* x=new Compound_Statement({},nullptr);}
-	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement($2,nullptr);for(int i:$2){if(i==1)x->have_ret=1;}}
+	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);for(int i:*($2)){if(i==1)x->have_ret=1;}}
 	| '{' declaration_list '}' {Compound_Statement* x=new Compound_Statement({},$2);}
-	| '{' declaration_list statement_list '}' {Compound_Statement* x=new Compound_Statement($3,$2);for(int i:$3){if(i==1)x->have_ret=1;}}
+	| '{' declaration_list statement_list '}' {Compound_Statement* x=new Compound_Statement(*($3),$2);for(int i:*($3)){if(i==1)x->have_ret=1;}}
 	;
 
 declaration_list
@@ -630,8 +630,8 @@ declaration_list
 	;
 
 statement_list
-	: statement {vector<int>z;z.push_back($1);$$=z;}
-	| statement_list statement {$1.push_back($2);$$=$1;}
+	: statement {vector<int>z;z.push_back($1);$$=&z;}
+	| statement_list statement {($1)->push_back($2);$$=($1);}
 	;
 
 expression_statement

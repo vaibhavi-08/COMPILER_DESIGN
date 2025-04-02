@@ -337,7 +337,7 @@ constant_expression
 /*check whether type is correct*/
 declaration
 	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
-	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);func_ret_type=nullptr;current_params_list.clear();}/* create object as above but add both fields*/
+	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);current_params_list.clear();}/* create object as above but add both fields*/
 /* thik karna hai action*/	/*| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}*//* same as above . check whether typedef specifier is there in typedef table. */
 	;
 
@@ -347,8 +347,8 @@ declaration
 
 declaration_specifiers
 	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back($1);$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
-	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);$$=ds;}/* add storage_class_specifier to $2*/
-	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);$$=ds;}/* create declaration specifier object . add type specifier to it . pass it above. */
+	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);$$=ds;cout << "declaration specifier done scs" << endl;}/* add storage_class_specifier to $2*/
+	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);$$=ds;cout << ds->ts.back()->string_type << endl;}/* create declaration specifier object . add type specifier to it . pass it above. */
 	| type_specifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->ts.push_back($1);$$=ds;}/* add type_specifier to $2 */
 	| type_qualifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back($1);$$=ds;}/* create declaration_specifiers object . add type qualifier to it . pass it above. */
 	| type_qualifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->tq.push_back($1);$$=ds;}/* add type_qualifier to $2 */
@@ -367,7 +367,7 @@ init_declarator
 storage_class_specifier
 	:/* TYPEDEF */
 	| EXTERN {$$="EXTERN";}
-	| STATIC {$$="STATIC";}
+	| STATIC {$$="STATIC";cout << "STATIC" << endl;}
 	| AUTO {$$="AUTO";}
 	| REGISTER {$$="REGISTER";}
 	;
@@ -597,13 +597,13 @@ initializer_list
 	;
 
 statement
-	: labeled_statement 
-	| compound_statement 
-	| expression_statement 
-	| selection_statement 
-	| iteration_statement 
-	| jump_statement 
-	| delete_statement 
+	: labeled_statement {$$=$1;}
+	| compound_statement {int z=0;for(int i:$1->st){if(i==1)z=1;}return z;}
+	| expression_statement {$$=$1;}
+	| selection_statement {$$=$1;}
+	| iteration_statement {$$=$1;}
+	| jump_statement {$$=$1;}
+	| delete_statement {$$=$1;}
 	;
 
 delete_statement
@@ -618,20 +618,20 @@ labeled_statement
 	;
 
 compound_statement
-	: '{' '}' {Compound_Statement* x=new Compound_Statement({},nullptr);}
-	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);for(int i:*($2)){if(i==1)x->have_ret=1;}}
-	| '{' declaration_list '}' {Compound_Statement* x=new Compound_Statement({},$2);}
-	| '{' declaration_list statement_list '}' {Compound_Statement* x=new Compound_Statement(*($3),$2);for(int i:*($3)){if(i==1)x->have_ret=1;}}
+	: '{' '}' {Compound_Statement* x=new Compound_Statement(vector<int>(),nullptr);$$=x;}
+	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);for(int i:*($2)){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();$$=x;}
+	| '{' declaration_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(vector<int>(),$2);cout << "compound_statement parsed" << endl;current_level--;current_table->get_parent();$$=x;}
+	| '{' declaration_list statement_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(*($3),$2);for(int i:*($3)){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();$$=x;cout << "compound_statement parsed" << endl;}
 	;
 
 declaration_list
-	: declaration {Declaration_List* x=new Declaration_List();x->dv.push_back($1);$$=x;current_level++;current_table->get_parent();add_to_local_table(current_table,$1);}
+	: declaration {cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back($1);current_level++;current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,$1);cout << "declaration list done successfully" << endl;$$=x;}
 	| declaration_list declaration {$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
 	;
 
 statement_list
-	: statement {vector<int>z;z.push_back($1);$$=&z;}
-	| statement_list statement {($1)->push_back($2);$$=($1);}
+	: statement { vector<int>* z = new vector<int>();;z->push_back($1);$$=z;cout << "statement parsed" << endl;}
+	| statement_list statement {($1)->push_back($2);$$=$1;}
 	;
 
 expression_statement
@@ -657,25 +657,25 @@ jump_statement
 	: GOTO IDENTIFIER ';' {$$=0;}
 	| CONTINUE ';' {$$=0;}
 	| BREAK ';' {$$=0;}
-	| RETURN ';' {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){check_if_function(get_type_id(lvl_name.top()));}else{cout << "return not allowed here" << endl;exit(0);} check_compatibility($2,func_ret_type);$$=1;}
+	| RETURN ';' {if(current_level==lvl_name.size()){assert(func_ret_type!=nullptr);}else{cout << "return not allowed here" << endl;exit(0);}$$=1;}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{cout << "return not allowed here" << endl;exit(0);cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done" << endl;$$=1;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
-	: external_declaration {Node* ext=create_node();ext->add_child($1);root->add_child(ext);}
-	| translation_unit external_declaration {Node* ext=create_node();ext->add_child($2);root->add_child(ext);}
+	: external_declaration {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
+	| translation_unit external_declaration {Node* ext=create_node();}
 	;
 
 external_declaration /* (type:node*) storing pointers to function_definition and declaration */
-	: function_definition  {add_to_gst($1,gst);$$=$1;}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
+	: function_definition  {add_to_gst($1,gst);cout<<"add to gst"<<endl;$$=$1;}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);$2->check_for_func();$$=x;func_ret_type=type; lvl_name.push(get_name($2));}
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);cout << "create type for func decl done successfully"<<endl;$2->check_for_func();cout << "check for func done successfully in func decl" << endl;$$=x;func_ret_type=type->func_ret_type ;assert(func_ret_type!=nullptr); lvl_name.push(get_name($2));}
 	;
 function_definition /*(function_definition <- node ) */
-	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}}*/ /* create function definition object.parameter. assign type. assign size. */
-	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);current_params_list.clear();lvl_name.pop();}/*same as above */
+	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}func_ret_type=nullptr;}*/ /* create function definition object.parameter. assign type. assign size. */
+	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);cout<<"create func def done"<< endl;current_params_list.clear();lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
 	;

@@ -5,8 +5,8 @@
 // }
 
 int main() {
-    static int x=0;
-    printf("Testing static variable:\n");
+    static int x=10;
+    //printf("Testing static variable:\n");
 
     // counterFunction();  // count = 1
     // counterFunction();  // count = 2

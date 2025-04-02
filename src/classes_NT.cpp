@@ -147,7 +147,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
         }
     }
     else if(z.size()==1){
-        if(z[0]->string_type=="class"||"struct"||"enum"||"union"){
+        if(z[0]->string_type=="class"||z[0]->string_type=="struct"||z[0]->string_type=="enum"||z[0]->string_type=="union"){
             if(ds->scs.empty()&&ds->tq.empty()&&d==nullptr){
                 t->objtype=z[0]->string_type;
                 if(z[0]->string_type=="class"){
@@ -195,6 +195,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
             t->isbasic=true;
             t->base="INT";
             type+=z[0]->string_type;
+            cout << "create type done succesfully" << endl;
         }
         else if(z[0]->string_type=="LONG"){
             t->isbasic=true;
@@ -255,6 +256,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
     }
     if(d!=nullptr){
         Pointer* y=d->p;
+        cout<< "d not nullptr" << endl;
         while(y!=nullptr){
             type+='*';
             t->ptr_level++;
@@ -273,6 +275,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
             y=y->p;
         }
         string dtype=d->check_declarator();
+        cout << "check_declarator done" << endl;
         if(dtype=="array"){
             Direct_Declarator* a=d->dd;
             while(a->type=="array"){
@@ -282,16 +285,19 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
             }
         }
         else if(dtype=="function"){
+            cout << "this is a function" << endl;
             if(ds->scs.empty()&&ds->tq.empty()){
                 t->isfunction=true;
                 Type* g=new Type();
                 create_type(ds,nullptr,g);
+                cout << "create type for int done" << endl;
                 t->func_ret_type=g;
                 if(g->isobj==false&&g->objtype!=""){
                     cout << "invalid return type for func" << endl;
                     exit(1);
                 }
                 t->prms=get_func_params(d);
+                cout << "function params extracted successfully" << endl;
             }
             else{
                 cout << "function cannot be declared with other keywords" << endl;
@@ -428,7 +434,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
         }
     }
     else if(z.size()==1){
-        if(z[0]->string_type=="class"||"struct"||"enum"||"union"){
+        if(z[0]->string_type=="class"||z[0]->string_type=="struct"||z[0]->string_type=="enum"||z[0]->string_type=="union"){
             if(ds->tq.empty()&&d==nullptr){
                 t->objtype=z[0]->string_type;
                 if(z[0]->string_type=="class"){
@@ -567,6 +573,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
                 t->isfunction=true;
                 Type* g=new Type();
                 create_type(ds,nullptr,g);
+                cout << "int done" << endl;
                 t->func_ret_type=g;
                 if(g->isobj==false&&g->objtype!=""){
                     cout << "invalid return type for func" << endl;
@@ -686,7 +693,7 @@ Type* Type_Name::create_type_tn(Specifier_Qualifier_List* ds,Abstract_Declarator
         }
     }
     else if(z.size()==1){
-        if(z[0]->string_type=="class"||"struct"||"enum"||"union"){
+        if(z[0]->string_type=="class"||z[0]->string_type=="struct"||z[0]->string_type=="enum"||z[0]->string_type=="union"){
             if(ds->tq.empty()&&ad==nullptr){
                 t->objtype=z[0]->string_type;
                 if(z[0]->string_type=="class"){
@@ -952,7 +959,11 @@ void check_compatibility(Initializer* i,Type* t){
         }
     }
     else{
+        cout << t->base << endl;
+        cout << t->isfunction << endl;
+        cout << t->func_ptr_lev << endl;
         check_for_assign(i->type,t,"=");
+        cout << "check for assign done" << endl;
     }
 
 }
@@ -1103,7 +1114,8 @@ Type* check_if_id_in_obj(Type* t,string id){
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
     int ccl=current_level;
     Local_Symbol_Table* cct=current_table;
-    while(ccl==0){
+    while(ccl>=0){
+    if(ccl>0){
     if(ccl>copy.size()){
         if(cct!=nullptr&&cct->class_struct_union_info.find(t->obj_class)!=nullptr){
             Local_Symbol_Table* x=cct->class_struct_union_info[t->obj_class];
@@ -1189,6 +1201,37 @@ Type* check_if_id_in_obj(Type* t,string id){
             cct=cct->get_parent();
             copy.pop();
         }
+    }
+    }
+    else{
+        Global_Symbol_Table* ccg=gst;
+            if(ccg->class_struct_union_info.find(t->obj_class)!=nullptr){
+                Local_Symbol_Table* x=ccg->class_struct_union_info[t->obj_class];
+                if(x->lst.find(id)!=nullptr){
+                    Symbol_Info* z=x->lst[id];
+                    Type* y=z->t;
+                    if(y->isauto){
+                        cout << "cannot declare auto inside class" << endl;
+                        exit(1);
+                    }
+                    if(!y->isobj&&y->objtype!=""){
+                        cout << "cannot access a struct class or union declaration" << endl;
+                        exit(1);
+                    }
+                    else{
+                        return y;
+                    }
+                }
+                else{
+                    cout << "no such member in " << t->obj_class << endl;
+                    exit(1);
+                }
+            }
+            else{
+                cout << "class not found" << endl;
+                exit(1);
+            }
+            ccl--;
     }
     }
     cout << "class not found " << t->obj_class  << endl;
@@ -1577,46 +1620,68 @@ string Abstract_Declarator:: check_abstract_declarator(){
 
 Type* get_type_id(string id) {
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
+    cout << "copy made here" << endl;
     int ccl=current_level;
     Local_Symbol_Table* cct=current_table;
     while(ccl>=0){
-    if(ccl>copy.size()){
-        if(cct!=nullptr&&cct->lst.find(id)!=nullptr){
-            Symbol_Info* z= cct->lst[id];
-            Type* y=z->t;
-            if(!y->isobj&&y->objtype!=""){
-                    cout << "cannot access a struct class or union declaration directly. make obj" << endl;
-                    exit(1);
-            }
-            else{
-                return y;
-            } 
-        }
-        else if(cct==nullptr){
-            Global_Symbol_Table* ccg=gst;
-            if(ccg->gst.find(id)!=nullptr){
-                Symbol_Info* z=ccg->gst[id];
+    if(ccl>=1){
+        if(ccl>copy.size()){
+            cout << "if block of get type id" << endl;
+            if(cct!=nullptr&&cct->lst.find(id)!=nullptr){
+                Symbol_Info* z= cct->lst[id];
                 Type* y=z->t;
                 if(!y->isobj&&y->objtype!=""){
-                    cout << "cannot access a struct class or union declaration" << endl;
-                    exit(1);
+                        cout << "cannot access a struct class or union declaration directly. make obj" << endl;
+                        exit(1);
                 }
                 else{
                     return y;
+                } 
+            }
+            else if(cct==nullptr){
+                Global_Symbol_Table* ccg=gst;
+                if(ccg->gst.find(id)!=nullptr){
+                    Symbol_Info* z=ccg->gst[id];
+                    Type* y=z->t;
+                    if(!y->isobj&&y->objtype!=""){
+                        cout << "cannot access a struct class or union declaration" << endl;
+                        exit(1);
+                    }
+                    else{
+                        return y;
+                    }
                 }
+            }
+            else{
+                ccl--;
+                cct=cct->get_parent();
             }
         }
         else{
+            cout << "else block " << endl;
             ccl--;
             cct=cct->get_parent();
+            copy.pop();
+        
         }
+
     }
     else{
+        Global_Symbol_Table* ccg=gst;
+        if(ccg->gst.find(id)!=nullptr){
+            Symbol_Info* z=ccg->gst[id];
+            Type* y=z->t;
+            if(!y->isobj&&y->objtype!=""){
+                cout << "cannot access a struct class or union declaration" << endl;
+                exit(1);
+            }
+            else{
+                return y;
+            }
+        }
         ccl--;
-        cct=cct->get_parent();
-        copy.pop();
-    
     }
+    
     }
     cout << "identifier not found " << id  << endl;
     exit(0);
@@ -1846,10 +1911,13 @@ void check_for_sizeof(Type* t) {
 string Declarator :: check_declarator(){
     //return which type of declarator
     Direct_Declarator* z=this->dd;
+    assert(dd!=nullptr);
     if(z->type=="function"){
+        cout << "function block of check declarator" << endl;
         Direct_Declarator* nxt=z->dd;
         assert(nxt!=nullptr);
         if(nxt->type=="id"){
+            cout << "correct" << endl;
             return "function";
         }
         else if(nxt->type=="declarator"){
@@ -1965,9 +2033,6 @@ vector<pair<string, pair<string,Type*>>> create_name_type_list(Declaration_Speci
                 string name = ds->ts[0]->enum_type->id;
                 result.push_back(make_pair(name, make_pair("enum", t)));
             }
-            else {
-                cout << "error &&&" << endl;
-            }
         }
         else {
             return result;
@@ -1978,7 +2043,7 @@ vector<pair<string, pair<string,Type*>>> create_name_type_list(Declaration_Speci
         for (Declarator* d : idl->idl) {
             Type* t=new Type();
             string type = create_type(ds, d, t);
-            
+            cout << "create type in create name type list done" << endl;
             if(type == "class" || type == "struct" || type == "union" || type == "enum") {
                 cout << "error: can't define objects like this for " << d->id << " in line :" << line_num << endl;
                 exit(1);
@@ -1996,6 +2061,8 @@ vector<pair<string, pair<string,Type*>>> create_name_type_list(Declaration_Speci
 
 Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl){
     Direct_Declarator* z=new Direct_Declarator(type,id,d,dd,ce,pl);
+    cout << "created dir decl obj" << endl;
+    cout << type << endl;
     if(z->id==""){
         if(z->dd!=nullptr){
             z->id=z->dd->id;
@@ -2008,13 +2075,20 @@ Direct_Declarator* create_direct_declarator(const string& type,const string& id,
 }
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
     Declarator* z=new Declarator(p,dd);
+    cout << "created declarator object" <<endl;
+    assert(dd!=nullptr);
     z->id=z->dd->id;
+    cout << "********" << endl;
     string t=z->check_declarator();
+    cout << "declarator type: " << t << endl;
     if(t=="function"){
+        cout << "function declarator" << endl; 
         z->isfunction=true;
         z->prms=get_params(dd->pl);
+        cout << "get params done successfully" << endl;
         for(auto i:z->prms){
             current_params_list[i.first]=i.second;
+            cout << "added prms to map" << endl;
         }
     }
     z->type=t;
@@ -2062,6 +2136,8 @@ void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
 
 }
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
+    assert(symbol!=nullptr);
+    assert(gst!=nullptr);
     Symbol_Info info={symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,"-",symbol->t};
     Symbol_Info* x=&info;
     if(gst->gst.find(symbol->name)!=gst->gst.end()){
@@ -2074,7 +2150,10 @@ Local_Symbol_Table* next_table(Local_Symbol_Table* current_table){
     bool checkgst=false;
     if(current_table==nullptr)checkgst=true;
     Local_Symbol_Table* new_table=new Local_Symbol_Table(checkgst,current_table);
-    current_table->children.push_back(new_table);
+    if(current_table!=nullptr)current_table->children.push_back(new_table);
+    else {
+        gst->children.push_back(new_table);
+    }
     return new_table;
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd){
@@ -2149,7 +2228,8 @@ void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_Li
 
 }
 Compound_Statement::Compound_Statement(vector<int> st, Declaration_List* dl)
-    : st(), dl(dl),have_ret(0) { 
+    : st(st), dl(dl){ 
+        cout << "compound statement constructor called" << endl;
 }
 
 Declaration_List :: Declaration_List(){
@@ -2267,7 +2347,9 @@ Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,C
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts){
     Declaration* d=new Declaration(ds,init_dl,ts);
     d->name_type_list=create_name_type_list(ds,init_dl);
+    cout << "create name type list working fine" << endl;
     d->level_name=get_level_name();
+    cout << "get level name done successfully" << endl;
     d->level=current_level-lvl_name.size()+1;
     if(current_level==0){
         d->scope="global";
@@ -2288,53 +2370,58 @@ Type_Specifier::Type_Specifier(const string& str, Struct_or_Union_Specifier* str
     struct_union_type(struct_union_type),
     class_type(class_type),
     enum_type(enum_type){
-    if(struct_union_type) {
-        const string& sou = struct_union_type->str_or_union;
-        const string& name = struct_union_type->name;
-        Struct_Declaration_List* sdl = struct_union_type->strdec_list;
-        if (!sou.empty()) {
-            if (sdl) { 
-                if (name.empty()) {
-                    string_type = sou + " anonymous";
+    if(str==""){
+        cout << "str is null" << endl;
+        if(struct_union_type) {
+            const string& sou = struct_union_type->str_or_union;
+            const string& name = struct_union_type->name;
+            Struct_Declaration_List* sdl = struct_union_type->strdec_list;
+            if (!sou.empty()) {
+                if (sdl) { 
+                    if (name.empty()) {
+                        string_type = sou + " anonymous";
+                    } 
+                    else {
+                        string_type = sou;
+                    }
                 } 
                 else {
-                    string_type = sou;
-                }
-            } 
-            else {
-                if (!name.empty()) {
-                    string_type = sou + " " + name;
+                    if (!name.empty()) {
+                        string_type = sou + " " + name;
+                    }
                 }
             }
         }
-    }
-    else if (class_type) { 
-        if (class_type->cb == nullptr) {
-            string_type = "class " + class_type->class_name;
-        }
-        else {
-            if (class_type->class_name.empty()) {
-                string_type = "class anonymous";
-            } 
+        else if (class_type) { 
+            if (class_type->cb == nullptr) {
+                string_type = "class " + class_type->class_name;
+            }
             else {
-                string_type = "class";
+                if (class_type->class_name.empty()) {
+                    string_type = "class anonymous";
+                } 
+                else {
+                    string_type = "class";
+                }
             }
         }
-    }
-    else if (enum_type) {
-        if (enum_type->enuml == nullptr) {
-            string_type = "enum " + enum_type->id;
-        } else {
-            if (enum_type->id.empty()) {
-                string_type = "enum anonymous"; 
+        else if (enum_type) {
+            if (enum_type->enuml == nullptr) {
+                string_type = "enum " + enum_type->id;
             } else {
-                string_type = "enum";  
+                if (enum_type->id.empty()) {
+                    string_type = "enum anonymous"; 
+                } else {
+                    string_type = "enum";  
+                }
             }
         }
+        else{
+            cout<<"Not struct_or_union,enum or class"<<"in line :"<< line_num<<endl;
+            exit(1);
+        }
     }
-    else{
-        cout<<"Not struct_or_union,enum or class"<<"in line :"<< line_num<<endl;
-    }
+    
 }
 
 
@@ -2419,6 +2506,7 @@ Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_
 }
 Declaration_Specifiers* create_decl_spec_object(){
     Declaration_Specifiers* ds=new Declaration_Specifiers();
+    cout <<"successfully created dec spec obj" << endl;
     return ds;
 }
 
@@ -2438,6 +2526,7 @@ Class_Specifier::Class_Specifier(const std::string &class_name, Inheritance_Spec
 
 Type_Specifier* create_ts_obj(const std::string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type){
     Type_Specifier* ts=new Type_Specifier(str,struct_union_type, class_type, enum_type);
+    cout << "successfully created ts obj" << endl;
     return ts;
 }
 Struct_or_Union_Specifier* create_struct_union_spec_obj(const string& sou,const string& name,Struct_Declaration_List* sdl){

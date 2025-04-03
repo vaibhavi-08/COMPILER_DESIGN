@@ -252,8 +252,8 @@ multiplicative_expression
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
-	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
-	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
+	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 shift_expression
@@ -272,8 +272,8 @@ relational_expression
 
 equality_expression
 	: relational_expression {$$=$1;}
-	| equality_expression EQ_OP relational_expression {Type* type=check_for_eq_op($1,$3);$$=type;}
-	| equality_expression NE_OP relational_expression {Type* type=check_for_eq_op($1,$3);$$=type;}
+	| equality_expression EQ_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"=",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| equality_expression NE_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"!=",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 and_expression
@@ -307,8 +307,8 @@ conditional_expression
 	;
 
 assignment_expression
-	: conditional_expression  {$$=$1;}
-	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);$$=t;}
+	: conditional_expression  {$$=$1; }
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2); string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;}
 	;
 
 assignment_operator

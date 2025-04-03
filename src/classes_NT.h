@@ -120,7 +120,8 @@ vector<Type*> get_func_params(Abstract_Declarator* ad);
 
 Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd);
-struct Symbol_Info{
+class Symbol_Info{
+    public:
     string name;
     string type;//return type of function
     string level_name;
@@ -128,6 +129,7 @@ struct Symbol_Info{
     string scope;
     string access;
     Type* t;
+    Symbol_Info(string name,string type, string level_name,int level,string scope,string access,Type* t);
 };
 class Global_Symbol_Table{
     public:

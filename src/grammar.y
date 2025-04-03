@@ -189,7 +189,7 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER {Type* t=get_type_id($1);$$=t;}
+	: IDENTIFIER {Type* t=get_type_id($1);$$=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
 	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";$$=t;} 
 	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);$$=t;}
 	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;}
@@ -337,7 +337,7 @@ constant_expression
 /*check whether type is correct*/
 declaration
 	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
-	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);current_params_list.clear();}/* create object as above but add both fields*/
+	| declaration_specifiers init_declarator_list ';' {cout<<"declaration started"<<endl;$$=create_declaration_object($1,$2,nullptr);current_params_list.clear();cout<<"declartion done"<<endl;}/* create object as above but add both fields*/
 /* thik karna hai action*/	/*| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}*//* same as above . check whether typedef specifier is there in typedef table. */
 	;
 
@@ -349,19 +349,19 @@ declaration_specifiers
 	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back($1);$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
 	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);$$=ds;cout << "declaration specifier done scs" << endl;}/* add storage_class_specifier to $2*/
 	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);$$=ds;cout << ds->ts.back()->string_type << endl;}/* create declaration specifier object . add type specifier to it . pass it above. */
-	| type_specifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->ts.push_back($1);$$=ds;}/* add type_specifier to $2 */
+	| type_specifier declaration_specifiers {cout<<"declaration_specifier started"<<endl;Declaration_Specifiers* ds=$2; ds->ts.push_back($1);$$=ds;cout<<"declaration specifier completed"<<endl;}/* add type_specifier to $2 */
 	| type_qualifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back($1);$$=ds;}/* create declaration_specifiers object . add type qualifier to it . pass it above. */
 	| type_qualifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->tq.push_back($1);$$=ds;}/* add type_qualifier to $2 */
 	;
 
 init_declarator_list
-	: init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;}
+	: init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;cout<<"idl completeted"<<endl;}
 	| init_declarator_list ',' init_declarator { $1->idl.push_back($3); $$ = $1;}
 	;
 
 init_declarator
 	: declarator {$$=$1;}
-	| declarator '=' initializer {$1->ini=$3;$$=$1;}
+	| declarator '=' initializer {cout<<"init_declartor started"<<endl;$1->ini=$3;$$=$1;cout<<"init_declarator done"<<endl;}
 	;
 
 storage_class_specifier
@@ -381,7 +381,7 @@ type_specifier
 	| FLOAT {$$=create_ts_obj("FLOAT",nullptr,nullptr,nullptr);}
 	| DOUBLE {$$=create_ts_obj("DOUBLE",nullptr,nullptr,nullptr);}
 	| SIGNED {$$=create_ts_obj("SIGNED",nullptr,nullptr,nullptr);}
-	| UNSIGNED {$$=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);}
+	| UNSIGNED {$$=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);cout<<"hurrah"<<endl;}
 	| struct_or_union_specifier {$$=create_ts_obj("",$1,nullptr,nullptr);}
     | class_specifier {$$=create_ts_obj("",nullptr,$1,nullptr);}
 	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$1);}
@@ -513,7 +513,7 @@ type_qualifier
 
 declarator
 	: pointer direct_declarator {$$=create_new_declarator($1,$2);}
-	| direct_declarator {$$=create_new_declarator(nullptr,$1);}/* check if is a function . if yes then add its name to stack */
+	| direct_declarator {$$=create_new_declarator(nullptr,$1);cout<<"##"<<endl;}/* check if is a function . if yes then add its name to stack */
 	;
 
 direct_declarator
@@ -626,7 +626,7 @@ compound_statement
 
 declaration_list
 	: declaration {cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back($1);current_level++;current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,$1);cout << "declaration list done successfully" << endl;$$=x;}
-	| declaration_list declaration {$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
+	| declaration_list declaration {cout<<"declaration_list done"<<endl;$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
 	;
 
 statement_list
@@ -671,7 +671,7 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);cout << "create type for func decl done successfully"<<endl;$2->check_for_func();cout << "check for func done successfully in func decl" << endl;$$=x;func_ret_type=type->func_ret_type ;assert(func_ret_type!=nullptr); lvl_name.push(get_name($2));}
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);cout << "create type for func decl done successfully"<<endl;$2->check_for_func();cout << "check for func done successfully in func decl" << endl;$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));cout<<"final func decl done huuh"<<endl;}
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}func_ret_type=nullptr;}*/ /* create function definition object.parameter. assign type. assign size. */

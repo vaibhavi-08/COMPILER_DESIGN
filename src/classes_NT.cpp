@@ -12,6 +12,15 @@ int current_level = 0;
 int line_num=1;
 set<string> labelset;
 stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
+Symbol_Info::Symbol_Info(string name,string type, string level_name,int level,string scope,string access,Type* t){
+    this->name=name;
+    this->type=type;
+    this->level_name=level_name;
+    this->level=level;
+    this->access=access;
+    this->scope=scope;
+    this->t=t;
+}
 void add_to_local_class_struct_union_info(){
     if(!current_class_struct_union_info.empty()){
         auto z=current_class_struct_union_info.top();
@@ -140,6 +149,12 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
             t->isbasic=true;
             t->base="LONG";
             type+=" SIGNED LONG";
+        }
+        else if(z[0]->string_type=="LONG"&&z[1]->string_type=="LONG"){
+            t->isigned=false;
+            t->isbasic=true;
+            t->base="LONG LONG";
+            type+="LONG LONG";
         }
         else{
             cout << "incorrect type specs in type of " << d->id <<"in line :"<< line_num<< endl;
@@ -428,6 +443,12 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
             t->base="LONG";
             type+=" SIGNED LONG";
         }
+        else if(z[0]->string_type=="LONG"&&z[1]->string_type=="LONG"){
+            t->isigned=false;
+            t->isbasic=true;
+            t->base="LONG LONG";
+            type+="LONG LONG";
+        }
         else{
             cout << "incorrect type specs in type of " << d->id <<"in line :"<< line_num<< endl;
             exit(1);
@@ -686,6 +707,12 @@ Type* Type_Name::create_type_tn(Specifier_Qualifier_List* ds,Abstract_Declarator
             t->isbasic=true;
             t->base="LONG";
             type+=" SIGNED LONG";
+        }
+        else if(z[0]->string_type=="LONG"&&z[1]->string_type=="LONG"){
+            t->isigned=false;
+            t->isbasic=true;
+            t->base="LONG LONG";
+            type+="LONG LONG";
         }
         else{
             cout << "incorrect type specs in type of " << ad->type << endl;
@@ -948,6 +975,7 @@ void check_compatibility(Initializer* i,Type* t){
     if(i->ini_lst!=nullptr){
         if(t->array_dim>0){
             for(auto j:i->ini_lst->iv){
+                cout<<"check compatiblity if block"<<endl;
                 t->array_dim--;
                 check_compatibility(j,t);
                 t->array_dim++;
@@ -959,10 +987,12 @@ void check_compatibility(Initializer* i,Type* t){
         }
     }
     else{
+        cout<<"check compatiblity else block"<<endl;
         cout << t->base << endl;
         cout << t->isfunction << endl;
         cout << t->func_ptr_lev << endl;
-        check_for_assign(i->type,t,"=");
+        cout << i->type->isobj << " " << i->type->base << endl;
+        check_for_assign(t,i->type,"=");
         cout << "check for assign done" << endl;
     }
 
@@ -1245,6 +1275,9 @@ Argument_Expression_List :: Argument_Expression_List(){
 
 
 Type* check_for_assign(Type* t1, Type* t2,string op) {
+    cout << t1->base << " " << t2->base << endl;
+    cout<< t1->isbasic<<" " <<t2->isbasic<<endl;
+    cout << "base checked" << endl;
     if(op=="="){
         bool isconst=false;
         if(t1->ptr_level>0){
@@ -1400,6 +1433,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
         else{
             if(t1->isbasic||t2->isbasic){
                 if(t1->isbasic&&t2->isbasic){
+                    cout << t1->base << " " << t2->base << endl;
                     if(t1->base==t2->base){
                         return t2;
                     }
@@ -1624,69 +1658,72 @@ Type* get_type_id(string id) {
     int ccl=current_level;
     Local_Symbol_Table* cct=current_table;
     while(ccl>=0){
-    if(ccl>=1){
-        if(ccl>copy.size()){
-            cout << "if block of get type id" << endl;
-            if(cct!=nullptr&&cct->lst.find(id)!=nullptr){
-                Symbol_Info* z= cct->lst[id];
-                Type* y=z->t;
-                if(!y->isobj&&y->objtype!=""){
-                        cout << "cannot access a struct class or union declaration directly. make obj" << endl;
-                        exit(1);
-                }
-                else{
-                    return y;
-                } 
-            }
-            else if(cct==nullptr){
-                Global_Symbol_Table* ccg=gst;
-                if(ccg->gst.find(id)!=nullptr){
-                    Symbol_Info* z=ccg->gst[id];
-                    Type* y=z->t;
-                    if(!y->isobj&&y->objtype!=""){
-                        cout << "cannot access a struct class or union declaration" << endl;
-                        exit(1);
+        if(ccl>=1){
+            if(ccl>copy.size()){
+                cout << "if block of get type id" << endl;
+                auto it = cct->lst.find(id);
+                if(cct!=nullptr&&it!=cct->lst.end()){
+                    Symbol_Info* z=it->second;
+                    if(z != nullptr) { // Check 1: Symbol_Info exists
+                        cout << "jjjj" << endl;
+                        cout << z->name << endl;
+                        cout << z->type << endl;
+                        cout << "KKKK" << endl;
+                        if(z->t != nullptr) { // Check 2: Type pointer valid
+                            Type* y = z->t;
+                            cout << y->base << endl;
+                            cout << "got type from symtab" << endl;
+                            
+                            if(!y->isobj && y->objtype != "") {
+                                // Your error handling
+                            } else {
+                                return y;
+                            }
+                        } else {
+                            cout << "NULL TYPE POINTER" << endl;
+                        }
                     }
-                    else{
-                        return y;
+                } else if(cct==nullptr){
+                    Global_Symbol_Table* ccg=gst;
+                    if(ccg->gst.find(id)!=ccg->gst.end()){
+                        Symbol_Info* z=ccg->gst[id];
+                        Type* y=z->t;
+                        if(!y->isobj&&y->objtype!=""){
+                            cout << "cannot access a struct class or union declaration" << endl;
+                            exit(1);
+                        } else {
+                            return y;
+                        }
                     }
+                } else {
+                    ccl--;
+                    cct=cct->get_parent();
                 }
-            }
-            else{
+            } else {
+                cout << "else block " << endl;
                 ccl--;
                 cct=cct->get_parent();
+                copy.pop();
             }
-        }
-        else{
-            cout << "else block " << endl;
+        } else {
+            Global_Symbol_Table* ccg=gst;
+            if(ccg->gst.find(id)!=ccg->gst.end()){
+                Symbol_Info* z=ccg->gst[id];
+                Type* y=z->t;
+                if(!y->isobj&&y->objtype!=""){
+                    cout << "cannot access a struct class or union declaration" << endl;
+                    exit(1);
+                } else {
+                    return y;
+                }
+            }
             ccl--;
-            cct=cct->get_parent();
-            copy.pop();
-        
         }
-
-    }
-    else{
-        Global_Symbol_Table* ccg=gst;
-        if(ccg->gst.find(id)!=nullptr){
-            Symbol_Info* z=ccg->gst[id];
-            Type* y=z->t;
-            if(!y->isobj&&y->objtype!=""){
-                cout << "cannot access a struct class or union declaration" << endl;
-                exit(1);
-            }
-            else{
-                return y;
-            }
-        }
-        ccl--;
-    }
-    
     }
     cout << "identifier not found " << id  << endl;
     exit(0);
-    
 }
+
 void check_if_array_or_pointer(Type* t){
     if(t->array_dim){
         t->array_dim--;
@@ -1717,69 +1754,141 @@ vector<pair<string,Type*>> get_params(Parameter_List* p){
     return ans;
 }
 Type* check_for_arithmatic_op(Type* s1, Type* s2){
+    //Type* t=new Type();
+    cout << s1->base << " " << s2->base << endl;
+    cout << s1->isbasic << " " << s2->isbasic << endl;
+//     if(s1->isobj || s2->isobj){
+//         if((s1->base=="INT" && s2->objtype=="enum") || (s1->objtype=="enum" && s2->base=="INT") || (s1->base=="INT" && s2->objtype=="enum")){
+//             t->base="INT";
+//         }
+//         else{
+//             cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<<"pls pls check again"<< endl;
+//             exit(1);
+//         }
+//     }
+//     if(s1->isbasic || s2->isbasic==false){
+//         cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<<"pls pls check"<< endl;
+//         exit(1);
+//     }
+//     if(s1->base=="CHAR" && s2->base=="CHAR"){
+//         t->base="CHAR";
+//     }
+//     else if(s1->base=="SHORT" && s2->base=="SHORT" || (s1->base=="SHORT" && s2->base=="CHAR") || (s1->base=="CHAR" && s2->base=="SHORT")){
+//         t->base="SHORT";
+//     }
+//     else if((s1->base=="INT" && s2->base=="INT") || (s1->base=="SHORT" && s2->base=="INT") || (s1->base=="INT" && s2->base=="SHORT") || (s1->base=="CHAR" && s2->base=="INT") || (s1->base=="INT" && s2->base=="CHAR")){
+//         t->base="INT";
+//     }
+//     else if((s1->base=="FLOAT" || s2->base=="FLOAT") || 
+//    (s1->base == "INT" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "INT") || 
+//     (s1->base == "SHORT" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "SHORT") || 
+//     (s1->base == "CHAR" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "CHAR") || 
+//     (s1->base == "LONG" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "LONG") ||
+//     (s1->base == "LONG LONG" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "LONG LONG")) {
+
+//     t->base = "FLOAT";
+//     }
+//     else if ((s1->base == "DOUBLE" || s2->base == "DOUBLE") || 
+//     (s1->base == "INT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "INT") || 
+//     (s1->base == "SHORT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "SHORT") || 
+//     (s1->base == "FLOAT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "FLOAT") || 
+//     (s1->base == "CHAR" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "CHAR") ||
+//     (s1->base == "LONG" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "LONG") ||
+//     (s1->base == "LONG LONG" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "LONG LONG")) {
+
+//     t->base = "DOUBLE";
+//     }
+//     else if ((s1->base == "LONG" && s2->base == "LONG") &&
+//     (s1->base == "LONG" && s2->base == "INT") || (s1->base == "INT" && s2->base == "LONG") || 
+//     (s1->base == "LONG" && s2->base == "CHAR") || (s1->base == "CHAR" && s2->base == "LONG")  || 
+//     (s1->base == "LONG" && s2->base == "SHORT") || (s1->base == "SHORT" && s2->base == "LONG")) {
+
+//     t->base = "LONG";
+//     }
+//     else if ((s1->base == "LONG LONG" && s2->base == "LONG LONG") &&
+//     (s1->base == "LONG LONG" && s2->base == "INT") || (s1->base == "INT" && s2->base == "LONG LONG") || 
+//     (s1->base == "LONG LONG" && s2->base == "CHAR") || (s1->base == "CHAR" && s2->base == "LONG LONG")  || 
+//     (s1->base == "LONG LONG" && s2->base == "SHORT") || (s1->base == "SHORT" && s2->base == "LONG LONG") ||
+//     (s1->base == "LONG LONG" && s2->base == "LONG") || (s1->base == "LONG" && s2->base == "LONG LONG")) {
+
+//     t->base = "LONG LONG";
+//     }
+    
+//     else {
+//     cout << "error:  not valid for arithmetic operation " <<"in line :"<< line_num<<"pls check"<< endl;
+//     exit(1);
+//     }
+//     return t;
     Type* t=new Type();
-    if(s1->isobj || s2->isobj){
-        if((s1->objtype=="enum" && s2->objtype=="INT") || (s1->objtype=="enum" && s2->base=="INT") || (s1->base=="INT" && s2->objtype=="enum")){
+    if(s1->ptr_level==0&&s2->ptr_level==0&&s1->array_dim==0&&s2->array_dim==0&&s1->func_ptr_lev==0&&s2->func_ptr_lev==0&&!s1->isfunction&&!s2->isfunction){
+        cout << "dash dash" << endl;
+        if(s1->isbasic&&s2->isbasic){
+            t->isbasic=true;
+            cout << "dash dash dash" << endl;
+            if(s1->base=="DOUBLE"||s2->base=="DOUBLE"){
+                t->base="DOUBLE";
+            }
+            else if(s1->base=="FLOAT"||s2->base=="FLOAT"){
+                t->base="FLOAT";
+            }
+            else if(s1->base=="LONG LONG"||s2->base=="LONG LONG"){
+                t->base="LONG LONG";
+            }
+            else if(s1->base=="LONG"||s2->base=="LONG"){
+                t->base="LONG";
+            }
+            else if(s1->base=="INT"||s2->base=="INT"){
+                t->base="INT";
+            }
+            else if(s1->base=="SHORT"||s2->base=="SHORT"){
+                t->base="SHORT";
+            }
+            else if(s1->base=="CHAR"||s1->base=="CHAR"){
+                t->base="CHAR";
+            }
+            else{
+                cout << "should not be executed" << endl;
+            }
+        }
+        else if(s1->isenum&&s2->isenum){
+            t->isbasic=true;
             t->base="INT";
         }
+        else if(s1->isenum&&s2->isbasic){
+            t->isbasic=true;
+            if(s2->base=="INT"||s2->base=="SHORT"||s2->base=="CHAR"){t->base=="INT";}
+            else if(s2->base=="LONG"){t->base="LONG";}
+            else if(s2->base=="LONG LONG"){t->base=="LONG LONG";}
+            else if(s2->base=="FLOAT"){t->base=="FLOAT";}
+            else if(s2->base=="DOUBLE"){t->base=="DOUBLE";}
+            else {
+                cout << "this is not possible" << endl;
+            }
+        }
+        else if(s1->isbasic&&s2->isenum){
+            t->isbasic=true;
+            if(s1->base=="INT"||s1->base=="SHORT"||s1->base=="CHAR"){t->base=="INT";}
+            else if(s1->base=="LONG"){t->base="LONG";}
+            else if(s1->base=="LONG LONG"){t->base=="LONG LONG";}
+            else if(s1->base=="FLOAT"){t->base=="FLOAT";}
+            else if(s1->base=="DOUBLE"){t->base=="DOUBLE";}
+            else {
+                cout << "this is not possible" << endl;
+            }
+        }
         else{
-            cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<< endl;
+            cout << "arithmatic operations not allowed between these types" << endl;
             exit(1);
         }
     }
-    if(s1->isbasic==false || s2->isbasic==false){
-        cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<< endl;
+    else{
+        cout << "arithmatic operations not allowed between these types" << endl;
         exit(1);
     }
-    if(s1->base=="CHAR" && s2->base=="CHAR"){
-        t->base="CHAR";
-    }
-    else if(s1->base=="SHORT" && s2->base=="SHORT" || (s1->base=="SHORT" && s2->base=="CHAR") || (s1->base=="CHAR" && s2->base=="SHORT")){
-        t->base="SHORT";
-    }
-    else if((s1->base=="INT" && s2->base=="INT") || (s1->base=="SHORT" && s2->base=="INT") || (s1->base=="INT" && s2->base=="SHORT") || (s1->base=="CHAR" && s2->base=="INT") || (s1->base=="INT" && s2->base=="CHAR")){
-        t->base="INT";
-    }
-    else if((s1->base=="FLOAT" || s2->base=="FLOAT") || 
-   (s1->base == "INT" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "INT") || 
-    (s1->base == "SHORT" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "SHORT") || 
-    (s1->base == "CHAR" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "CHAR") || 
-    (s1->base == "LONG" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "LONG") ||
-    (s1->base == "LONG LONG" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "LONG LONG")) {
-
-    t->base = "FLOAT";
-    }
-    else if ((s1->base == "DOUBLE" || s2->base == "DOUBLE") || 
-    (s1->base == "INT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "INT") || 
-    (s1->base == "SHORT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "SHORT") || 
-    (s1->base == "FLOAT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "FLOAT") || 
-    (s1->base == "CHAR" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "CHAR") ||
-    (s1->base == "LONG" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "LONG") ||
-    (s1->base == "LONG LONG" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "LONG LONG")) {
-
-    t->base = "DOUBLE";
-    }
-    else if ((s1->base == "LONG" && s2->base == "LONG") &&
-    (s1->base == "LONG" && s2->base == "INT") || (s1->base == "INT" && s2->base == "LONG") || 
-    (s1->base == "LONG" && s2->base == "CHAR") || (s1->base == "CHAR" && s2->base == "LONG")  || 
-    (s1->base == "LONG" && s2->base == "SHORT") || (s1->base == "SHORT" && s2->base == "LONG")) {
-
-    t->base = "LONG";
-    }
-    else if ((s1->base == "LONG LONG" && s2->base == "LONG LONG") &&
-    (s1->base == "LONG LONG" && s2->base == "INT") || (s1->base == "INT" && s2->base == "LONG LONG") || 
-    (s1->base == "LONG LONG" && s2->base == "CHAR") || (s1->base == "CHAR" && s2->base == "LONG LONG")  || 
-    (s1->base == "LONG LONG" && s2->base == "SHORT") || (s1->base == "SHORT" && s2->base == "LONG LONG") ||
-    (s1->base == "LONG LONG" && s2->base == "LONG") || (s1->base == "LONG" && s2->base == "LONG LONG")) {
-
-    t->base = "LONG LONG";
-    }
-    
-    else {
-    cout << "error:  not valid for arithmetic operation" <<"in line :"<< line_num<< endl;
-    exit(1);
-    }
+    cout << t->isbasic << endl;
+    cout << "checking here in check_for_arithmatic_op" << endl;
     return t;
+
 }
 void check_if_obj(Type* s){
     if(s->objtype=="enum"){
@@ -2015,7 +2124,6 @@ vector<pair<string, pair<string,Type*>>> create_name_type_list(Declaration_Speci
     if (!idl) {
         Type* t=new Type();
         string type = create_type(ds, nullptr, t);
-        
         if(type == "class" || type == "struct" || type == "union" || type == "enum") {
             if(ds->ts[0]->string_type == "class") {
                 string name = ds->ts[0]->class_type->class_name;
@@ -2037,12 +2145,15 @@ vector<pair<string, pair<string,Type*>>> create_name_type_list(Declaration_Speci
         else {
             return result;
         }
+        cout<<"not of create_name_type_list"<<endl;
     }
     // Properly placed loop outside initial if-block
     if (idl) {  // Add null check for safety
         for (Declarator* d : idl->idl) {
+            cout<<"true of create_name_type_list"<<endl;
             Type* t=new Type();
             string type = create_type(ds, d, t);
+            cout << t->base << endl;
             cout << "create type in create name type list done" << endl;
             if(type == "class" || type == "struct" || type == "union" || type == "enum") {
                 cout << "error: can't define objects like this for " << d->id << " in line :" << line_num << endl;
@@ -2125,8 +2236,7 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
 }
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
     for(auto i:symbol->name_type_list){
-        Symbol_Info info={i.first,i.second.first,symbol->level_name,symbol->level,symbol->scope,"-",i.second.second};
-        Symbol_Info* x=&info;
+        Symbol_Info* x=new Symbol_Info(i.first,i.second.first,symbol->level_name,symbol->level,symbol->scope,"-",i.second.second);
         if(gst->gst.find(i.first)!=gst->gst.end()){
             cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
             exit(1);
@@ -2138,8 +2248,7 @@ void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
 void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
     assert(symbol!=nullptr);
     assert(gst!=nullptr);
-    Symbol_Info info={symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,"-",symbol->t};
-    Symbol_Info* x=&info;
+    Symbol_Info* x=new Symbol_Info(symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,"-",symbol->t);
     if(gst->gst.find(symbol->name)!=gst->gst.end()){
         cout << "error :" << "redeclaration of function " << symbol->name <<"in line :"<< line_num<< endl;
         exit(1);
@@ -2158,8 +2267,8 @@ Local_Symbol_Table* next_table(Local_Symbol_Table* current_table){
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd){
     for(auto i:sd->name_type_list){
-        Symbol_Info info={i.first,i.second.first,sd->level_name,sd->level,sd->scope,"-",i.second.second};
-        Symbol_Info* x=&info;
+        Symbol_Info* x=new Symbol_Info(i.first,i.second.first,sd->level_name,sd->level,sd->scope,"-",i.second.second);
+
         if(current_table->lst.find(i.first)!=current_table->lst.end()){
             cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
             exit(1);
@@ -2175,20 +2284,20 @@ void add_to_local_table(Enumerator_List* e,Type* t){
     else scope="local";
     for(auto x:e->e){
         if(current_table!=nullptr){
-            Symbol_Info info={x->id,"enum "+t->obj_class,level_name,level,scope,"-",t};
+            Symbol_Info* info=new Symbol_Info(x->id,"enum "+t->obj_class,level_name,level,scope,"-",t);
             if(current_table->lst.find(x->id)!=current_table->lst.end()){
                 cout << "error :" << "redeclaration of " << x->id <<"in line :"<< line_num<< endl;
                 exit(1);
             }
-            current_table->lst[x->id]=&info;
+            current_table->lst[x->id]=info;
         }
         else{
-            Symbol_Info info={x->id,"enum "+t->obj_class,level_name,level,scope,"-",t};
+            Symbol_Info* info=new Symbol_Info(x->id,"enum "+t->obj_class,level_name,level,scope,"-",t);
             if(gst->gst.find(x->id)!=gst->gst.end()){
                 cout << "error :" << "redeclaration of " << x->id <<"in line :"<< line_num<< endl;
                 exit(1);
             }
-            gst->gst[x->id]=&info;
+            gst->gst[x->id]=info;
         }
         
     }
@@ -2198,17 +2307,24 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         if(d->init_dec_list!=nullptr){
             for(auto j:d->init_dec_list->idl){
                 if(j->ini){
+                    cout<<"check compatilblity started"<<endl;
                     check_compatibility(j->ini,i.second.second);
+                    cout<<"check compatiblity done"<<endl;
                 }
             }
         }
-        Symbol_Info info={i.first,i.second.first,d->level_name,d->level,d->scope,"-",i.second.second};
-        Symbol_Info* x=&info;
+        cout << i.second.second->base << endl;
+        cout << "got type from declaration" << endl;
+        Symbol_Info* x=new Symbol_Info(i.first,i.second.first,d->level_name,d->level,d->scope,"-",i.second.second);
+        cout << x->t->base << endl;
+        cout << "type correctly added to symbol info" << endl;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){
             cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
             exit(1);
         }
         current_table->lst[i.first]=x;
+        cout << current_table->lst[i.first]->t->base << endl;
+        cout << "type correctly added to current table" << endl;
         /*check if initializer is matching with type*/
     }
 }
@@ -2222,8 +2338,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_Li
     string name=get_name(d);
     string level_name=get_level_name();
     int level=current_level-lvl_name.size()+1;
-    Symbol_Info info={name,type,level_name,level,"local",access,t};
-    Symbol_Info* x=&info;
+    Symbol_Info* x=new Symbol_Info(name,type,level_name,level,"local",access,t);
     current_table->lst[name]=x;
 
 }
@@ -2252,8 +2367,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Constructor_Declaratio
     Type* t=new Type();
     t->prms=prms;
     t->obj_class=name;
-    Symbol_Info info={name,type,level_name,level,"local",access,t};
-    Symbol_Info* x=&info;
+    Symbol_Info* x=new Symbol_Info(name,type,level_name,level,"local",access,t);
     current_table->lst[name]=x;/*redefinition of same type of constructor not handled. also multiple constructors case not handled. can handle by adding params to name*/
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* fd){
@@ -2261,8 +2375,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* f
     if(!access_spec_stk.empty()){
         access=access_spec_stk.top();
     }
-    Symbol_Info info={fd->name,fd->type,fd->level_name,fd->level,fd->scope,access,fd->t};
-    Symbol_Info* x=&info;
+    Symbol_Info* x=new Symbol_Info(fd->name,fd->type,fd->level_name,fd->level,fd->scope,access,fd->t);
     if(current_table->lst.find(fd->name)!=current_table->lst.end()){
         cout << "error :" << "redeclaration of function " << fd->name <<"in line :"<< line_num<< endl;
         exit(1);

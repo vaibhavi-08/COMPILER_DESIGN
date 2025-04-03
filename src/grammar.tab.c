@@ -1798,7 +1798,7 @@ yyreduce:
     {
   case 2: /* primary_expression: IDENTIFIER  */
 #line 192 "grammar.y"
-                     {Type* t=get_type_id((yyvsp[0].str));(yyval.typ)=t;}
+                     {Type* t=get_type_id((yyvsp[0].str));(yyval.typ)=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
 #line 1803 "grammar.tab.c"
     break;
 
@@ -2278,7 +2278,7 @@ yyreduce:
 
   case 82: /* declaration: declaration_specifiers init_declarator_list ';'  */
 #line 340 "grammar.y"
-                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();}
+                                                          {cout<<"declaration started"<<endl;(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();cout<<"declartion done"<<endl;}
 #line 2283 "grammar.tab.c"
     break;
 
@@ -2302,7 +2302,7 @@ yyreduce:
 
   case 86: /* declaration_specifiers: type_specifier declaration_specifiers  */
 #line 352 "grammar.y"
-                                                {Declaration_Specifiers* ds=(yyvsp[0].dec_spec); ds->ts.push_back((yyvsp[-1].type_spec));(yyval.dec_spec)=ds;}
+                                                {cout<<"declaration_specifier started"<<endl;Declaration_Specifiers* ds=(yyvsp[0].dec_spec); ds->ts.push_back((yyvsp[-1].type_spec));(yyval.dec_spec)=ds;cout<<"declaration specifier completed"<<endl;}
 #line 2307 "grammar.tab.c"
     break;
 
@@ -2320,7 +2320,7 @@ yyreduce:
 
   case 89: /* init_declarator_list: init_declarator  */
 #line 358 "grammar.y"
-                          {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back((yyvsp[0].dec));(yyval.init_dec_list)=x;}
+                          {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back((yyvsp[0].dec));(yyval.init_dec_list)=x;cout<<"idl completeted"<<endl;}
 #line 2325 "grammar.tab.c"
     break;
 
@@ -2338,7 +2338,7 @@ yyreduce:
 
   case 92: /* init_declarator: declarator '=' initializer  */
 #line 364 "grammar.y"
-                                     {(yyvsp[-2].dec)->ini=(yyvsp[0].ini);(yyval.dec)=(yyvsp[-2].dec);}
+                                     {cout<<"init_declartor started"<<endl;(yyvsp[-2].dec)->ini=(yyvsp[0].ini);(yyval.dec)=(yyvsp[-2].dec);cout<<"init_declarator done"<<endl;}
 #line 2343 "grammar.tab.c"
     break;
 
@@ -2416,7 +2416,7 @@ yyreduce:
 
   case 106: /* type_specifier: UNSIGNED  */
 #line 384 "grammar.y"
-                   {(yyval.type_spec)=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);}
+                   {(yyval.type_spec)=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);cout<<"hurrah"<<endl;}
 #line 2421 "grammar.tab.c"
     break;
 
@@ -2734,7 +2734,7 @@ yyreduce:
 
   case 159: /* declarator: direct_declarator  */
 #line 516 "grammar.y"
-                            {(yyval.dec)=create_new_declarator(nullptr,(yyvsp[0].dir_dec));}
+                            {(yyval.dec)=create_new_declarator(nullptr,(yyvsp[0].dir_dec));cout<<"##"<<endl;}
 #line 2739 "grammar.tab.c"
     break;
 
@@ -3058,7 +3058,7 @@ yyreduce:
 
   case 215: /* declaration_list: declaration_list declaration  */
 #line 629 "grammar.y"
-                                       {(yyvsp[-1].dec_list)->dv.push_back((yyvsp[0].declaration));(yyval.dec_list)=(yyvsp[-1].dec_list);add_to_local_table(current_table,(yyvsp[0].declaration));}
+                                       {cout<<"declaration_list done"<<endl;(yyvsp[-1].dec_list)->dv.push_back((yyvsp[0].declaration));(yyval.dec_list)=(yyvsp[-1].dec_list);add_to_local_table(current_table,(yyvsp[0].declaration));}
 #line 3063 "grammar.tab.c"
     break;
 
@@ -3190,7 +3190,7 @@ yyreduce:
 
   case 237: /* function_declaration: declaration_specifiers declarator  */
 #line 674 "grammar.y"
-                                            { Function_Declaration* x=new Function_Declaration((yyvsp[-1].dec_spec),(yyvsp[0].dec));Type* type=new Type();string t=create_type((yyvsp[-1].dec_spec),(yyvsp[0].dec),type);cout << "create type for func decl done successfully"<<endl;(yyvsp[0].dec)->check_for_func();cout << "check for func done successfully in func decl" << endl;(yyval.func_decl)=x;func_ret_type=type->func_ret_type ;assert(func_ret_type!=nullptr); lvl_name.push(get_name((yyvsp[0].dec)));}
+                                            { Function_Declaration* x=new Function_Declaration((yyvsp[-1].dec_spec),(yyvsp[0].dec));Type* type=new Type();string t=create_type((yyvsp[-1].dec_spec),(yyvsp[0].dec),type);cout << "create type for func decl done successfully"<<endl;(yyvsp[0].dec)->check_for_func();cout << "check for func done successfully in func decl" << endl;(yyval.func_decl)=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name((yyvsp[0].dec)));cout<<"final func decl done huuh"<<endl;}
 #line 3195 "grammar.tab.c"
     break;
 

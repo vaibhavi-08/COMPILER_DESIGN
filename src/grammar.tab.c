@@ -79,7 +79,7 @@
 #include <fstream>
 #include <cstring> // Required for strdup
 #include <classes_NT.h>
-
+#include "symtab_print.h"
 void yyerror(const char *s);
 
 using namespace std;
@@ -2278,7 +2278,7 @@ yyreduce:
 
   case 82: /* declaration: declaration_specifiers init_declarator_list ';'  */
 #line 340 "grammar.y"
-                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();}
+                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();cout << "current params list cleared" << endl;}
 #line 2283 "grammar.tab.c"
     break;
 
@@ -3447,6 +3447,7 @@ int main(int argc, char *argv[]){
     else{
         cout << "parsing successful" << endl;
     }
+	  print_full_symbol_table();
 
     return 0;
 }

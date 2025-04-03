@@ -60,7 +60,7 @@
 #include <fstream>
 #include <cstring> // Required for strdup
 #include <classes_NT.h>
-
+#include "symtab_print.h"
 void yyerror(const char *s);
 
 using namespace std;
@@ -732,6 +732,7 @@ int main(int argc, char *argv[]){
     else{
         cout << "parsing successful" << endl;
     }
+	  print_full_symbol_table();
 
     return 0;
 }

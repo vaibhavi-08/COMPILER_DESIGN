@@ -252,14 +252,14 @@ multiplicative_expression
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
-	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
-	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
+	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 shift_expression
 	: additive_expression {$$=$1;}
-	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);$$=$1;}
-	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);$$=$1;}
+	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<<",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">>",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 relational_expression

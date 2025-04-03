@@ -2030,13 +2030,13 @@ yyreduce:
 
   case 40: /* additive_expression: additive_expression '+' multiplicative_expression  */
 #line 254 "grammar.y"
-                                                            {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                            {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));string nn=get_new_temp();type->place=nn;string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"+",nn);type->code.push_back(cod);global_code.push_back(cod);(yyval.typ)=type;}
 #line 2031 "grammar.tab.c"
     break;
 
   case 41: /* additive_expression: additive_expression '-' multiplicative_expression  */
 #line 255 "grammar.y"
-                                                            {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                            {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));string nn=get_new_temp();type->place=nn;string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"-",nn);type->code.push_back(cod);global_code.push_back(cod);(yyval.typ)=type;}
 #line 2037 "grammar.tab.c"
     break;
 
@@ -2048,13 +2048,13 @@ yyreduce:
 
   case 43: /* shift_expression: shift_expression LEFT_OP additive_expression  */
 #line 260 "grammar.y"
-                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
+                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=(yyvsp[-2].typ);string nn=get_new_temp();type->place=nn;string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"<<",nn);type->code.push_back(cod);global_code.push_back(cod);(yyval.typ)=type;}
 #line 2049 "grammar.tab.c"
     break;
 
   case 44: /* shift_expression: shift_expression RIGHT_OP additive_expression  */
 #line 261 "grammar.y"
-                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=(yyvsp[-2].typ);}
+                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=(yyvsp[-2].typ);string nn=get_new_temp();type->place=nn;string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,">>",nn);type->code.push_back(cod);global_code.push_back(cod);(yyval.typ)=type;}
 #line 2055 "grammar.tab.c"
     break;
 

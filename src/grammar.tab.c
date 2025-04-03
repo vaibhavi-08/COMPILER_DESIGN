@@ -2278,7 +2278,7 @@ yyreduce:
 
   case 82: /* declaration: declaration_specifiers init_declarator_list ';'  */
 #line 340 "grammar.y"
-                                                          {cout<<"declaration started"<<endl;(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();cout<<"declartion done"<<endl;}
+                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();}
 #line 2283 "grammar.tab.c"
     break;
 
@@ -3154,7 +3154,7 @@ yyreduce:
 
   case 231: /* jump_statement: RETURN ';'  */
 #line 660 "grammar.y"
-                     {if(current_level==lvl_name.size()){assert(func_ret_type!=nullptr);}else{cout << "return not allowed here" << endl;exit(0);}(yyval.int_value)=1;}
+                     {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(0);}(yyval.int_value)=1;if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
 #line 3159 "grammar.tab.c"
     break;
 
@@ -3196,7 +3196,7 @@ yyreduce:
 
   case 238: /* function_definition: function_declaration compound_statement  */
 #line 678 "grammar.y"
-                                                  {Function_Declaration* x=(yyvsp[-1].func_decl);(yyval.fun_def)=create_func_def(x->ds,x->d,(yyvsp[0].comp_stmt));cout<<"create func def done"<< endl;current_params_list.clear();lvl_name.pop();}
+                                                  {Function_Declaration* x=(yyvsp[-1].func_decl);(yyval.fun_def)=create_func_def(x->ds,x->d,(yyvsp[0].comp_stmt));cout<<"create func def done"<< endl;current_params_list.clear();cout << "current params list cleared" << endl;lvl_name.pop();}
 #line 3201 "grammar.tab.c"
     break;
 

@@ -189,6 +189,11 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
                     cout << "only functions can be declared void" << endl;
                     exit(1);
                 }
+                t->isfunction=true;
+                t->prms=get_func_params(d);
+                Type* g=new Type();
+                g->isvoid=true;
+                t->func_ret_type=g;
                 return "VOID";
             }
             else {
@@ -482,6 +487,11 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
                     cout << "only functions can be declared void" << endl;
                     exit(1);
                 }
+                t->isfunction=true;
+                t->prms=get_func_params(d);
+                Type* g=new Type();
+                g->isvoid=true;
+                t->func_ret_type=g;
                 return "VOID";
             }
             else {
@@ -747,6 +757,11 @@ Type* Type_Name::create_type_tn(Specifier_Qualifier_List* ds,Abstract_Declarator
                     cout << "only functions can be declared void" << endl;
                     exit(1);
                 }
+                t->isfunction=true;
+                t->prms=get_func_params(ad);
+                Type* g=new Type();
+                g->isvoid=true;
+                t->func_ret_type=g;
                 return t;
             }
             else {
@@ -1720,6 +1735,10 @@ Type* get_type_id(string id) {
             ccl--;
         }
     }
+    if(current_params_list.find(id)!=current_params_list.end()){
+        Type* y=current_params_list[id];
+        return y;
+    }
     cout << "identifier not found " << id  << endl;
     exit(0);
 }
@@ -2093,6 +2112,7 @@ void add_params_to_map(Parameter_List* pl) {
             exit(1);
         }
         current_params_list[param.first] = param.second;
+        cout << "params pushed in map" << endl;
     }
 }
 

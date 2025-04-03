@@ -60,6 +60,7 @@
 #include <fstream>
 #include <cstring> // Required for strdup
 #include <classes_NT.h>
+#include <tac.h>
 #include "symtab_print.h"
 void yyerror(const char *s);
 
@@ -189,14 +190,14 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER {Type* t=get_type_id($1);$$=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
-	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";$$=t;} 
-	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);$$=t;}
-	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;}
-	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;}
-	| CONST_EXP {$$=get_type_exp($1);}
-	| '(' expression ')' {$$=$2;}
-	| NULL_TOKEN {Type* t=new Type();t->isnull=true;$$=t;}
+	: IDENTIFIER {Type* t=get_type_id($1);cout << t->base << endl;cout << "get type id in primary exp done" << endl;Symbol_Info* x=get_symbol_info_id($1);if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;}t->place=x->tempname;$$=t;}
+	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();t->place=nn;$$=t;} 
+	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();t->place=nn;$$=t;}
+	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
+	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
+	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;$$=t;}
+	| '(' expression ')' {Type* t=$2;string nn=get_new_temp();t->place=nn;$$=t;}
+	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;$$=t;}
 	;
 
 class_name
@@ -244,9 +245,9 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression {$$=$1;}
-	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
-	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3);$$=type;}
-	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3);$$=type;}
+	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"/",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"%",nn);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 additive_expression
@@ -411,7 +412,7 @@ union
 	;
 
 struct_declaration_list
-	: struct_declaration {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
+	: struct_declaration {current_level++;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
 	| struct_declaration_list struct_declaration {Struct_Declaration_List* x=$1;x->sdl.push_back($2);$$=x;add_to_local_table(current_table,$2);} /* add struct decl. to already made object.  add struct declaration to current table*/
 	;
 
@@ -619,13 +620,13 @@ labeled_statement
 
 compound_statement
 	: '{' '}' {Compound_Statement* x=new Compound_Statement(vector<int>(),nullptr);$$=x;}
-	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);for(int i:*($2)){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();$$=x;}
+	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);for(int i:*($2)){if(i==1)x->have_ret=1;}$$=x;}
 	| '{' declaration_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(vector<int>(),$2);cout << "compound_statement parsed" << endl;current_level--;current_table->get_parent();$$=x;}
 	| '{' declaration_list statement_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(*($3),$2);for(int i:*($3)){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();$$=x;cout << "compound_statement parsed" << endl;}
 	;
 
 declaration_list
-	: declaration {cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back($1);current_level++;current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,$1);cout << "declaration list done successfully" << endl;$$=x;}
+	: declaration {current_level++;cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back($1);current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,$1);cout << "declaration list done successfully" << endl;$$=x;}
 	| declaration_list declaration {cout<<"declaration_list done"<<endl;$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
 	;
 
@@ -734,5 +735,17 @@ int main(int argc, char *argv[]){
     }
 	  print_full_symbol_table();
 
+	cout << "FINAL SYMTAB: " << endl;
+	for(auto i:final_symtab){
+		cout << i.first << ":" << endl;
+		cout << i.second->name << " " << i.second->type << " " << i.second->level_name << " " << i.second->level << endl;
+	}
+	cout << "==================================================" << endl;
+	cout << endl;
+	cout << endl;
+	for(auto i:global_code){
+		cout << i << endl;
+	}
+	cout << "==================================================" << endl;
     return 0;
 }

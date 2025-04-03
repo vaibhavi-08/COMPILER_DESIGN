@@ -117,7 +117,7 @@ void check_int_comp(Type* type);
 void check_typecast_compatibility(Type* t1,Type* t2);
 Type* check_if_function(Type* t);
 vector<Type*> get_func_params(Abstract_Declarator* ad);
-
+Symbol_Info* get_symbol_info_id(string id);
 Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd);
 class Symbol_Info{
@@ -129,6 +129,7 @@ class Symbol_Info{
     string scope;
     string access;
     Type* t;
+    string tempname;
     Symbol_Info(string name,string type, string level_name,int level,string scope,string access,Type* t);
 };
 class Global_Symbol_Table{
@@ -162,6 +163,8 @@ class Type {
     bool isenum;
     Type* func_ret_type;
     vector<Type*> prms;
+    vector<string> code;
+    string place;
     Enumerator_List* el;
     string base;
     string objtype;

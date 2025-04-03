@@ -79,7 +79,11 @@
 #include <fstream>
 #include <cstring> // Required for strdup
 #include <classes_NT.h>
+<<<<<<< HEAD
 #include "symtab_print.h"
+=======
+#include <tac.h>
+>>>>>>> 480d6893b9db76f3ee7355bfd76b579c4d152f17
 void yyerror(const char *s);
 
 using namespace std;
@@ -1798,49 +1802,49 @@ yyreduce:
     {
   case 2: /* primary_expression: IDENTIFIER  */
 #line 192 "grammar.y"
-                     {Type* t=get_type_id((yyvsp[0].str));(yyval.typ)=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
+                     {Type* t=get_type_id((yyvsp[0].str));cout << t->base << endl;cout << "get type id in primary exp done" << endl;Symbol_Info* x=get_symbol_info_id((yyvsp[0].str));if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;}t->place=x->tempname;(yyval.typ)=t;}
 #line 1803 "grammar.tab.c"
     break;
 
   case 3: /* primary_expression: CONSTANT  */
 #line 193 "grammar.y"
-                   {Type* t=new Type(); t->isbasic=true;t->base="INT";(yyval.typ)=t;}
+                   {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();t->place=nn;(yyval.typ)=t;}
 #line 1809 "grammar.tab.c"
     break;
 
   case 4: /* primary_expression: STRING_LITERAL  */
 #line 194 "grammar.y"
-                         {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);(yyval.typ)=t;}
+                         {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();t->place=nn;(yyval.typ)=t;}
 #line 1815 "grammar.tab.c"
     break;
 
   case 5: /* primary_expression: CONST_CHAR  */
 #line 195 "grammar.y"
-                     {Type* t=new Type(); t->isbasic=true;t->base="CHAR";(yyval.typ)=t;}
+                     {Type* t=new Type(); t->isbasic=true;t->base="CHAR";(yyval.typ)=t;string nn=get_new_temp();t->place=nn;(yyval.typ)=t;}
 #line 1821 "grammar.tab.c"
     break;
 
   case 6: /* primary_expression: CONST_FLOAT  */
 #line 196 "grammar.y"
-                      {Type* t=new Type();t->isbasic=true;t->base="FLOAT";(yyval.typ)=t;}
+                      {Type* t=new Type();t->isbasic=true;t->base="FLOAT";(yyval.typ)=t;string nn=get_new_temp();t->place=nn;(yyval.typ)=t;}
 #line 1827 "grammar.tab.c"
     break;
 
   case 7: /* primary_expression: CONST_EXP  */
 #line 197 "grammar.y"
-                    {(yyval.typ)=get_type_exp((yyvsp[0].str));}
+                    {Type* t=get_type_exp((yyvsp[0].str));string nn=get_new_temp();t->place=nn;(yyval.typ)=t;}
 #line 1833 "grammar.tab.c"
     break;
 
   case 8: /* primary_expression: '(' expression ')'  */
 #line 198 "grammar.y"
-                             {(yyval.typ)=(yyvsp[-1].typ);}
+                             {Type* t=(yyvsp[-1].typ);string nn=get_new_temp();t->place=nn;(yyval.typ)=t;}
 #line 1839 "grammar.tab.c"
     break;
 
   case 9: /* primary_expression: NULL_TOKEN  */
 #line 199 "grammar.y"
-                     {Type* t=new Type();t->isnull=true;(yyval.typ)=t;}
+                     {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;(yyval.typ)=t;}
 #line 1845 "grammar.tab.c"
     break;
 
@@ -2002,19 +2006,19 @@ yyreduce:
 
   case 36: /* multiplicative_expression: multiplicative_expression '*' cast_expression  */
 #line 247 "grammar.y"
-                                                        {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                        {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));string nn=get_new_temp();type->place=nn;string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"*",nn);type->code.push_back(cod);global_code.push_back(cod);(yyval.typ)=type;}
 #line 2007 "grammar.tab.c"
     break;
 
   case 37: /* multiplicative_expression: multiplicative_expression '/' cast_expression  */
 #line 248 "grammar.y"
-                                                        {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                        {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));string nn=get_new_temp();type->place=nn;string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"/",nn);type->code.push_back(cod);global_code.push_back(cod);(yyval.typ)=type;}
 #line 2013 "grammar.tab.c"
     break;
 
   case 38: /* multiplicative_expression: multiplicative_expression '%' cast_expression  */
 #line 249 "grammar.y"
-                                                        {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));(yyval.typ)=type;}
+                                                        {Type* type=check_for_arithmatic_op((yyvsp[-2].typ),(yyvsp[0].typ));string nn=get_new_temp();type->place=nn;string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"%",nn);type->code.push_back(cod);global_code.push_back(cod);(yyval.typ)=type;}
 #line 2019 "grammar.tab.c"
     break;
 
@@ -2488,7 +2492,7 @@ yyreduce:
 
   case 118: /* struct_declaration_list: struct_declaration  */
 #line 414 "grammar.y"
-                             {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;current_table=next_table(current_table);add_to_local_table(current_table,(yyvsp[0].struc_dec));if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}
+                             {current_level++;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;current_table=next_table(current_table);add_to_local_table(current_table,(yyvsp[0].struc_dec));if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}
 #line 2493 "grammar.tab.c"
     break;
 
@@ -3034,7 +3038,7 @@ yyreduce:
 
   case 211: /* compound_statement: '{' statement_list '}'  */
 #line 622 "grammar.y"
-                                 {Compound_Statement* x=new Compound_Statement(*((yyvsp[-1].vec_int)),nullptr);for(int i:*((yyvsp[-1].vec_int))){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();(yyval.comp_stmt)=x;}
+                                 {Compound_Statement* x=new Compound_Statement(*((yyvsp[-1].vec_int)),nullptr);for(int i:*((yyvsp[-1].vec_int))){if(i==1)x->have_ret=1;}(yyval.comp_stmt)=x;}
 #line 3039 "grammar.tab.c"
     break;
 
@@ -3052,7 +3056,7 @@ yyreduce:
 
   case 214: /* declaration_list: declaration  */
 #line 628 "grammar.y"
-                      {cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back((yyvsp[0].declaration));current_level++;current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,(yyvsp[0].declaration));cout << "declaration list done successfully" << endl;(yyval.dec_list)=x;}
+                      {current_level++;cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back((yyvsp[0].declaration));current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,(yyvsp[0].declaration));cout << "declaration list done successfully" << endl;(yyval.dec_list)=x;}
 #line 3057 "grammar.tab.c"
     break;
 
@@ -3447,7 +3451,22 @@ int main(int argc, char *argv[]){
     else{
         cout << "parsing successful" << endl;
     }
+<<<<<<< HEAD
 	  print_full_symbol_table();
 
+=======
+	cout << "FINAL SYMTAB: " << endl;
+	for(auto i:final_symtab){
+		cout << i.first << ":" << endl;
+		cout << i.second->name << " " << i.second->type << " " << i.second->level_name << " " << i.second->level << endl;
+	}
+	cout << "==================================================" << endl;
+	cout << endl;
+	cout << endl;
+	for(auto i:global_code){
+		cout << i << endl;
+	}
+	cout << "==================================================" << endl;
+>>>>>>> 480d6893b9db76f3ee7355bfd76b579c4d152f17
     return 0;
 }

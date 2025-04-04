@@ -361,9 +361,7 @@ Direct_Abstract_Declarator::Direct_Abstract_Declarator(string type, Abstract_Dec
 
 }
 
-Struct_Declaration_List::Struct_Declaration_List() {
-    // Constructor logic
-}
+Struct_Declaration_List::Struct_Declaration_List() : sdl() {}
 
 Class_Member_Declaration_List::Class_Member_Declaration_List(){
     // Constructor logic
@@ -385,7 +383,16 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
         type+="VOLATILE ";
         t->isvolatile=true;
     }
+    cout << "making type specifier vector" << endl;
+    if(!ds) {
+        cerr << "CRITICAL: ds is nullptr!" << endl;
+    }    
+    assert(ds != nullptr && "DS pointer is null!");
+    assert(ds->ts.size() < 1e6 && "Vector size corrupted");
     vector<Type_Specifier*> z=ds->ts;
+    cout << "After modification, ts size: " << ds->ts.size() 
+          << ", capacity: " << ds->ts.capacity() << std::endl;
+    cout << "create type 2 done till here" << endl;
     reverse(z.begin(),z.end());
     if(z.size()==3){
         if((z[0]->string_type=="UNSIGNED") && (z[1]->string_type=="LONG") && (z[2]->string_type=="LONG")){
@@ -926,6 +933,7 @@ vector<pair<string,pair<string,Type*>>> create_struct_name_type_list(Specifier_Q
     if(sdl==nullptr){
         Type* t=new Type();
         string type=create_type(sql,nullptr,t);
+        cout << "create type in create_struct_name_type_list done" << endl;
         if(type=="class"||type=="struct"||type=="union"||type=="enum"){
             if(sql->ts[0]->string_type=="class"){
                 
@@ -1296,8 +1304,10 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
     if(op=="="){
         bool isconst=false;
         if(t1->ptr_level>0){
+            cout<<"inside pointer"<<endl;
             Tq ss=t1->ptrtql.back();
             isconst=ss.isconst;
+            cout<<"completed inside pointer"<<endl;
         }
         else isconst=t1->isconst;
         if(t1->isfunction){
@@ -1363,6 +1373,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
             exit(1);
         }
         else if(t1->ptr_level>0&&t2->isnull){
+            cout<<"another ppointer in check for assign"<<endl;
             return t2;
         }
         else if(t2->isenum){
@@ -2506,6 +2517,7 @@ Type_Specifier::Type_Specifier(const string& str, Struct_or_Union_Specifier* str
     if(str==""){
         cout << "str is null" << endl;
         if(struct_union_type) {
+            assert(struct_union_type->str_or_union.size() < 1000);
             const string& sou = struct_union_type->str_or_union;
             const string& name = struct_union_type->name;
             Struct_Declaration_List* sdl = struct_union_type->strdec_list;
@@ -2526,6 +2538,7 @@ Type_Specifier::Type_Specifier(const string& str, Struct_or_Union_Specifier* str
             }
         }
         else if (class_type) { 
+            assert(class_type->class_name.size() < 1000);
             if (class_type->cb == nullptr) {
                 string_type = "class " + class_type->class_name;
             }
@@ -2582,12 +2595,15 @@ Initializer_List::Initializer_List() {
 }
 
 Struct_Declaration::Struct_Declaration(Specifier_Qualifier_List* sql, Struct_Declarator_List* sdl) {
-    this->sql = sql;                   
-    this->sdl = sdl;                  
-    this->name_type_list = create_struct_name_type_list(sql,sdl);         
-    this->scope = "local";                  
-    this->level = current_level-lvl_name.size()+1;                  
-    this->level_name = get_level_name();         
+    this->sql = sql;
+    this->sdl = sdl;
+    int calculated_level = current_level -(lvl_name.size()) + 1;
+    cout << "calculated levl in struct decl contr" << endl;
+    this->level = calculated_level;
+    this->name_type_list = create_struct_name_type_list(sql, sdl); // Now safe
+    cout << "create_struct_name_type_list_done" << endl;
+    this->scope = "local";
+    this->level_name = get_level_name();       
 }
 
 Struct_Declarator_List::Struct_Declarator_List() {
@@ -2624,14 +2640,16 @@ Base_Class::Base_Class(const std::string& asp, const std::string& id)
     : asp(asp), id(id) {  
 }
 
-Specifier_Qualifier_List::Specifier_Qualifier_List() {
-    this->ts={};
-    this->tq={};
+Specifier_Qualifier_List::Specifier_Qualifier_List() 
+    : ts(), tq() {
+    std::cout << "Constructor called. ts size: " << ts.size() 
+              << ", address: " << this << std::endl;
 }
 
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl){
+    cout<<"in 1st line of create_struct_dec_obj"<<endl;
     Struct_Declaration* sd=new Struct_Declaration(sql,sdl);
-    sd->level=current_level-lvl_name.size()+1;
+    cout << "constr done" << endl;
     sd->level_name=get_level_name();
     if(current_level==0)sd->scope="global";
     else sd->scope="local";

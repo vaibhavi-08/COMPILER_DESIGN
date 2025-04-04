@@ -189,8 +189,8 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER {Type* t=get_type_id($1);$$=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
-	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";$$=t;} 
+	: IDENTIFIER {cout<<"identifier start"<<endl;Type* t=get_type_id($1);$$=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
+	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";$$=t;cout<<"finally get the constant "<<t->base<<endl;} 
 	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);$$=t;}
 	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;}
 	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;}
@@ -200,7 +200,7 @@ primary_expression
 	;
 
 class_name
-    : IDENTIFIER /* pass */ { $$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) ); }
+    : IDENTIFIER /* pass */ { cout<<"IDENTIFIER will be passed to CN"<<endl;$$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) );cout<<"identifier passed to class_name"<<endl; }
     ;
 
 postfix_expression
@@ -223,7 +223,7 @@ unary_expression
 	: postfix_expression {$$=$1;}
 	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;}
 	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;}
-	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;}
+	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;}
 	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;}/* void , functiions */
 	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;}
 	;
@@ -325,7 +325,7 @@ assignment_operator
 	;
 
 expression
-	: assignment_expression {$$=$1;}
+	: assignment_expression {$$=$1; cout<<"finally expression has identifier"<<endl;}
 	| expression ',' assignment_expression {Type* t=new Type();$$=t;}
 	;
 
@@ -348,7 +348,7 @@ declaration
 declaration_specifiers
 	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back($1);$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
 	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);$$=ds;cout << "declaration specifier done scs" << endl;}/* add storage_class_specifier to $2*/
-	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);$$=ds;cout << ds->ts.back()->string_type << endl;}/* create declaration specifier object . add type specifier to it . pass it above. */
+	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);$$=ds;cout << ds->ts.back()->string_type << endl;cout<<"got type specifier"<<endl;}/* create declaration specifier object . add type specifier to it . pass it above. */
 	| type_specifier declaration_specifiers {cout<<"declaration_specifier started"<<endl;Declaration_Specifiers* ds=$2; ds->ts.push_back($1);$$=ds;cout<<"declaration specifier completed"<<endl;}/* add type_specifier to $2 */
 	| type_qualifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->tq.push_back($1);$$=ds;}/* create declaration_specifiers object . add type qualifier to it . pass it above. */
 	| type_qualifier declaration_specifiers {Declaration_Specifiers* ds=$2; ds->tq.push_back($1);$$=ds;}/* add type_qualifier to $2 */
@@ -376,14 +376,14 @@ type_specifier
     : VOID { $$ = create_ts_obj(std::string("VOID"), nullptr, nullptr, nullptr); }
 	| CHAR	{$$=create_ts_obj("CHAR",nullptr,nullptr,nullptr);}
 	| SHORT {$$=create_ts_obj("SHORT",nullptr,nullptr,nullptr);}
-	| INT {$$=create_ts_obj("INT",nullptr,nullptr,nullptr);}
+	| INT {$$=create_ts_obj("INT",nullptr,nullptr,nullptr);cout<<"INT Passed"<<endl;}
 	| LONG {$$=create_ts_obj("LONG",nullptr,nullptr,nullptr);}
 	| FLOAT {$$=create_ts_obj("FLOAT",nullptr,nullptr,nullptr);}
 	| DOUBLE {$$=create_ts_obj("DOUBLE",nullptr,nullptr,nullptr);}
 	| SIGNED {$$=create_ts_obj("SIGNED",nullptr,nullptr,nullptr);}
 	| UNSIGNED {$$=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);cout<<"hurrah"<<endl;}
-	| struct_or_union_specifier {$$=create_ts_obj("",$1,nullptr,nullptr);}
-    | class_specifier {$$=create_ts_obj("",nullptr,$1,nullptr);}
+	| struct_or_union_specifier {cout<<"struct_or_union_specifier found"<<endl;$$=create_ts_obj("",$1,nullptr,nullptr);}
+    | class_specifier {cout<<"completed class specifier"<<endl;$$=create_ts_obj("",nullptr,$1,nullptr);}
 	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$1);}
 	/*| TYPE_NAME {$$=create_ts_obj("TYPE_NAME",nullptr,nullptr,nullptr);}*/
 	;
@@ -391,37 +391,37 @@ type_specifier
 struct_or_union_specifier
 	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->get_parent(); lvl_name.pop();add_to_local_class_struct_union_info(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
 	/*| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*//* same as above */
-	| struct IDENTIFIER {check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
+	| struct IDENTIFIER {cout<<"struct identifier reached"<<endl;check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
 	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
 	/*| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*/ /* same as above */
 	| union IDENTIFIER {check_if_declared(current_table,$2,"union");$$=create_struct_union_spec_obj($1,$2,nullptr);/* whether this identifier is declared before use */}
 	;
 
 struct_id 
-	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));}
+	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));cout<<"got struct identifier"<<endl;}
 	;
 union_id
 	: IDENTIFIER {lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));}
 	;
 struct
-	: STRUCT /*just pass */ {$$="STRUCT";}
+	: STRUCT /*just pass */ {$$="STRUCT";cout <<"finally reached to struct"<<endl;}
 	;
 union
 	: UNION {$$="UNION";}
 	;
 
 struct_declaration_list
-	: struct_declaration {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
+	: struct_declaration {cout<<"struct_dec_lst started"<<endl;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}cout<<"struct declaration list done"<<endl;} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
 	| struct_declaration_list struct_declaration {Struct_Declaration_List* x=$1;x->sdl.push_back($2);$$=x;add_to_local_table(current_table,$2);} /* add struct decl. to already made object.  add struct declaration to current table*/
 	;
 
 struct_declaration
-	: specifier_qualifier_list struct_declarator_list ';'{$$=create_struct_dec_obj($1,$2);} /* create type. */ 
+	: specifier_qualifier_list struct_declarator_list ';'{cout<<"struct declaration started"<<endl;$$=create_struct_dec_obj($1,$2);cout<<"struct declaration done"<<endl;} /* create type. */ 
 	;
 
 specifier_qualifier_list
 	: type_specifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->ts.push_back($1);} /* add type_specifier to specifier_qualifier_list object already created */
-	| type_specifier {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back($1);}/* create object of specifier_qualifier_list . add type_specifier to it */
+	| type_specifier {cout<<"type spec in sql started"<<endl;Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back($1);cout<<"type spec in sql ended"<<endl;}/* create object of specifier_qualifier_list . add type_specifier to it */
 	| type_qualifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->tq.push_back($1);}  /* same as above rule */
 	| type_qualifier {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->tq.push_back($1);} /* same as above rule */
 	;
@@ -486,8 +486,8 @@ class_member_declaration
     ;
 
 member_declaration
-    : specifier_qualifier_list declarator ';' {$$=new Member_Declaration($1,$2,nullptr);add_to_local_table(current_table,$1,$2);} /* do not add directly in local symtab , change grammar*/
-    | function_definition {$$=new Member_Declaration(nullptr,nullptr,$1);add_to_local_table(current_table,$1);}
+	: function_definition {$$=new Member_Declaration(nullptr,nullptr,$1);add_to_local_table(current_table,$1);}
+    | specifier_qualifier_list declarator ';' {$$=new Member_Declaration($1,$2,nullptr);add_to_local_table(current_table,$1,$2);} /* do not add directly in local symtab , change grammar*/
     ;
 
 enum_specifier
@@ -512,7 +512,7 @@ type_qualifier
 	;
 
 declarator
-	: pointer direct_declarator {$$=create_new_declarator($1,$2);}
+	: pointer direct_declarator {$$=create_new_declarator($1,$2);cout<<"got pointer direct declarator"<<endl;}
 	| direct_declarator {$$=create_new_declarator(nullptr,$1);cout<<"##"<<endl;}/* check if is a function . if yes then add its name to stack */
 	;
 
@@ -598,7 +598,7 @@ initializer_list
 
 statement
 	: labeled_statement {$$=$1;}
-	| compound_statement {int z=0;for(int i:$1->st){if(i==1)z=1;}return z;}
+	| compound_statement {int z=0;for(int i:$1->st){if(i==1)z=1;}return z;cout<<"finally statement has compound statement"<<endl;}
 	| expression_statement {$$=$1;}
 	| selection_statement {$$=$1;}
 	| iteration_statement {$$=$1;}
@@ -614,19 +614,19 @@ delete_statement
 labeled_statement
 	: IDENTIFIER ':' statement {if(labelset.find($1)==labelset.end())labelset.insert($1);else {cout << "label declared twice" << endl;exit(1);}}
 	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement
+	| DEFAULT ':' statement {cout<<"finally reached to default"<<endl;}
 	;
 
 compound_statement
 	: '{' '}' {Compound_Statement* x=new Compound_Statement(vector<int>(),nullptr);$$=x;}
-	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);for(int i:*($2)){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();$$=x;}
+	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);cout<<"obj of compound statement done for st_lst"<<endl; for(int i:*($2)){if(i==1)x->have_ret=1;}cout<<"loop completed"<<endl;current_level--;if(current_table!=nullptr){current_table->get_parent();}cout<<"got parent"<<endl;$$=x;cout<<"statement_list done in compound_statement"<<endl;}
 	| '{' declaration_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(vector<int>(),$2);cout << "compound_statement parsed" << endl;current_level--;current_table->get_parent();$$=x;}
 	| '{' declaration_list statement_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(*($3),$2);for(int i:*($3)){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();$$=x;cout << "compound_statement parsed" << endl;}
 	;
 
 declaration_list
 	: declaration {cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back($1);current_level++;current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,$1);cout << "declaration list done successfully" << endl;$$=x;}
-	| declaration_list declaration {cout<<"declaration_list done"<<endl;$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
+	| declaration_list declaration {cout<<"declaration_list started"<<endl;$1->dv.push_back($2);cout<<"pushing in vector done"<<endl;$$=$1;add_to_local_table(current_table,$2);cout<<"declaration_list done"<<endl;}
 	;
 
 statement_list
@@ -635,14 +635,14 @@ statement_list
 	;
 
 expression_statement
-	: ';' {$$=0;}
+	: ';' {$$=0;cout<<"semi colon"<<endl;}
 	| expression ';' {$$=0;}
 	;
 
 selection_statement
 	: IF '(' expression ')' statement {$$=$5;}
 	| IF '(' expression ')' statement ELSE statement {$$=($5|$7);}
-	| SWITCH '(' expression ')' statement {$$=$5;}
+	| SWITCH '(' expression ')' statement {cout<<"switch found"<<endl;$$=$5;}
 	;
 
 iteration_statement
@@ -656,9 +656,9 @@ iteration_statement
 jump_statement
 	: GOTO IDENTIFIER ';' {$$=0;}
 	| CONTINUE ';' {$$=0;}
-	| BREAK ';' {$$=0;}
+	| BREAK ';' {$$=0;cout<<"found break"<<endl;}
 	| RETURN ';' {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(0);}$$=1;if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{cout << "return not allowed here" << endl;exit(0);cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done" << endl;$$=1;}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{/*cout << "return not allowed here" << endl;exit(0);*/cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done in return" << endl;$$=1;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */

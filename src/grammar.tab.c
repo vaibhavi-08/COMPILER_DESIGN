@@ -860,7 +860,7 @@ static const yytype_uint8 yydefact[] =
       63,    65,    78,     0,   214,     0,   216,   204,   198,   199,
        0,     0,   200,   201,   202,   203,   154,     0,   152,   135,
      137,   136,   138,   131,   132,     0,   140,     0,     0,    85,
-       0,     0,    93,   147,   141,   146,    87,   149,   129,   161,
+       0,     0,    93,   147,   141,   146,    87,   148,   129,   161,
      171,   169,    90,    91,     2,     0,     0,   191,    92,   165,
        0,     0,   172,   174,   163,    33,    80,     0,   122,     0,
      118,     0,   124,     0,     0,     0,    25,     0,    22,    23,
@@ -878,7 +878,7 @@ static const yytype_uint8 yydefact[] =
       13,     0,    19,     0,    15,    66,    36,    37,    38,    40,
       41,    43,    44,    48,    49,    46,    47,    51,    52,    54,
       56,    58,    60,    62,     0,    79,   213,   155,   153,   133,
-       0,     0,   148,     0,     0,   192,   173,   175,     0,   120,
+       0,     0,   149,     0,     0,   192,   173,   175,     0,   120,
       26,   208,     0,     0,     0,     0,     0,   206,     0,   187,
        0,     0,   183,     0,   181,    93,     0,    34,    14,     0,
       12,     0,   144,     0,    93,   195,     0,   193,   197,   126,
@@ -1324,7 +1324,7 @@ static const yytype_int8 yyr2[] =
        5,     2,     5,     2,     1,     1,     1,     1,     1,     2,
        3,     2,     1,     2,     1,     1,     3,     1,     3,     4,
        2,     2,     1,     3,     2,     1,     1,     1,     1,     3,
-       2,     1,     2,     5,     4,     2,     1,     1,     3,     1,
+       2,     1,     2,     5,     4,     2,     1,     1,     1,     3,
        5,     2,     1,     3,     1,     3,     1,     1,     2,     1,
        1,     3,     4,     3,     4,     3,     1,     2,     2,     3,
        1,     2,     1,     3,     1,     3,     2,     1,     2,     1,
@@ -1798,13 +1798,13 @@ yyreduce:
     {
   case 2: /* primary_expression: IDENTIFIER  */
 #line 192 "grammar.y"
-                     {Type* t=get_type_id((yyvsp[0].str));(yyval.typ)=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
+                     {cout<<"identifier start"<<endl;Type* t=get_type_id((yyvsp[0].str));(yyval.typ)=t;cout << t->base << endl;cout << "get type id in primary exp done" << endl;}
 #line 1803 "grammar.tab.c"
     break;
 
   case 3: /* primary_expression: CONSTANT  */
 #line 193 "grammar.y"
-                   {Type* t=new Type(); t->isbasic=true;t->base="INT";(yyval.typ)=t;}
+                   {Type* t=new Type(); t->isbasic=true;t->base="INT";(yyval.typ)=t;cout<<"finally get the constant "<<t->base<<endl;}
 #line 1809 "grammar.tab.c"
     break;
 
@@ -1846,7 +1846,7 @@ yyreduce:
 
   case 10: /* class_name: IDENTIFIER  */
 #line 203 "grammar.y"
-                            { (yyval.str) = (yyvsp[0].str); string s="class "; s+=(yyvsp[0].str);lvl_name.push(s);current_class_struct_union_info.push(std::make_pair((yyvsp[0].str), nullptr) ); }
+                            { cout<<"IDENTIFIER will be passed to CN"<<endl;(yyval.str) = (yyvsp[0].str); string s="class "; s+=(yyvsp[0].str);lvl_name.push(s);current_class_struct_union_info.push(std::make_pair((yyvsp[0].str), nullptr) );cout<<"identifier passed to class_name"<<endl; }
 #line 1851 "grammar.tab.c"
     break;
 
@@ -1930,7 +1930,7 @@ yyreduce:
 
   case 24: /* unary_expression: unary_operator cast_expression  */
 #line 226 "grammar.y"
-                                         {Type* type=get_type_unary_expression((yyvsp[-1].str),(yyvsp[0].typ));(yyval.typ)=type;}
+                                         {Type* type=get_type_unary_expression((yyvsp[-1].str),(yyvsp[0].typ));(yyval.typ)=type;cout<<"got &"<<endl;}
 #line 1935 "grammar.tab.c"
     break;
 
@@ -2254,7 +2254,7 @@ yyreduce:
 
   case 78: /* expression: assignment_expression  */
 #line 328 "grammar.y"
-                                {(yyval.typ)=(yyvsp[0].typ);}
+                                {(yyval.typ)=(yyvsp[0].typ); cout<<"finally expression has identifier"<<endl;}
 #line 2259 "grammar.tab.c"
     break;
 
@@ -2278,7 +2278,7 @@ yyreduce:
 
   case 82: /* declaration: declaration_specifiers init_declarator_list ';'  */
 #line 340 "grammar.y"
-                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();}
+                                                          {(yyval.declaration)=create_declaration_object((yyvsp[-2].dec_spec),(yyvsp[-1].init_dec_list),nullptr);current_params_list.clear();cout << "current params list cleared" << endl;}
 #line 2283 "grammar.tab.c"
     break;
 
@@ -2296,7 +2296,7 @@ yyreduce:
 
   case 85: /* declaration_specifiers: type_specifier  */
 #line 351 "grammar.y"
-                         {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back((yyvsp[0].type_spec));(yyval.dec_spec)=ds;cout << ds->ts.back()->string_type << endl;}
+                         {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back((yyvsp[0].type_spec));(yyval.dec_spec)=ds;cout << ds->ts.back()->string_type << endl;cout<<"got type specifier"<<endl;}
 #line 2301 "grammar.tab.c"
     break;
 
@@ -2386,7 +2386,7 @@ yyreduce:
 
   case 101: /* type_specifier: INT  */
 #line 379 "grammar.y"
-              {(yyval.type_spec)=create_ts_obj("INT",nullptr,nullptr,nullptr);}
+              {(yyval.type_spec)=create_ts_obj("INT",nullptr,nullptr,nullptr);cout<<"INT Passed"<<endl;}
 #line 2391 "grammar.tab.c"
     break;
 
@@ -2422,13 +2422,13 @@ yyreduce:
 
   case 107: /* type_specifier: struct_or_union_specifier  */
 #line 385 "grammar.y"
-                                    {(yyval.type_spec)=create_ts_obj("",(yyvsp[0].str_union),nullptr,nullptr);}
+                                    {cout<<"struct_or_union_specifier found"<<endl;(yyval.type_spec)=create_ts_obj("",(yyvsp[0].str_union),nullptr,nullptr);}
 #line 2427 "grammar.tab.c"
     break;
 
   case 108: /* type_specifier: class_specifier  */
 #line 386 "grammar.y"
-                      {(yyval.type_spec)=create_ts_obj("",nullptr,(yyvsp[0].class_spec),nullptr);}
+                      {cout<<"completed class specifier"<<endl;(yyval.type_spec)=create_ts_obj("",nullptr,(yyvsp[0].class_spec),nullptr);}
 #line 2433 "grammar.tab.c"
     break;
 
@@ -2446,7 +2446,7 @@ yyreduce:
 
   case 111: /* struct_or_union_specifier: struct IDENTIFIER  */
 #line 394 "grammar.y"
-                            {check_if_declared(current_table,(yyvsp[0].str),"struct");(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-1].str),(yyvsp[0].str),nullptr);}
+                            {cout<<"struct identifier reached"<<endl;check_if_declared(current_table,(yyvsp[0].str),"struct");(yyval.str_union)=create_struct_union_spec_obj((yyvsp[-1].str),(yyvsp[0].str),nullptr);}
 #line 2451 "grammar.tab.c"
     break;
 
@@ -2464,7 +2464,7 @@ yyreduce:
 
   case 114: /* struct_id: IDENTIFIER  */
 #line 401 "grammar.y"
-                     {lvl_name.push("struct " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);current_class_struct_union_info.push(std::make_pair((yyvsp[0].str),nullptr));}
+                     {lvl_name.push("struct " + std::string((yyvsp[0].str)));(yyval.str)=(yyvsp[0].str);current_class_struct_union_info.push(std::make_pair((yyvsp[0].str),nullptr));cout<<"got struct identifier"<<endl;}
 #line 2469 "grammar.tab.c"
     break;
 
@@ -2476,7 +2476,7 @@ yyreduce:
 
   case 116: /* struct: STRUCT  */
 #line 407 "grammar.y"
-                                {(yyval.str)="STRUCT";}
+                                {(yyval.str)="STRUCT";cout <<"finally reached to struct"<<endl;}
 #line 2481 "grammar.tab.c"
     break;
 
@@ -2488,7 +2488,7 @@ yyreduce:
 
   case 118: /* struct_declaration_list: struct_declaration  */
 #line 414 "grammar.y"
-                             {Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;current_table=next_table(current_table);add_to_local_table(current_table,(yyvsp[0].struc_dec));if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}
+                             {cout<<"struct_dec_lst started"<<endl;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back((yyvsp[0].struc_dec));(yyval.struc_dec_list)=x;current_table=next_table(current_table);add_to_local_table(current_table,(yyvsp[0].struc_dec));if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}cout<<"struct declaration list done"<<endl;}
 #line 2493 "grammar.tab.c"
     break;
 
@@ -2500,7 +2500,7 @@ yyreduce:
 
   case 120: /* struct_declaration: specifier_qualifier_list struct_declarator_list ';'  */
 #line 419 "grammar.y"
-                                                             {(yyval.struc_dec)=create_struct_dec_obj((yyvsp[-2].sql),(yyvsp[-1].sdl));}
+                                                             {cout<<"struct declaration started"<<endl;(yyval.struc_dec)=create_struct_dec_obj((yyvsp[-2].sql),(yyvsp[-1].sdl));cout<<"struct declaration done"<<endl;}
 #line 2505 "grammar.tab.c"
     break;
 
@@ -2512,7 +2512,7 @@ yyreduce:
 
   case 122: /* specifier_qualifier_list: type_specifier  */
 #line 424 "grammar.y"
-                         {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back((yyvsp[0].type_spec));}
+                         {cout<<"type spec in sql started"<<endl;Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back((yyvsp[0].type_spec));cout<<"type spec in sql ended"<<endl;}
 #line 2517 "grammar.tab.c"
     break;
 
@@ -2666,15 +2666,15 @@ yyreduce:
 #line 2667 "grammar.tab.c"
     break;
 
-  case 148: /* member_declaration: specifier_qualifier_list declarator ';'  */
+  case 148: /* member_declaration: function_definition  */
 #line 489 "grammar.y"
-                                              {(yyval.memd)=new Member_Declaration((yyvsp[-2].sql),(yyvsp[-1].dec),nullptr);add_to_local_table(current_table,(yyvsp[-2].sql),(yyvsp[-1].dec));}
+                              {(yyval.memd)=new Member_Declaration(nullptr,nullptr,(yyvsp[0].fun_def));add_to_local_table(current_table,(yyvsp[0].fun_def));}
 #line 2673 "grammar.tab.c"
     break;
 
-  case 149: /* member_declaration: function_definition  */
+  case 149: /* member_declaration: specifier_qualifier_list declarator ';'  */
 #line 490 "grammar.y"
-                          {(yyval.memd)=new Member_Declaration(nullptr,nullptr,(yyvsp[0].fun_def));add_to_local_table(current_table,(yyvsp[0].fun_def));}
+                                              {(yyval.memd)=new Member_Declaration((yyvsp[-2].sql),(yyvsp[-1].dec),nullptr);add_to_local_table(current_table,(yyvsp[-2].sql),(yyvsp[-1].dec));}
 #line 2679 "grammar.tab.c"
     break;
 
@@ -2728,7 +2728,7 @@ yyreduce:
 
   case 158: /* declarator: pointer direct_declarator  */
 #line 515 "grammar.y"
-                                    {(yyval.dec)=create_new_declarator((yyvsp[-1].point),(yyvsp[0].dir_dec));}
+                                    {(yyval.dec)=create_new_declarator((yyvsp[-1].point),(yyvsp[0].dir_dec));cout<<"got pointer direct declarator"<<endl;}
 #line 2733 "grammar.tab.c"
     break;
 
@@ -2974,7 +2974,7 @@ yyreduce:
 
   case 199: /* statement: compound_statement  */
 #line 601 "grammar.y"
-                             {int z=0;for(int i:(yyvsp[0].comp_stmt)->st){if(i==1)z=1;}return z;}
+                             {int z=0;for(int i:(yyvsp[0].comp_stmt)->st){if(i==1)z=1;}return z;cout<<"finally statement has compound statement"<<endl;}
 #line 2979 "grammar.tab.c"
     break;
 
@@ -3026,182 +3026,188 @@ yyreduce:
 #line 3027 "grammar.tab.c"
     break;
 
+  case 209: /* labeled_statement: DEFAULT ':' statement  */
+#line 617 "grammar.y"
+                                {cout<<"finally reached to default"<<endl;}
+#line 3033 "grammar.tab.c"
+    break;
+
   case 210: /* compound_statement: '{' '}'  */
 #line 621 "grammar.y"
                   {Compound_Statement* x=new Compound_Statement(vector<int>(),nullptr);(yyval.comp_stmt)=x;}
-#line 3033 "grammar.tab.c"
+#line 3039 "grammar.tab.c"
     break;
 
   case 211: /* compound_statement: '{' statement_list '}'  */
 #line 622 "grammar.y"
-                                 {Compound_Statement* x=new Compound_Statement(*((yyvsp[-1].vec_int)),nullptr);for(int i:*((yyvsp[-1].vec_int))){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();(yyval.comp_stmt)=x;}
-#line 3039 "grammar.tab.c"
+                                 {Compound_Statement* x=new Compound_Statement(*((yyvsp[-1].vec_int)),nullptr);cout<<"obj of compound statement done for st_lst"<<endl; for(int i:*((yyvsp[-1].vec_int))){if(i==1)x->have_ret=1;}cout<<"loop completed"<<endl;current_level--;if(current_table!=nullptr){current_table->get_parent();}cout<<"got parent"<<endl;(yyval.comp_stmt)=x;cout<<"statement_list done in compound_statement"<<endl;}
+#line 3045 "grammar.tab.c"
     break;
 
   case 212: /* compound_statement: '{' declaration_list '}'  */
 #line 623 "grammar.y"
                                    {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(vector<int>(),(yyvsp[-1].dec_list));cout << "compound_statement parsed" << endl;current_level--;current_table->get_parent();(yyval.comp_stmt)=x;}
-#line 3045 "grammar.tab.c"
+#line 3051 "grammar.tab.c"
     break;
 
   case 213: /* compound_statement: '{' declaration_list statement_list '}'  */
 #line 624 "grammar.y"
                                                   {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(*((yyvsp[-1].vec_int)),(yyvsp[-2].dec_list));for(int i:*((yyvsp[-1].vec_int))){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();(yyval.comp_stmt)=x;cout << "compound_statement parsed" << endl;}
-#line 3051 "grammar.tab.c"
+#line 3057 "grammar.tab.c"
     break;
 
   case 214: /* declaration_list: declaration  */
 #line 628 "grammar.y"
                       {cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back((yyvsp[0].declaration));current_level++;current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,(yyvsp[0].declaration));cout << "declaration list done successfully" << endl;(yyval.dec_list)=x;}
-#line 3057 "grammar.tab.c"
+#line 3063 "grammar.tab.c"
     break;
 
   case 215: /* declaration_list: declaration_list declaration  */
 #line 629 "grammar.y"
-                                       {cout<<"declaration_list done"<<endl;(yyvsp[-1].dec_list)->dv.push_back((yyvsp[0].declaration));(yyval.dec_list)=(yyvsp[-1].dec_list);add_to_local_table(current_table,(yyvsp[0].declaration));}
-#line 3063 "grammar.tab.c"
+                                       {cout<<"declaration_list started"<<endl;(yyvsp[-1].dec_list)->dv.push_back((yyvsp[0].declaration));cout<<"pushing in vector done"<<endl;(yyval.dec_list)=(yyvsp[-1].dec_list);add_to_local_table(current_table,(yyvsp[0].declaration));cout<<"declaration_list done"<<endl;}
+#line 3069 "grammar.tab.c"
     break;
 
   case 216: /* statement_list: statement  */
 #line 633 "grammar.y"
                     { vector<int>* z = new vector<int>();;z->push_back((yyvsp[0].int_value));(yyval.vec_int)=z;cout << "statement parsed" << endl;}
-#line 3069 "grammar.tab.c"
+#line 3075 "grammar.tab.c"
     break;
 
   case 217: /* statement_list: statement_list statement  */
 #line 634 "grammar.y"
                                    {((yyvsp[-1].vec_int))->push_back((yyvsp[0].int_value));(yyval.vec_int)=(yyvsp[-1].vec_int);}
-#line 3075 "grammar.tab.c"
+#line 3081 "grammar.tab.c"
     break;
 
   case 218: /* expression_statement: ';'  */
 #line 638 "grammar.y"
-              {(yyval.int_value)=0;}
-#line 3081 "grammar.tab.c"
+              {(yyval.int_value)=0;cout<<"semi colon"<<endl;}
+#line 3087 "grammar.tab.c"
     break;
 
   case 219: /* expression_statement: expression ';'  */
 #line 639 "grammar.y"
                          {(yyval.int_value)=0;}
-#line 3087 "grammar.tab.c"
+#line 3093 "grammar.tab.c"
     break;
 
   case 220: /* selection_statement: IF '(' expression ')' statement  */
 #line 643 "grammar.y"
                                           {(yyval.int_value)=(yyvsp[0].int_value);}
-#line 3093 "grammar.tab.c"
+#line 3099 "grammar.tab.c"
     break;
 
   case 221: /* selection_statement: IF '(' expression ')' statement ELSE statement  */
 #line 644 "grammar.y"
                                                          {(yyval.int_value)=((yyvsp[-2].int_value)|(yyvsp[0].int_value));}
-#line 3099 "grammar.tab.c"
+#line 3105 "grammar.tab.c"
     break;
 
   case 222: /* selection_statement: SWITCH '(' expression ')' statement  */
 #line 645 "grammar.y"
-                                              {(yyval.int_value)=(yyvsp[0].int_value);}
-#line 3105 "grammar.tab.c"
+                                              {cout<<"switch found"<<endl;(yyval.int_value)=(yyvsp[0].int_value);}
+#line 3111 "grammar.tab.c"
     break;
 
   case 223: /* iteration_statement: WHILE '(' expression ')' statement  */
 #line 649 "grammar.y"
                                              {(yyval.int_value)=(yyvsp[0].int_value);}
-#line 3111 "grammar.tab.c"
+#line 3117 "grammar.tab.c"
     break;
 
   case 224: /* iteration_statement: UNTIL '(' expression ')' statement  */
 #line 650 "grammar.y"
                                              {(yyval.int_value)=(yyvsp[0].int_value);}
-#line 3117 "grammar.tab.c"
+#line 3123 "grammar.tab.c"
     break;
 
   case 225: /* iteration_statement: DO statement WHILE '(' expression ')' ';'  */
 #line 651 "grammar.y"
                                                     {(yyval.int_value)=(yyvsp[-5].int_value);}
-#line 3123 "grammar.tab.c"
+#line 3129 "grammar.tab.c"
     break;
 
   case 226: /* iteration_statement: FOR '(' expression_statement expression_statement ')' statement  */
 #line 652 "grammar.y"
                                                                           {(yyval.int_value)=(yyvsp[0].int_value);}
-#line 3129 "grammar.tab.c"
+#line 3135 "grammar.tab.c"
     break;
 
   case 227: /* iteration_statement: FOR '(' expression_statement expression_statement expression ')' statement  */
 #line 653 "grammar.y"
                                                                                      {(yyval.int_value)=(yyvsp[0].int_value);}
-#line 3135 "grammar.tab.c"
+#line 3141 "grammar.tab.c"
     break;
 
   case 228: /* jump_statement: GOTO IDENTIFIER ';'  */
 #line 657 "grammar.y"
                               {(yyval.int_value)=0;}
-#line 3141 "grammar.tab.c"
+#line 3147 "grammar.tab.c"
     break;
 
   case 229: /* jump_statement: CONTINUE ';'  */
 #line 658 "grammar.y"
                        {(yyval.int_value)=0;}
-#line 3147 "grammar.tab.c"
+#line 3153 "grammar.tab.c"
     break;
 
   case 230: /* jump_statement: BREAK ';'  */
 #line 659 "grammar.y"
-                    {(yyval.int_value)=0;}
-#line 3153 "grammar.tab.c"
+                    {(yyval.int_value)=0;cout<<"found break"<<endl;}
+#line 3159 "grammar.tab.c"
     break;
 
   case 231: /* jump_statement: RETURN ';'  */
 #line 660 "grammar.y"
                      {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(0);}(yyval.int_value)=1;if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
-#line 3159 "grammar.tab.c"
+#line 3165 "grammar.tab.c"
     break;
 
   case 232: /* jump_statement: RETURN initializer ';'  */
 #line 661 "grammar.y"
-                                 {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{cout << "return not allowed here" << endl;exit(0);cout<<"jump staement else done in return"<<endl;} check_compatibility((yyvsp[-1].ini),func_ret_type);cout << "check_compatibility done" << endl;(yyval.int_value)=1;}
-#line 3165 "grammar.tab.c"
+                                 {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{/*cout << "return not allowed here" << endl;exit(0);*/cout<<"jump staement else done in return"<<endl;} check_compatibility((yyvsp[-1].ini),func_ret_type);cout << "check_compatibility done in return" << endl;(yyval.int_value)=1;}
+#line 3171 "grammar.tab.c"
     break;
 
   case 233: /* translation_unit: external_declaration  */
 #line 665 "grammar.y"
                                {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
-#line 3171 "grammar.tab.c"
+#line 3177 "grammar.tab.c"
     break;
 
   case 234: /* translation_unit: translation_unit external_declaration  */
 #line 666 "grammar.y"
                                                 {Node* ext=create_node();}
-#line 3177 "grammar.tab.c"
+#line 3183 "grammar.tab.c"
     break;
 
   case 235: /* external_declaration: function_definition  */
 #line 670 "grammar.y"
                                {add_to_gst((yyvsp[0].fun_def),gst);cout<<"add to gst"<<endl;(yyval.node)=(yyvsp[0].fun_def);}
-#line 3183 "grammar.tab.c"
+#line 3189 "grammar.tab.c"
     break;
 
   case 236: /* external_declaration: declaration  */
 #line 671 "grammar.y"
                       {add_to_gst((yyvsp[0].declaration),gst);(yyval.node)=(yyvsp[0].declaration);}
-#line 3189 "grammar.tab.c"
+#line 3195 "grammar.tab.c"
     break;
 
   case 237: /* function_declaration: declaration_specifiers declarator  */
 #line 674 "grammar.y"
                                             { Function_Declaration* x=new Function_Declaration((yyvsp[-1].dec_spec),(yyvsp[0].dec));Type* type=new Type();string t=create_type((yyvsp[-1].dec_spec),(yyvsp[0].dec),type);cout << "create type for func decl done successfully"<<endl;(yyvsp[0].dec)->check_for_func();cout << "check for func done successfully in func decl" << endl;(yyval.func_decl)=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name((yyvsp[0].dec)));cout<<"final func decl done huuh"<<endl;}
-#line 3195 "grammar.tab.c"
+#line 3201 "grammar.tab.c"
     break;
 
   case 238: /* function_definition: function_declaration compound_statement  */
 #line 678 "grammar.y"
                                                   {Function_Declaration* x=(yyvsp[-1].func_decl);(yyval.fun_def)=create_func_def(x->ds,x->d,(yyvsp[0].comp_stmt));cout<<"create func def done"<< endl;current_params_list.clear();cout << "current params list cleared" << endl;lvl_name.pop();}
-#line 3201 "grammar.tab.c"
+#line 3207 "grammar.tab.c"
     break;
 
 
-#line 3205 "grammar.tab.c"
+#line 3211 "grammar.tab.c"
 
       default: break;
     }

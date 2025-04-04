@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include <classes_NT.h>
+#include <tac.h>
 using namespace std;
 // Definition
 Global_Symbol_Table* gst = nullptr; // Definition
@@ -20,6 +21,7 @@ Symbol_Info::Symbol_Info(string name,string type, string level_name,int level,st
     this->access=access;
     this->scope=scope;
     this->t=t;
+    this->tempname="";
 }
 void add_to_local_class_struct_union_info(){
     if(!current_class_struct_union_info.empty()){
@@ -1162,6 +1164,8 @@ Type :: Type(){
     this-> array_dim = 0;
     this-> ptr_level = 0;
     this-> func_ptr_lev = 0;
+    this->code=vector<string>();
+    this->place="";
 }
 Type* check_if_id_in_obj(Type* t,string id){
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
@@ -1677,7 +1681,78 @@ string Abstract_Declarator:: check_abstract_declarator(){
         }
     }
 }
-
+Symbol_Info* get_symbol_info_id(string id){
+    stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
+    cout << "copy made here" << endl;
+    int ccl=current_level;
+    Local_Symbol_Table* cct=current_table;
+    while(ccl>=0){
+        if(ccl>=1){
+            if(ccl>copy.size()){
+                cout << "if block of get type id" << endl;
+                auto it = cct->lst.find(id);
+                if(cct!=nullptr&&it!=cct->lst.end()){
+                    Symbol_Info* z=it->second;
+                    if(z != nullptr) { // Check 1: Symbol_Info exists
+                        cout << "jjjj" << endl;
+                        cout << z->name << endl;
+                        cout << z->type << endl;
+                        cout << "KKKK" << endl;
+                        if(z->t != nullptr) { // Check 2: Type pointer valid
+                            Type* y = z->t;
+                            cout << y->base << endl;
+                            cout << "got type from symtab" << endl;
+                            
+                            if(!y->isobj && y->objtype != "") {
+                                // Your error handling
+                            } else {
+                                return z;
+                            }
+                        } else {
+                            cout << "NULL TYPE POINTER" << endl;
+                        }
+                    }
+                } else if(cct==nullptr){
+                    Global_Symbol_Table* ccg=gst;
+                    if(ccg->gst.find(id)!=ccg->gst.end()){
+                        Symbol_Info* z=ccg->gst[id];
+                        Type* y=z->t;
+                        if(!y->isobj&&y->objtype!=""){
+                            cout << "cannot access a struct class or union declaration" << endl;
+                            exit(1);
+                        } else {
+                            return z;
+                        }
+                    }
+                } else {
+                    ccl--;
+                    cct=cct->get_parent();
+                }
+            } else {
+                cout << "else block " << endl;
+                ccl--;
+                cct=cct->get_parent();
+                copy.pop();
+            }
+        } else {
+            Global_Symbol_Table* ccg=gst;
+            if(ccg->gst.find(id)!=ccg->gst.end()){
+                Symbol_Info* z=ccg->gst[id];
+                Type* y=z->t;
+                if(!y->isobj&&y->objtype!=""){
+                    cout << "cannot access a struct class or union declaration" << endl;
+                    exit(1);
+                } else {
+                    return z;
+                }
+            }
+            ccl--;
+        }
+    }
+    //parameters not handled
+    cout << "identifier not found " << id  << endl;
+    exit(0);
+}
 Type* get_type_id(string id) {
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
     cout << "copy made here" << endl;
@@ -2346,7 +2421,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         }
         cout << i.second.second->base << endl;
         cout << "got type from declaration" << endl;
-        Symbol_Info* x=new Symbol_Info(i.first,i.second.first,d->level_name,d->level,d->scope,"-",i.second.second);
+        Symbol_Info* x=new Symbol_Info(i.first,i.second.first,d->level_name,current_level-lvl_name.size()+1,d->scope,"-",i.second.second);
         cout << x->t->base << endl;
         cout << "type correctly added to symbol info" << endl;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){

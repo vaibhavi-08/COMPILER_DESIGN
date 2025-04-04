@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // void funx(){
 //     //int x=1;
 //     char x='a';
@@ -84,4 +85,15 @@ int main(){
     // while(a*b!=10){
     //     a-=1;
     // }
+=======
+int main(){
+    int x=5;
+    int y=8;
+    int z=7;
+    int a;
+    x<<5;
+    x||y;
+    x&&y;
+    return 0;
+>>>>>>> 3bb8ae6361dbb62a3a45186e19ed28c9b816304b
 }

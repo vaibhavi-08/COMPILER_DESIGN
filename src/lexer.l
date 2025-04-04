@@ -70,7 +70,7 @@ extern bool iserror;
 "false"                 { symtab[yytext]="FALSE";program.emplace_back(yytext);count(); return FALSE;}
 "volatile"              { symtab[yytext]="VOLATILE";program.emplace_back(yytext);count(); return VOLATILE;}
 "while"                 { symtab[yytext]="WHILE";program.emplace_back(yytext);count(); return WHILE;}
-"NULL"                   {symtab[yytext]="NULL";program.emplace_back(yytext);count(); return NULL_TOKEN;}
+"null_ptr"                   {symtab[yytext]="NULL";program.emplace_back(yytext);count(); return NULL_TOKEN;}
 {L}({L}|{D})*           { symtab[yytext]="IDENTIFIER";program.emplace_back(yytext);count(); yylval.str = strdup(yytext); return IDENTIFIER;}
 0[xX]{H}+{IS}?          { symtab[yytext]="CONSTANT HEX";program.emplace_back(yytext);count();yylval.str = strdup(yytext);  return CONSTANT;}
 {D}+{IS}                { symtab[yytext]="INTEGER";program.emplace_back(yytext);count();yylval.str = strdup(yytext); return CONSTANT;}

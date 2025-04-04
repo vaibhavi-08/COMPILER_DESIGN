@@ -186,6 +186,7 @@ Node* root;
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
+%type <int_value> m
 %start translation_unit
 %%
 
@@ -196,7 +197,7 @@ primary_expression
 	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
 	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
 	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;$$=t;}
-	| '(' expression ')' {Type* t=$2;string nn=get_new_temp();t->place=nn;$$=t;}
+	| '(' expression ')' {Type* t=$2;string nn=get_new_temp();t->place=nn;t->truelist=$2->truelist;t->falselist=$2->falselist;$$=t;}
 	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;$$=t;}
 	;
 
@@ -245,60 +246,111 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression {$$=$1;}
-	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"/",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"%",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"/",nn);
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"%",nn);
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
-	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();
+		type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 shift_expression
 	: additive_expression {$$=$1;}
-	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"<<",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
-	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,">>",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"<<",nn);
+		merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+		string cod=get_code4($1->place,$3->place,">>",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
+		global_code.push_back(cod);type->place=nn;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 relational_expression
 	: shift_expression {$$=$1;}
-	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
+		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
+		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">",nn);merge_code(type->code,$1->code,$3->code);
+		type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
+		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<=",nn);merge_code(type->code,$1->code,$3->code);
+		type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;
+		type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">=",nn);
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 equality_expression
 	: relational_expression {$$=$1;}
-	| equality_expression EQ_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"==",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| equality_expression NE_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"!=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| equality_expression EQ_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;
+		string cod=get_code4($1->place,$3->place,"==",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);
+		global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| equality_expression NE_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;
+		string cod=get_code4($1->place,$3->place,"!=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 and_expression
 	: equality_expression {$$=$1;}
-	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+		string cod=get_code4($1->place,$3->place,"&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
+		global_code.push_back(cod);type->place=nn;
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 exclusive_or_expression
 	: and_expression {$$=$1;}
-	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+		string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$=$1;}
-	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+		string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 logical_and_expression
 	: inclusive_or_expression {$$=$1;}
-	| logical_and_expression AND_OP inclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"&&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+		string cod=get_code4($1->place,$3->place,"&&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP logical_and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"||",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+	| logical_or_expression OR_OP m logical_and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"||",nn);merge_code1(type->code,$3->code);
+		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	;
 
 conditional_expression
@@ -308,9 +360,10 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression  {$$=$1; }
-	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;}
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=t;}
 	;
-
 assignment_operator
 	: '=' {$$="=";}
 	| MUL_ASSIGN {$$="*=";}
@@ -468,7 +521,9 @@ class_body
     : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->get_parent();lvl_name.pop();while(!access_spec_stk.empty())access_spec_stk.pop();add_to_local_class_struct_union_info();}/*come to parent table from current table. pass above*/ 
     | '{' '}' {lvl_name.pop();add_to_local_class_struct_union_info();}/* pass empty class member declaration list object */
     ;
-
+class_name
+    : IDENTIFIER /* pass */ { $$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) ); }
+    ;
 class_member_declaration_list
     : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table(current_table);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}  /* make obj class_member_declaration_list . add class_member_declaration. */
     | class_member_declaration_list class_member_declaration { $1->cd.push_back($2); $$ = $1;}/* add class_member_declaration to existing obj */
@@ -511,6 +566,7 @@ type_qualifier
 	: CONST  {$$="CONST";}/* just pass */
 	| VOLATILE {$$="VOLATILE";}/* just pass */
 	;
+
 
 declarator
 	: pointer direct_declarator {$$=create_new_declarator($1,$2);cout<<"got pointer direct declarator"<<endl;}
@@ -641,9 +697,12 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression ')' statement {$$=$5;}
-	| IF '(' expression ')' statement ELSE statement {$$=($5|$7);}
-	| SWITCH '(' expression ')' statement {cout<<"switch found"<<endl;$$=$5;}
+	: IF '(' expression ')' m statement m {$$=$5; cout << "other if else done" << endl;}
+	| IF '(' expression ')' statement ELSE statement {$$=($5|$7);cout << "if_else done" << endl; }
+	| SWITCH '(' expression ')' statement {$$=$5;}
+	;
+m
+	:/*nowhere*/
 	;
 
 iteration_statement
@@ -704,6 +763,7 @@ void yyerror(const char *s) {
 	
 }
 int main(int argc, char *argv[]){
+	string outputFileName="lexer_output";
     FILE *fh;
 	FILE *fo;
 
@@ -717,6 +777,8 @@ int main(int argc, char *argv[]){
 		std::cout << "Input file does not exist!" << endl;
 		exit(0);
 	}
+	ofstream outputFile(outputFileName);
+	
 	Node* root= new Node();
 	gst=new Global_Symbol_Table();
 	current_params_list.clear();
@@ -727,6 +789,49 @@ int main(int argc, char *argv[]){
 	current_table=nullptr;
 	current_level=0;
     int abc=yyparse();
+	if (!error.empty()) {
+        outputFile << "Errors Found:\n";
+        for (const auto &err : error) {
+             if(err.first!="unterminated comment")outputFile << "invalid character : " << err.first << " at line no. " << err.second << endl;
+            else outputFile  << err.first << " at line no. " << err.second << endl;
+        }
+		cout << "error in lexical phase" << endl;
+		exit(1);
+    } 
+	else {
+		
+        outputFile << "Original Symbol Table:\n";
+        outputFile << "-------------------------------------------------------------------------------\n";
+        outputFile << "| Lexeme                                | Token                                 |\n";
+        outputFile << "-------------------------------------------------------------------------------\n";
+
+        for (const auto &entry : symtab) {
+            std::stringstream tokenStream(entry.first);
+            std::string line;
+            bool firstLine = true;
+            while (std::getline(tokenStream, line, '\n')) {
+                if (firstLine) {
+                    outputFile << "| " << setw(36) << left << line
+                               << " | " << setw(36) << left << entry.second << " |\n";
+                    firstLine = false;
+                } else {
+                    outputFile << "| " << setw(36) << left << line
+                               << " | " << setw(36) << left << "" << " |\n";
+                }
+            }
+        }
+        outputFile << "-------------------------------------------------------------------------------\n";
+        outputFile << '\n';
+		outputFile << "seperated tokens: "<< endl;
+		for(auto i:program)outputFile << i << endl;
+		outputFile << endl;
+
+		
+	
+    cout << "Lexical analysis completed. Check '" << outputFileName << "' for results." << endl;
+	
+    }
+	outputFile.close();
     if(abc){
         cout << "parsing failed!" << endl;
     }

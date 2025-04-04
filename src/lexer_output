@@ -1,0 +1,53 @@
+Original Symbol Table:
+-------------------------------------------------------------------------------
+| Lexeme                                | Token                                 |
+-------------------------------------------------------------------------------
+| }                                    | SEPERATOR                            |
+| *                                    | MUL                                  |
+| int                                  | INT                                  |
+| y                                    | IDENTIFIER                           |
+| z                                    | IDENTIFIER                           |
+| (                                    | SEPERATOR                            |
+| ||                                   | OR_OP                                |
+| )                                    | SEPERATOR                            |
+| {                                    | SEPERATOR                            |
+| ;                                    | SEPERATOR                            |
+| if                                   | IF                                   |
+| x                                    | IDENTIFIER                           |
+| main                                 | IDENTIFIER                           |
+| =                                    | ASSIGN                               |
+| 0                                    | INTEGER                              |
+-------------------------------------------------------------------------------
+
+seperated tokens: 
+int
+main
+(
+)
+{
+int
+z
+;
+int
+y
+;
+if
+(
+z
+||
+y
+)
+{
+int
+x
+=
+0
+;
+x
+=
+y
+*
+z
+;
+}
+

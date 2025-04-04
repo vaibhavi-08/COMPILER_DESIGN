@@ -173,6 +173,9 @@ class Type {
     int array_dim;
     int ptr_level;
     int func_ptr_lev;
+    vector<int> truelist;
+    vector<int> falselist;
+    vector<int> nextlist;
     vector<Tq> ptrtql;  // Now this will work, assuming Tq is defined earlier
     Type();
 };

@@ -12,6 +12,19 @@ string get_code4(string op1,string op2,string oprnd,string result){
     s+=op2;
     return s;
 }
+string get_if_true_code(string condition){
+    string s="";
+    s+="if ";
+    s+=condition;
+    s+="goto ";
+    return s;
+
+}
+string get_if_false_code(){
+    string s="";
+    s+="goto ";
+    return s;
+}
 void merge_code(vector<string>& res,vector<string>& e1,vector<string>& e2){
     for(auto i:e1){
         res.push_back(i);

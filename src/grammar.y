@@ -258,8 +258,8 @@ additive_expression
 
 shift_expression
 	: additive_expression {$$=$1;}
-	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<<",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">>",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"<<",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,">>",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 relational_expression
@@ -278,27 +278,27 @@ equality_expression
 
 and_expression
 	: equality_expression {$$=$1;}
-	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 exclusive_or_expression
 	: and_expression {$$=$1;}
-	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$=$1;}
-	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 logical_and_expression
 	: inclusive_or_expression {$$=$1;}
-	| logical_and_expression AND_OP inclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"&&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| logical_and_expression AND_OP inclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"&&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP logical_and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"||",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| logical_or_expression OR_OP logical_and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"||",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 conditional_expression
@@ -308,7 +308,7 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression  {$$=$1; }
-	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;}
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;}
 	;
 
 assignment_operator

@@ -53,7 +53,7 @@ void backpatch(vector<int>& list,int label){
     cout << "backpatching started" << endl;
     cout << "label:" << label << endl;
     for(int i=0; i<list.size();i++){
-        cout << "line no:" << i << endl;
+        //cout << "line no:" << i << endl;
         cout << list[i] << endl;
         cout << global_code[list[i]] << endl;
         global_code[list[i]]+=to_string(label);
@@ -75,4 +75,8 @@ vector<int> merge(vector<int>& l1,vector<int>& l2){
         res1.push_back(i);
     }
     return res1;
+}
+FCRB::FCRB(){
+    this->pos=0;
+    this->nextlist=vector<int>();
 }

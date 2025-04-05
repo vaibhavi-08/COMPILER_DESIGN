@@ -47,6 +47,7 @@
 	class Initializer_List;
 	class Argument_Expression_List;
 	class Init_Declarator_List;
+	class FCRB;
 
 }
 
@@ -123,6 +124,7 @@ Node* root;
 	Direct_Abstract_Declarator* dir_ad;
 	Initializer_List* ini_lst;
 	Initializer* ini;
+	FCRB* for_cb;
 }
 %token <str> IDENTIFIER CONSTANT STRING_LITERAL CONST_FLOAT CONST_CHAR CONST_EXP
 %token SIZEOF
@@ -157,7 +159,7 @@ Node* root;
 %type<str_union> struct_or_union_specifier
 %type <str> type_qualifier unary_operator
 %type <typ> statement_list
-%type <str> struct_id union_id struct union
+%type <str> struct_id union_id struct union 
 %type <struc_dec_list> struct_declaration_list
 %type <struc_dec> struct_declaration
 %type <sql> specifier_qualifier_list 
@@ -175,7 +177,8 @@ Node* root;
 %type <typ> constant_expression unary_expression cast multiplicative_expression
 %type <typ> additive_expression shift_expression relational_expression equality_expression
 %type <typ> and_expression exclusive_or_expression inclusive_or_expression cast_expression
-%type <typ> logical_and_expression logical_or_expression conditional_expression
+%type <typ> logical_and_expression logical_or_expression conditional_expression 
+%type <for_cb> fcrb;
 %type <constrdec> constructor_declaration
 %type <enum_spec> enum_specifier
 %type <enuml> enumerator_list 
@@ -187,19 +190,19 @@ Node* root;
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
-%type <int_value> m crb els srb doo smc
+%type <int_value> m crb els srb doo smc 
 %start translation_unit
 %%
 
 primary_expression
 	: IDENTIFIER {Type* t=get_type_id($1);cout << t->base << endl;cout << "get type id in primary exp done" << endl;Symbol_Info* x=get_symbol_info_id($1);if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;}t->place=x->tempname;$$=t;}
-	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();t->place=nn;$$=t;} 
-	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();t->place=nn;$$=t;}
-	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
-	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
-	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;$$=t;}
+	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;} 
+	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;}
+	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
+	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
+	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
 	| '(' expression ')' {Type* t=$2;string nn=get_new_temp();t->place=nn;t->truelist=$2->truelist;t->falselist=$2->falselist;$$=t;}
-	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;$$=t;}
+	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4("nullptr","","",nn));$$=t;}
 	;
 
 class_name
@@ -342,7 +345,8 @@ conditional_expression
 assignment_expression
 	: conditional_expression  {$$=$1; }
 	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);
-		backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());
+		backpatch($3->truelist,global_code.size());
+		backpatch($3->falselist,global_code.size());
 		global_code.push_back(cod);$$=t;
 		}
 	;
@@ -677,10 +681,7 @@ statement_list
 
 expression_statement
 	: ';' {$$=new Type();cout<<"semi colon"<<endl;}
-	| expression smc {
-		backpatch($1->truelist,global_code.size());
-		backpatch($1->falselist,global_code.size());
-		$$=$1;}
+	| expression {$$=$1;}
 	;
 smc
 	: ';' {$$=global_code.size();}
@@ -724,21 +725,19 @@ iteration_statement
 	backpatch($$->nextlist, global_code.size());
 	}
 
-	| FOR '(' expression_statement expression_statement ')' statement {$$=$6;
-	
-	}
+	| FOR '(' expression smc expression smc ')' statement {$$=$8;}
 
 
-	| FOR '(' expression smc expression smc expression crb statement {
-		backpatch($5->truelist,$8);
-		backpatch($7->truelist,$4);
-		backpatch($7->falselist,$4);
-		get_while_code($6);
+	| FOR '(' expression smc expression smc expression fcrb statement {
+		backpatch($5->truelist,$8->pos);
+		backpatch($8->nextlist,$4);
+		global_code.push_back(get_while_code($6));
 		backpatch($5->falselist,global_code.size());
 		$$=$7;$$->nextlist=$5->falselist;}
 	;
 
-
+fcrb
+	: ')' {FCRB* t=new FCRB();t->nextlist.push_back(global_code.size());global_code.push_back(get_if_false_code());t->pos=global_code.size();$$=t;}
 doo
 	: DO {$$=global_code.size();}
    

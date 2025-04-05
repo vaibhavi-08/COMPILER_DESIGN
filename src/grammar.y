@@ -247,95 +247,71 @@ cast_expression
 multiplicative_expression
 	: cast_expression {$$=$1;}
 	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"/",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"%",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
 	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();
-		type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 shift_expression
 	: additive_expression {$$=$1;}
 	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"<<",nn);
-		merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,">>",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
-		global_code.push_back(cod);type->place=nn;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 relational_expression
 	: shift_expression {$$=$1;}
 	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
-		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
 		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">",nn);merge_code(type->code,$1->code,$3->code);
-		type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
 		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<=",nn);merge_code(type->code,$1->code,$3->code);
-		type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;
 		type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">=",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 equality_expression
 	: relational_expression {$$=$1;}
 	| equality_expression EQ_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;
 		string cod=get_code4($1->place,$3->place,"==",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);
-		global_code.push_back(cod);type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		global_code.push_back(cod);;$$=type;}
 	| equality_expression NE_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;
-		string cod=get_code4($1->place,$3->place,"!=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		string cod=get_code4($1->place,$3->place,"!=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 and_expression
 	: equality_expression {$$=$1;}
 	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,"&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
-		global_code.push_back(cod);type->place=nn;
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 exclusive_or_expression
 	: and_expression {$$=$1;}
 	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
-		string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$=$1;}
 	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
-		string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+		string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
 	;
 
 logical_and_expression
@@ -697,12 +673,16 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression ')' m statement m {$$=$5; cout << "other if else done" << endl;}
+	: IF '(' expression ')' m statement  {$$=$5; cout << "other if else done" << endl;
+		backpatch($3->truelist,$5); 
+		SS->nextlist=merge($3->falselist, $6->nextlist);
+		backpatch($$->nextlist, global_code.size());
+	}
 	| IF '(' expression ')' statement ELSE statement {$$=($5|$7);cout << "if_else done" << endl; }
 	| SWITCH '(' expression ')' statement {$$=$5;}
 	;
 m
-	:/*nowhere*/
+	:/*nowhere*/ {$$=global_code.size();}
 	;
 
 iteration_statement

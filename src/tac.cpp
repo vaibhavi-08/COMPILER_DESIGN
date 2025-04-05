@@ -42,3 +42,25 @@ string get_new_temp(){
     tempcount++;
     return "t"+to_string(tempcount);
 }
+
+void backpatch(vector<int>& list,int label){
+    for(int i=0; i<list.size();i++){
+        global_code[list[i]]+=" ";
+        global_code[list[i]]+=to_string(label);
+    }
+}
+
+vector<int> merge(vector<int>& l1,vector<int>& l2){
+    set<int> res;
+    for(auto i:l1){
+        res.insert(i);
+    }
+    for(auto i:l2){
+        res.insert(i);
+    }
+    vector<int> res1;
+    for(auto i:res){
+        res1.push_back(i);
+    }
+    return res1;
+}

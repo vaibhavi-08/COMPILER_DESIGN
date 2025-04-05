@@ -137,8 +137,8 @@ Node* root;
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
 %type <node> translation_unit external_declaration
-%type <int_value> statement labeled_statement jump_statement
-%type <int_value> delete_statement selection_statement expression_statement iteration_statement
+%type <typ> statement labeled_statement jump_statement
+%type <typ> delete_statement selection_statement expression_statement iteration_statement
 %type <declaration> declaration
 %type <fun_def> function_definition
 %type <ini_lst> initializer_list
@@ -155,7 +155,7 @@ Node* root;
 %type<class_spec> class_specifier
 %type<str_union> struct_or_union_specifier
 %type <str> type_qualifier unary_operator
-%type <vec_int> statement_list
+%type <typ> statement_list
 %type <str> struct_id union_id struct union
 %type <struc_dec_list> struct_declaration_list
 %type <struc_dec> struct_declaration
@@ -317,16 +317,16 @@ inclusive_or_expression
 logical_and_expression
 	: inclusive_or_expression {Type* type=$1;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
 		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
-	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
+	| logical_and_expression AND_OP inclusive_or_expression /*{check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
 		string cod=get_code4($1->place,$4->place,"&&",nn);merge_code1(type->code,$4->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$2->falselist);type->truelist=$2->truelist;$$=type;}
+		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$4->falselist);type->truelist=$4->truelist;$$=type;}*/
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP m logical_and_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
+	| logical_or_expression OR_OP logical_and_expression /*{check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
 		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$2->truelist);type->falselist=$2->falselist;$$=type;}
+		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$4->truelist);type->falselist=$4->falselist;$$=type;}*/
 	;
 
 conditional_expression
@@ -336,9 +336,7 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression  {$$=$1; }
-	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=t;}
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;}
 	;
 assignment_operator
 	: '=' {$$="=";}
@@ -631,12 +629,12 @@ initializer_list
 
 statement
 	: labeled_statement {$$=$1;}
-	| compound_statement {int z=0;for(int i:$1->st){if(i==1)z=1;}return z;cout<<"finally statement has compound statement"<<endl;}
+	| compound_statement {$$=$1->st;cout<<"finally statement has compound statement"<<endl;}
 	| expression_statement {$$=$1;}
 	| selection_statement {$$=$1;}
 	| iteration_statement {$$=$1;}
 	| jump_statement {$$=$1;}
-	| delete_statement {$$=$1;}
+	| delete_statement {}
 	;
 
 delete_statement
@@ -645,16 +643,16 @@ delete_statement
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement {if(labelset.find($1)==labelset.end())labelset.insert($1);else {cout << "label declared twice" << endl;exit(1);}}
-	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement {cout<<"finally reached to default"<<endl;}
+	: IDENTIFIER ':' statement {if(labelset.find($1)==labelset.end())labelset.insert($1);else {cout << "label declared twice" << endl;exit(1);}$$=$3;}
+	| CASE constant_expression ':' statement {$$=$4;}
+	| DEFAULT ':' statement {cout<<"finally reached to default"<<endl;$$=$3;}
 	;
 
 compound_statement
-	: '{' '}' {Compound_Statement* x=new Compound_Statement(vector<int>(),nullptr);$$=x;}
-	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement(*($2),nullptr);cout<<"obj of compound statement done for st_lst"<<endl; for(int i:*($2)){if(i==1)x->have_ret=1;}cout<<"loop completed"<<endl;$$=x;cout<<"statement_list done in compound_statement"<<endl;}
-	| '{' declaration_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(vector<int>(),$2);cout << "compound_statement parsed" << endl;current_level--;current_table->get_parent();$$=x;}
-	| '{' declaration_list statement_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(*($3),$2);for(int i:*($3)){if(i==1)x->have_ret=1;}current_level--;current_table->get_parent();$$=x;cout << "compound_statement parsed" << endl;}
+	: '{' '}' {Compound_Statement* x=new Compound_Statement(new Type(),nullptr);$$=x;}
+	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement($2,nullptr);cout<<"obj of compound statement done for st_lst"<<endl; cout<<"loop completed"<<endl;$$=x;cout<<"statement_list done in compound_statement"<<endl;}
+	| '{' declaration_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),$2);cout << "compound_statement parsed" << endl;current_level--;current_table->get_parent();$$=x;}
+	| '{' declaration_list statement_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),$2);current_level--;current_table->get_parent();$$=x;cout << "compound_statement parsed" << endl;}
 	;
 
 declaration_list
@@ -663,27 +661,26 @@ declaration_list
 	;
 
 statement_list
-	: statement { vector<int>* z = new vector<int>();;z->push_back($1);$$=z;cout << "statement parsed" << endl;}
-	| statement_list statement {($1)->push_back($2);$$=$1;}
+	: statement { cout << "statement parsed" << endl;$$=$1;}
+	| statement_list statement {$$=$2;}
 	;
 
 expression_statement
-	: ';' {$$=0;cout<<"semi colon"<<endl;}
-	| expression ';' {$$=0;}
+	: ';' {$$=new Type();cout<<"semi colon"<<endl;}
+	| expression ';' {$$=new Type();}
 	;
 
 selection_statement
-	: IF '(' expression ')' m statement  {$$=$5; cout << "other if else done" << endl;
-		backpatch($3->truelist,$5); 
-		SS->nextlist=merge($3->falselist, $6->nextlist);
-		backpatch($$->nextlist, global_code.size());
-	}
-	| IF '(' expression ')' statement ELSE statement {$$=($5|$7);cout << "if_else done" << endl; }
+	: IF '(' expression ')' statement  /*{ cout << "other if else done" << endl;
+		backpatch($3->truelist,$5); Type* zz=new Type();
+		zz->nextlist=merge($3->falselist, $6->nextlist);$$=zz; 
+	}*/
+	| IF '(' expression ')' statement ELSE statement {cout << "if_else done" << endl; $$=$5;}
 	| SWITCH '(' expression ')' statement {$$=$5;}
 	;
-m
-	:/*nowhere*/ {$$=global_code.size();}
-	;
+/*m */
+	/*:nowhere{$$=global_code.size();}*/
+	/*; */
 
 iteration_statement
 	: WHILE '(' expression ')' statement {$$=$5;}
@@ -694,11 +691,11 @@ iteration_statement
 	;
 
 jump_statement
-	: GOTO IDENTIFIER ';' {$$=0;}
-	| CONTINUE ';' {$$=0;}
-	| BREAK ';' {$$=0;cout<<"found break"<<endl;}
-	| RETURN ';' {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(0);}$$=1;if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{/*cout << "return not allowed here" << endl;exit(0);*/cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done in return" << endl;$$=1;}
+	: GOTO IDENTIFIER ';' {$$=new Type();}
+	| CONTINUE ';' {$$=new Type();}
+	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;}
+	| RETURN ';' {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(0);}$$=new Type();if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{/*cout << "return not allowed here" << endl;exit(0);*/cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done in return" << endl;$$=new Type();}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
@@ -714,7 +711,7 @@ function_declaration
 	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);cout << "create type for func decl done successfully"<<endl;$2->check_for_func();cout << "check for func done successfully in func decl" << endl;$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));cout<<"final func decl done huuh"<<endl;}
 	;
 function_definition /*(function_definition <- node ) */
-	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}func_ret_type=nullptr;}*/ /* create function definition object.parameter. assign type. assign size. */
+	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();func_ret_type=nullptr;}*/ /* create function definition object.parameter. assign type. assign size. */
 	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);cout<<"create func def done"<< endl;current_params_list.clear();cout << "current params list cleared" << endl;lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
@@ -775,8 +772,8 @@ int main(int argc, char *argv[]){
              if(err.first!="unterminated comment")outputFile << "invalid character : " << err.first << " at line no. " << err.second << endl;
             else outputFile  << err.first << " at line no. " << err.second << endl;
         }
-		cout << "error in lexical phase" << endl;
-		exit(1);
+		/*cout << "error in lexical phase" << endl;
+		exit(1);*/
     } 
 	else {
 		

@@ -251,10 +251,9 @@ class Declaration_Specifiers : public Node{
 };
 class Compound_Statement : public Node{
     public:
-    vector<int> st;
-    int have_ret;
+    Type* st;
     Declaration_List* dl;
-    Compound_Statement(vector<int> st,Declaration_List* dl);
+    Compound_Statement(Type* st,Declaration_List* dl);
 };
 
 

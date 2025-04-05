@@ -3,20 +3,17 @@ Original Symbol Table:
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
 | }                                    | SEPERATOR                            |
-| *                                    | MUL                                  |
-| int                                  | INT                                  |
-| y                                    | IDENTIFIER                           |
-| z                                    | IDENTIFIER                           |
-| (                                    | SEPERATOR                            |
-| ||                                   | OR_OP                                |
-| )                                    | SEPERATOR                            |
-| {                                    | SEPERATOR                            |
 | ;                                    | SEPERATOR                            |
+| 7                                    | INTEGER                              |
+| 5                                    | INTEGER                              |
 | if                                   | IF                                   |
-| x                                    | IDENTIFIER                           |
+| {                                    | SEPERATOR                            |
+| )                                    | SEPERATOR                            |
+| ||                                   | OR_OP                                |
+| (                                    | SEPERATOR                            |
+| z                                    | IDENTIFIER                           |
 | main                                 | IDENTIFIER                           |
-| =                                    | ASSIGN                               |
-| 0                                    | INTEGER                              |
+| int                                  | INT                                  |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
@@ -25,29 +22,16 @@ main
 (
 )
 {
-int
-z
-;
-int
-y
-;
 if
 (
-z
+5
 ||
-y
+7
 )
 {
 int
-x
-=
-0
-;
-x
-=
-y
-*
 z
 ;
+}
 }
 

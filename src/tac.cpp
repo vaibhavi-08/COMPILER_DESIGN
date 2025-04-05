@@ -44,9 +44,15 @@ string get_new_temp(){
 }
 
 void backpatch(vector<int>& list,int label){
+    cout << "backpatching started" << endl;
+    cout << "label:" << label << endl;
     for(int i=0; i<list.size();i++){
-        global_code[list[i]]+=" ";
+        cout << "line no:" << i << endl;
+        cout << list[i] << endl;
+        cout << global_code[list[i]] << endl;
         global_code[list[i]]+=to_string(label);
+        cout << global_code[list[i]] << endl;
+
     }
 }
 

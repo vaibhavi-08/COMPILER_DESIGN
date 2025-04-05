@@ -2448,7 +2448,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_Li
     current_table->lst[name]=x;
 
 }
-Compound_Statement::Compound_Statement(vector<int> st, Declaration_List* dl)
+Compound_Statement::Compound_Statement(Type* st, Declaration_List* dl)
     : st(st), dl(dl){ 
         cout << "compound statement constructor called" << endl;
 }

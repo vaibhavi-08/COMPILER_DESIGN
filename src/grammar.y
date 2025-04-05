@@ -211,13 +211,13 @@ class_name
 
 postfix_expression
 	: primary_expression {$$=$1;}
-	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;}
+	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;string nn=}
 	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());$$=t;}
 	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
 	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
 	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type* type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
-	| postfix_expression INC_OP /* later */ {check_inc_dec_op($1);$$=$1;}
-	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;}
+	| postfix_expression INC_OP  {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));$$->place=nn;}
+	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));$$->place=nn;}
 	;
 
 argument_expression_list
@@ -227,11 +227,11 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression {$$=$1;}
-	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;}
-	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;}
-	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;}
-	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;}/* void , functiions */
-	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;}
+	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"++",nn));$$->place=nn;}
+	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));$$->place=nn;}
+	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,$1,nn));$$->place=nn;}
+	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"SIZEOF",nn));$$->place=nn;}/* void , functiions */
+	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",get_string_type($3->type),"SIZEOF ",nn));$$->place=nn;}
 	;
 
 unary_operator
@@ -725,7 +725,12 @@ iteration_statement
 	backpatch($$->nextlist, global_code.size());
 	}
 
-	| FOR '(' expression smc expression smc ')' statement {$$=$8;}
+	| FOR '(' expression smc expression smc ')' statement {$$=$8;
+		backpatch($5->truelist,$6);
+		$$->nextlist=$5->falselist;
+		global_code.push_back(get_while_code($4));
+		backpatch($5->falselist,global_code.size());
+		}
 
 
 	| FOR '(' expression smc expression smc expression fcrb statement {

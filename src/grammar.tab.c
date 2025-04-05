@@ -727,8 +727,8 @@ static const yytype_int16 yyrline[] =
      646,   647,   648,   649,   650,   651,   655,   656,   660,   661,
      662,   666,   667,   668,   669,   673,   674,   678,   679,   683,
      684,   687,   689,   693,   699,   702,   705,   714,   722,   728,
-     731,   740,   742,   745,   748,   751,   756,   757,   758,   759,
-     760,   763,   764,   768,   769,   772,   776
+     736,   745,   747,   750,   753,   756,   761,   762,   763,   764,
+     765,   768,   769,   773,   774,   777,   781
 };
 #endif
 
@@ -1937,31 +1937,31 @@ yyreduce:
 
   case 22: /* unary_expression: INC_OP unary_expression  */
 #line 230 "grammar.y"
-                                                                                                {check_inc_dec_op((yyvsp[0].typ));(yyval.typ)=(yyvsp[0].typ);}
+                                                                                                {check_inc_dec_op((yyvsp[0].typ));(yyval.typ)=(yyvsp[0].typ);string nn=get_new_temp();(yyval.typ)->place=nn;global_code.push_back(get_code4("",(yyvsp[0].typ)->place,"++",nn));}
 #line 1942 "grammar.tab.c"
     break;
 
   case 23: /* unary_expression: DEC_OP unary_expression  */
 #line 231 "grammar.y"
-                                   {check_inc_dec_op((yyvsp[0].typ));(yyval.typ)=(yyvsp[0].typ);}
+                                   {check_inc_dec_op((yyvsp[0].typ));(yyval.typ)=(yyvsp[0].typ);string nn=get_new_temp();(yyval.typ)->place=nn;global_code.push_back(get_code4("",(yyvsp[0].typ)->place,"--",nn));}
 #line 1948 "grammar.tab.c"
     break;
 
   case 24: /* unary_expression: unary_operator cast_expression  */
 #line 232 "grammar.y"
-                                         {Type* type=get_type_unary_expression((yyvsp[-1].str),(yyvsp[0].typ));(yyval.typ)=type;cout<<"got &"<<endl;}
+                                         {Type* type=get_type_unary_expression((yyvsp[-1].str),(yyvsp[0].typ));(yyval.typ)=type;cout<<"got &"<<endl;string nn=get_new_temp();(yyval.typ)->place=nn;global_code.push_back(get_code4("",(yyvsp[0].typ)->place,(yyvsp[-1].str),nn));}
 #line 1954 "grammar.tab.c"
     break;
 
   case 25: /* unary_expression: SIZEOF unary_expression  */
 #line 233 "grammar.y"
-                                  {check_for_sizeof((yyvsp[0].typ)); Type* t=new Type(); t->isbasic=true; t->base="INT";(yyval.typ)=t;}
+                                  {check_for_sizeof((yyvsp[0].typ)); Type* t=new Type(); t->isbasic=true; t->base="INT";(yyval.typ)=t;string nn=get_new_temp();(yyval.typ)->place=nn;global_code.push_back(get_code4("",(yyvsp[0].typ)->place,"SIZEOF",nn));}
 #line 1960 "grammar.tab.c"
     break;
 
   case 26: /* unary_expression: SIZEOF '(' type_name ')'  */
 #line 234 "grammar.y"
-                                   {check_for_sizeof((yyvsp[-1].ty_nm)->type);Type* t=new Type();t->isbasic=true;t->base="INT";(yyval.typ)=t;}
+                                   {check_for_sizeof((yyvsp[-1].ty_nm)->type);Type* t=new Type();t->isbasic=true;t->base="INT";(yyval.typ)=t;string nn=get_new_temp();(yyval.typ)->place=nn;global_code.push_back(get_code4("",get_string_type((yyvsp[-1].ty_nm)->type),"SIZEOF ",nn));}
 #line 1966 "grammar.tab.c"
     break;
 
@@ -3233,107 +3233,112 @@ yyreduce:
 
   case 229: /* iteration_statement: FOR '(' expression smc expression smc ')' statement  */
 #line 728 "grammar.y"
-                                                              {(yyval.typ)=(yyvsp[0].typ);}
-#line 3238 "grammar.tab.c"
+                                                              {(yyval.typ)=(yyvsp[0].typ);
+		backpatch((yyvsp[-3].typ)->truelist,(yyvsp[-2].int_value));
+		(yyval.typ)->nextlist=(yyvsp[-3].typ)->falselist;
+		global_code.push_back(get_while_code((yyvsp[-4].int_value)));
+		backpatch((yyvsp[-3].typ)->falselist,global_code.size());
+		}
+#line 3243 "grammar.tab.c"
     break;
 
   case 230: /* iteration_statement: FOR '(' expression smc expression smc expression fcrb statement  */
-#line 731 "grammar.y"
+#line 736 "grammar.y"
                                                                           {
 		backpatch((yyvsp[-4].typ)->truelist,(yyvsp[-1].for_cb)->pos);
 		backpatch((yyvsp[-1].for_cb)->nextlist,(yyvsp[-5].int_value));
 		global_code.push_back(get_while_code((yyvsp[-3].int_value)));
 		backpatch((yyvsp[-4].typ)->falselist,global_code.size());
 		(yyval.typ)=(yyvsp[-2].typ);(yyval.typ)->nextlist=(yyvsp[-4].typ)->falselist;}
-#line 3249 "grammar.tab.c"
+#line 3254 "grammar.tab.c"
     break;
 
   case 231: /* fcrb: ')'  */
-#line 740 "grammar.y"
+#line 745 "grammar.y"
               {FCRB* t=new FCRB();t->nextlist.push_back(global_code.size());global_code.push_back(get_if_false_code());t->pos=global_code.size();(yyval.for_cb)=t;}
-#line 3255 "grammar.tab.c"
+#line 3260 "grammar.tab.c"
     break;
 
   case 232: /* doo: DO  */
-#line 742 "grammar.y"
+#line 747 "grammar.y"
              {(yyval.int_value)=global_code.size();}
-#line 3261 "grammar.tab.c"
+#line 3266 "grammar.tab.c"
     break;
 
   case 233: /* crb: ')'  */
-#line 745 "grammar.y"
+#line 750 "grammar.y"
               {(yyval.int_value)=global_code.size();}
-#line 3267 "grammar.tab.c"
+#line 3272 "grammar.tab.c"
     break;
 
   case 234: /* els: ELSE  */
-#line 748 "grammar.y"
+#line 753 "grammar.y"
                {(yyval.int_value)=global_code.size();}
-#line 3273 "grammar.tab.c"
+#line 3278 "grammar.tab.c"
     break;
 
   case 235: /* srb: '('  */
-#line 751 "grammar.y"
+#line 756 "grammar.y"
               {(yyval.int_value)=global_code.size();}
-#line 3279 "grammar.tab.c"
+#line 3284 "grammar.tab.c"
     break;
 
   case 236: /* jump_statement: GOTO IDENTIFIER ';'  */
-#line 756 "grammar.y"
+#line 761 "grammar.y"
                               {(yyval.typ)=new Type();}
-#line 3285 "grammar.tab.c"
+#line 3290 "grammar.tab.c"
     break;
 
   case 237: /* jump_statement: CONTINUE ';'  */
-#line 757 "grammar.y"
+#line 762 "grammar.y"
                        {(yyval.typ)=new Type();}
-#line 3291 "grammar.tab.c"
+#line 3296 "grammar.tab.c"
     break;
 
   case 238: /* jump_statement: BREAK ';'  */
-#line 758 "grammar.y"
+#line 763 "grammar.y"
                     {(yyval.typ)=new Type();cout<<"found break"<<endl;}
-#line 3297 "grammar.tab.c"
+#line 3302 "grammar.tab.c"
     break;
 
   case 241: /* translation_unit: external_declaration  */
-#line 763 "grammar.y"
+#line 768 "grammar.y"
                                {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
-#line 3303 "grammar.tab.c"
+#line 3308 "grammar.tab.c"
     break;
 
   case 242: /* translation_unit: translation_unit external_declaration  */
-#line 764 "grammar.y"
+#line 769 "grammar.y"
                                                 {Node* ext=create_node();}
-#line 3309 "grammar.tab.c"
+#line 3314 "grammar.tab.c"
     break;
 
   case 243: /* external_declaration: function_definition  */
-#line 768 "grammar.y"
+#line 773 "grammar.y"
                                {add_to_gst((yyvsp[0].fun_def),gst);cout<<"add to gst"<<endl;(yyval.node)=(yyvsp[0].fun_def);}
-#line 3315 "grammar.tab.c"
+#line 3320 "grammar.tab.c"
     break;
 
   case 244: /* external_declaration: declaration  */
-#line 769 "grammar.y"
+#line 774 "grammar.y"
                       {add_to_gst((yyvsp[0].declaration),gst);(yyval.node)=(yyvsp[0].declaration);}
-#line 3321 "grammar.tab.c"
+#line 3326 "grammar.tab.c"
     break;
 
   case 245: /* function_declaration: declaration_specifiers declarator  */
-#line 772 "grammar.y"
+#line 777 "grammar.y"
                                             { Function_Declaration* x=new Function_Declaration((yyvsp[-1].dec_spec),(yyvsp[0].dec));Type* type=new Type();string t=create_type((yyvsp[-1].dec_spec),(yyvsp[0].dec),type);cout << "create type for func decl done successfully"<<endl;(yyvsp[0].dec)->check_for_func();cout << "check for func done successfully in func decl" << endl;(yyval.func_decl)=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name((yyvsp[0].dec)));cout<<"final func decl done huuh"<<endl;}
-#line 3327 "grammar.tab.c"
+#line 3332 "grammar.tab.c"
     break;
 
   case 246: /* function_definition: function_declaration compound_statement  */
-#line 776 "grammar.y"
+#line 781 "grammar.y"
                                                   {Function_Declaration* x=(yyvsp[-1].func_decl);(yyval.fun_def)=create_func_def(x->ds,x->d,(yyvsp[0].comp_stmt));cout<<"create func def done"<< endl;current_params_list.clear();cout << "current params list cleared" << endl;lvl_name.pop();}
-#line 3333 "grammar.tab.c"
+#line 3338 "grammar.tab.c"
     break;
 
 
-#line 3337 "grammar.tab.c"
+#line 3342 "grammar.tab.c"
 
       default: break;
     }
@@ -3526,7 +3531,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 781 "grammar.y"
+#line 786 "grammar.y"
 
 #include <stdio.h>
 #include <bits/stdc++.h>

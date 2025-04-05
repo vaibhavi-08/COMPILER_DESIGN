@@ -3,21 +3,22 @@ Original Symbol Table:
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
 | }                                    | SEPERATOR                            |
+| +                                    | PLUS                                 |
 | x                                    | IDENTIFIER                           |
 | int                                  | INT                                  |
+| ++                                   | INC_OP                               |
 | (                                    | SEPERATOR                            |
 | )                                    | SEPERATOR                            |
 | {                                    | SEPERATOR                            |
 | <                                    | LESSTHAN                             |
-| +                                    | PLUS                                 |
 | main                                 | IDENTIFIER                           |
 | for                                  | FOR                                  |
 | i                                    | IDENTIFIER                           |
 | =                                    | ASSIGN                               |
 | 1                                    | INTEGER                              |
 | 0                                    | INTEGER                              |
-| 10                                   | INTEGER                              |
 | ;                                    | SEPERATOR                            |
+| 7                                    | INTEGER                              |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
@@ -39,13 +40,10 @@ i
 ;
 i
 <
-10
+7
 ;
+++
 i
-=
-i
-+
-1
 )
 {
 int

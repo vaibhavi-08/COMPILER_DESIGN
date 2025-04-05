@@ -61,6 +61,7 @@ extern Type* func_ret_type;
 extern set<string> labelset;
 extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 Type* myFunction();
+string get_string_type(Type* t);
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
 void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* fd);
 void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d);

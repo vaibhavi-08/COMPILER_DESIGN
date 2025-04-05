@@ -16,7 +16,7 @@ string get_if_true_code(string condition){
     string s="";
     s+="if ";
     s+=condition;
-    s+="goto ";
+    s+=" goto ";
     return s;
 
 }

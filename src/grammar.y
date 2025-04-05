@@ -187,7 +187,7 @@ Node* root;
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
-%type <int_value> m crb
+%type <int_value> m crb els
 %start translation_unit
 %%
 
@@ -218,8 +218,8 @@ postfix_expression
 	;
 
 argument_expression_list
-	: assignment_expression {Argument_Expression_List* z=new Argument_Expression_List();z->vec_exp.push_back($1);$$=z;}
-	| argument_expression_list ',' assignment_expression {$1->vec_exp.push_back($3);$$=$1;}
+	: assignment_expression {Argument_Expression_List* z=new Argument_Expression_List();z->vec_exp.push_back($1);$$=z;backpatch($1->truelist,global_code.size());backpatch($1->falselist,global_code.size());}
+	| argument_expression_list ',' assignment_expression {$1->vec_exp.push_back($3);$$=$1;backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
 	;
 
 unary_expression
@@ -316,10 +316,14 @@ inclusive_or_expression
 	;
 
 logical_and_expression
-	: inclusive_or_expression {cout << "logical end done" << endl;Type* type=$1;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+	: inclusive_or_expression {cout << "logical end done" << endl;Type* type=$1;
+		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
 		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
-		string cod=get_code4($1->place,$4->place,"&&",nn);merge_code1(type->code,$4->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
+		string cod=get_code4($1->place,$4->place,"&&",nn);merge_code1(type->code,$4->code);type->code.push_back(cod);
+		$4->truelist.push_back(global_code.size());$4->falselist.push_back(global_code.size()+1);
+		global_code.push_back(get_if_true_code($4->place));global_code.push_back(get_if_false_code());
+		global_code.push_back(cod);type->place=nn;
 		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$4->falselist);type->truelist=$4->truelist;$$=type;}
 	;
 
@@ -337,7 +341,8 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression  {$$=$1; }
-	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;}
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;
+		backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
 	;
 assignment_operator
 	: '=' {$$="=";}
@@ -355,7 +360,7 @@ assignment_operator
 
 expression
 	: assignment_expression {$$=$1; cout<<"finally expression has identifier"<<endl;}
-	| expression ',' assignment_expression {Type* t=new Type();$$=t;}
+	| expression ',' assignment_expression {Type* t=new Type();$$=t;backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
 	;
 
 constant_expression
@@ -618,7 +623,7 @@ direct_abstract_declarator
 	;
 
 initializer
-	: assignment_expression  {Initializer* x=new Initializer($1,"",nullptr,"",nullptr);x->type=$1;$$=x;}
+	: assignment_expression  {Initializer* x=new Initializer($1,"",nullptr,"",nullptr);x->type=$1;$$=x;backpatch($1->truelist,global_code.size());backpatch($1->falselist,global_code.size());}
 	| '{' initializer_list '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
 	| '{' initializer_list ',' '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
 	| NEW class_name '(' argument_expression_list ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,$4->vec_exp);Type* z=new Type();z->isobj=true;z->objtype="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,$4);$$=gg;} 
@@ -674,11 +679,16 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression crb statement  { cout << "other if else done" << endl;
+	: IF '(' expression crb statement { cout << "other if else done" << endl;
 		backpatch($3->truelist,$4); Type* zz=new Type();
-		zz->nextlist=merge($3->falselist, $5->nextlist);$$=zz; 
+		zz->nextlist=merge($3->falselist, $5->nextlist);backpatch(zz->nextlist,global_code.size());$$=zz; 
 	}
-	| IF '(' expression crb statement ELSE statement {cout << "if_else done" << endl; $$=$5;}
+	| IF '(' expression crb statement els statement  {cout << "if_else done" << endl;
+		backpatch($3->truelist,$4);
+		backpatch ($3->falselist,$6);
+		Type* zz=new Type(); zz->nextlist=merge($5->nextlist,$7->nextlist);
+		backpatch(zz->nextlist,global_code.size()); $$=zz;}
+
 	| SWITCH '(' expression ')' statement {$$=$5;}
 	;
 m 
@@ -687,6 +697,8 @@ m
 crb 
 	: ')' {$$=global_code.size();}
 	;
+els 
+	: ELSE {$$=global_code.size();}
 iteration_statement
 	: WHILE '(' expression ')' statement {$$=$5;}
 	| UNTIL '(' expression ')' statement {$$=$5;}
@@ -829,8 +841,8 @@ int main(int argc, char *argv[]){
 	cout << "==================================================" << endl;
 	cout << endl;
 	cout << endl;
-	for(auto i:global_code){
-		cout << i << endl;
+	for(int i=0;i<global_code.size();i++){
+		cout <<  i << ": " << global_code[i] <<  endl;
 	}
 	cout << "==================================================" << endl;
     return 0;

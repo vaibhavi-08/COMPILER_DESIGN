@@ -1,11 +1,12 @@
 
 int main() {
-   int a;
-   if(a){
-
+   int a=9;
+   int b=10;
+   if(a&&b){
+    int x=a+b;
+    b=x*b;
    }
    else{
-    int h=a;
+    int y=10;
    }
-    return 0;
 }

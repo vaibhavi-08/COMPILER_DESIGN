@@ -1,3 +1,4 @@
+
 %code requires {
     // Forward declarations
     class Node;
@@ -186,7 +187,7 @@ Node* root;
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
-%type <int_value> m
+%type <int_value> m crb
 %start translation_unit
 %%
 
@@ -315,18 +316,18 @@ inclusive_or_expression
 	;
 
 logical_and_expression
-	: inclusive_or_expression {Type* type=$1;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+	: inclusive_or_expression {cout << "logical end done" << endl;Type* type=$1;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
 		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
-	| logical_and_expression AND_OP inclusive_or_expression /*{check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
+	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
 		string cod=get_code4($1->place,$4->place,"&&",nn);merge_code1(type->code,$4->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$4->falselist);type->truelist=$4->truelist;$$=type;}*/
+		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$4->falselist);type->truelist=$4->truelist;$$=type;}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP logical_and_expression /*{check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
+	| logical_or_expression OR_OP m logical_and_expression { cout << "logical or done" << endl;check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
 		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$4->truelist);type->falselist=$4->falselist;$$=type;}*/
+		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$4->truelist);type->falselist=$4->falselist;$$=type;}
 	;
 
 conditional_expression
@@ -374,7 +375,9 @@ declaration
 	;*/
 
 declaration_specifiers
-	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->scs.push_back($1);$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
+	: storage_class_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); if(ds==nullptr){assert(0);}
+	ds->scs.push_back($1);
+	$$=ds;} /* create object of declaration specifier. add storage class specifier to vector of storage class specifier* in decl spec. and pass it above.*/ 
 	| storage_class_specifier declaration_specifiers {Declaration_Specifiers* ds=$2;ds->scs.push_back($1);$$=ds;cout << "declaration specifier done scs" << endl;}/* add storage_class_specifier to $2*/
 	| type_specifier {Declaration_Specifiers* ds=create_decl_spec_object(); ds->ts.push_back($1);$$=ds;cout << ds->ts.back()->string_type << endl;cout<<"got type specifier"<<endl;}/* create declaration specifier object . add type specifier to it . pass it above. */
 	| type_specifier declaration_specifiers {cout<<"declaration_specifier started"<<endl;Declaration_Specifiers* ds=$2; ds->ts.push_back($1);$$=ds;cout<<"declaration specifier completed"<<endl;}/* add type_specifier to $2 */
@@ -671,17 +674,19 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression ')' statement  /*{ cout << "other if else done" << endl;
-		backpatch($3->truelist,$5); Type* zz=new Type();
-		zz->nextlist=merge($3->falselist, $6->nextlist);$$=zz; 
-	}*/
-	| IF '(' expression ')' statement ELSE statement {cout << "if_else done" << endl; $$=$5;}
+	: IF '(' expression crb statement  { cout << "other if else done" << endl;
+		backpatch($3->truelist,$4); Type* zz=new Type();
+		zz->nextlist=merge($3->falselist, $5->nextlist);$$=zz; 
+	}
+	| IF '(' expression crb statement ELSE statement {cout << "if_else done" << endl; $$=$5;}
 	| SWITCH '(' expression ')' statement {$$=$5;}
 	;
-/*m */
-	/*:nowhere{$$=global_code.size();}*/
-	/*; */
-
+m 
+	: {$$=global_code.size();}
+	; 
+crb 
+	: ')' {$$=global_code.size();}
+	;
 iteration_statement
 	: WHILE '(' expression ')' statement {$$=$5;}
 	| UNTIL '(' expression ')' statement {$$=$5;}
@@ -694,9 +699,8 @@ jump_statement
 	: GOTO IDENTIFIER ';' {$$=new Type();}
 	| CONTINUE ';' {$$=new Type();}
 	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;}
-	| RETURN ';' {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(0);}$$=new Type();if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{/*cout << "return not allowed here" << endl;exit(0);*/cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done in return" << endl;$$=new Type();}
-	;
+	| RETURN ';' 
+	| RETURN initializer ';' 
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
 	: external_declaration {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}

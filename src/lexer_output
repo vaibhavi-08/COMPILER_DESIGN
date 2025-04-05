@@ -3,15 +3,13 @@ Original Symbol Table:
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
 | }                                    | SEPERATOR                            |
-| ;                                    | SEPERATOR                            |
-| 7                                    | INTEGER                              |
+| 4                                    | INTEGER                              |
 | 5                                    | INTEGER                              |
 | if                                   | IF                                   |
 | {                                    | SEPERATOR                            |
 | )                                    | SEPERATOR                            |
 | ||                                   | OR_OP                                |
 | (                                    | SEPERATOR                            |
-| z                                    | IDENTIFIER                           |
 | main                                 | IDENTIFIER                           |
 | int                                  | INT                                  |
 -------------------------------------------------------------------------------
@@ -24,14 +22,11 @@ main
 {
 if
 (
-5
+4
 ||
-7
+5
 )
 {
-int
-z
-;
 }
 }
 

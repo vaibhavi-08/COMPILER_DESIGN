@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 1 "grammar.y"
+#line 2 "grammar.y"
 
     // Forward declarations
     class Node;
@@ -188,7 +188,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 81 "grammar.y"
+#line 82 "grammar.y"
 
 	Node* node;
 	Function_Definition* fun_def;

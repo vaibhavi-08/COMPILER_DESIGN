@@ -315,18 +315,18 @@ inclusive_or_expression
 	;
 
 logical_and_expression
-	: inclusive_or_expression {$$=$1;}
-	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
-		string cod=get_code4($1->place,$3->place,"&&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+	: inclusive_or_expression {Type* type=$1;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
 		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
+		string cod=get_code4($1->place,$4->place,"&&",nn);merge_code1(type->code,$4->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
+		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$2->falselist);type->truelist=$2->truelist;$$=type;}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP m logical_and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"||",nn);merge_code1(type->code,$3->code);
-		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
-		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
+	| logical_or_expression OR_OP m logical_and_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
+		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
+		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$2->truelist);type->falselist=$2->falselist;$$=type;}
 	;
 
 conditional_expression

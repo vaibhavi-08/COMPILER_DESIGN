@@ -187,7 +187,7 @@ Node* root;
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
-%type <int_value> m crb els srb doo
+%type <int_value> m crb els srb doo smc
 %start translation_unit
 %%
 
@@ -639,7 +639,7 @@ initializer_list
 
 statement
 	: labeled_statement {$$=$1;}
-	| compound_statement {$$=$1->st;cout<<"finally statement has compound statement"<<endl;}
+	| compound_statement {$$=$1->st;cout<<"finally statemeexpression_statementnt has compound statement"<<endl;}
 	| expression_statement {$$=$1;}
 	| selection_statement {$$=$1;}
 	| iteration_statement {$$=$1;}
@@ -677,9 +677,13 @@ statement_list
 
 expression_statement
 	: ';' {$$=new Type();cout<<"semi colon"<<endl;}
-	| expression ';' {$$=new Type();}
+	| expression smc {
+		backpatch($1->truelist,global_code.size());
+		backpatch($1->falselist,global_code.size());
+		$$=$1;}
 	;
-
+smc
+	: ';' {$$=global_code.size();}
 selection_statement
 	: IF '(' expression crb statement { cout << "other if else done" << endl;
 		backpatch($3->truelist,$4); Type* zz=new Type();
@@ -725,12 +729,14 @@ iteration_statement
 	}
 
 
-	| FOR '(' expression_statement m expression_statement m expression ')' statement {$$=$7;
-	
-	}
+	| FOR '(' expression smc expression smc expression crb statement {
+		backpatch($5->truelist,$8);
+		backpatch($7->truelist,$4);
+		backpatch($7->falselist,$4);
+		get_while_code($6);
+		backpatch($5->falselist,global_code.size());
+		$$=$7;$$->nextlist=$5->falselist;}
 	;
-
-	; 
 
 
 doo

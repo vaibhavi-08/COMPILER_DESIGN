@@ -2,25 +2,18 @@ Original Symbol Table:
 -------------------------------------------------------------------------------
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
-| y                                    | IDENTIFIER                           |
-| else                                 | ELSE                                 |
-| }                                    | SEPERATOR                            |
-| *                                    | MUL                                  |
-| +                                    | PLUS                                 |
-| int                                  | INT                                  |
-| (                                    | SEPERATOR                            |
-| &&                                   | AND_OP                               |
-| )                                    | SEPERATOR                            |
-| {                                    | SEPERATOR                            |
-| x                                    | IDENTIFIER                           |
-| if                                   | IF                                   |
-| a                                    | IDENTIFIER                           |
-| main                                 | IDENTIFIER                           |
-| =                                    | ASSIGN                               |
-| 9                                    | INTEGER                              |
-| b                                    | IDENTIFIER                           |
 | ;                                    | SEPERATOR                            |
 | 10                                   | INTEGER                              |
+| 0                                    | INTEGER                              |
+| =                                    | ASSIGN                               |
+| <                                    | LESSTHAN                             |
+| i                                    | IDENTIFIER                           |
+| {                                    | SEPERATOR                            |
+| )                                    | SEPERATOR                            |
+| for                                  | FOR                                  |
+| (                                    | SEPERATOR                            |
+| main                                 | IDENTIFIER                           |
+| int                                  | INT                                  |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
@@ -30,43 +23,19 @@ main
 )
 {
 int
-a
+i
 =
-9
+0
 ;
-int
-b
-=
-10
-;
-if
+for
 (
-a
-&&
-b
-)
-{
-int
-x
+i
 =
-a
-+
-b
+0
 ;
-b
-=
-x
-*
-b
-;
-}
-else
-{
-int
-y
-=
+i
+<
 10
 ;
-}
-}
+i
 

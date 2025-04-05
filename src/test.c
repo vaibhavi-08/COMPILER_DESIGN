@@ -1,5 +1,8 @@
 int main(){
-    int a=10;
-    int b=20;
-    a=b;
+    int i=0;
+    
+    for(i=0; i<10; i++){
+        int x=0;
+        x=x+1;
+    }
 }

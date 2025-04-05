@@ -187,7 +187,7 @@ Node* root;
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
-%type <int_value> m crb els
+%type <int_value> m crb els srb doo
 %start translation_unit
 %%
 
@@ -341,8 +341,10 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression  {$$=$1; }
-	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);global_code.push_back(cod);$$=t;
-		backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);
+		backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());
+		global_code.push_back(cod);$$=t;
+		}
 	;
 assignment_operator
 	: '=' {$$="=";}
@@ -693,19 +695,57 @@ selection_statement
 	;
 m 
 	: {$$=global_code.size();}
+
+iteration_statement
+	: WHILE srb expression crb statement {$$=$5;
+	backpatch($5->nextlist, $2);
+	backpatch($3->truelist, $4);
+	$$->nextlist=$3->falselist;
+	global_code.push_back(get_while_code($2));
+	backpatch($$->nextlist, global_code.size());
+	}
+
+
+	| UNTIL srb expression crb statement {$$=$5;
+	backpatch($5->nextlist, $2);
+	backpatch($3->truelist, $4);
+	$$->nextlist=$3->falselist;
+	global_code.push_back(get_while_code($2));
+	backpatch($$->nextlist, global_code.size());
+	}
+
+	| doo statement WHILE srb expression ')' ';' {$$=$2;
+	$$->nextlist=$5->falselist;
+	backpatch($5->truelist, $1);
+	backpatch($$->nextlist, global_code.size());
+	}
+
+	| FOR '(' expression_statement expression_statement ')' statement {$$=$6;
+	
+	}
+
+
+	| FOR '(' expression_statement m expression_statement m expression ')' statement {$$=$7;
+	
+	}
+	;
+
 	; 
+
+
+doo
+	: DO {$$=global_code.size();}
+   
 crb 
 	: ')' {$$=global_code.size();}
 	;
 els 
 	: ELSE {$$=global_code.size();}
-iteration_statement
-	: WHILE '(' expression ')' statement {$$=$5;}
-	| UNTIL '(' expression ')' statement {$$=$5;}
-	| DO statement WHILE '(' expression ')' ';' {$$=$2;}
-	| FOR '(' expression_statement expression_statement ')' statement {$$=$6;}
-	| FOR '(' expression_statement expression_statement expression ')' statement {$$=$7;}
+
+srb
+	: '(' {$$=global_code.size();}
 	;
+
 
 jump_statement
 	: GOTO IDENTIFIER ';' {$$=new Type();}

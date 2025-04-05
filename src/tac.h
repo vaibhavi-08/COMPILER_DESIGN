@@ -6,6 +6,7 @@ using namespace std;
 extern unordered_map<string,Symbol_Info*> final_symtab;
 extern int tempcount;
 extern vector<string> global_code;
+string get_while_code(int temp);
 void backpatch(vector<int>& list,int label);
 string get_if_true_code(string condition);
 string get_if_false_code();

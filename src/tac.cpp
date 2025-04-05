@@ -25,6 +25,12 @@ string get_if_false_code(){
     s+="goto ";
     return s;
 }
+string get_while_code(int temp){
+    string s="";
+    s+="goto ";
+    s+=to_string(temp);
+    return s;
+}
 void merge_code(vector<string>& res,vector<string>& e1,vector<string>& e2){
     for(auto i:e1){
         res.push_back(i);

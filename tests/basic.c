@@ -1,24 +1,10 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-
-
-int main(){
-    int a=10;
-    int* ptr=&a;
+int func(int x){
+    int z=2*x;
+    return z;
 }
-=======
-struct P{
-    int x;
-};
->>>>>>> e51116577ca0756965c528cc62da408d7fe5abfb
-=======
-class Color{
-   member int x;
-   member int y;
-
-};
 int main(){
-    class Color c;
+    int z=8;
+    char y=func(8);
+    8<<2;
+    return 0;
 }
->>>>>>> d7942a8 (KKK)

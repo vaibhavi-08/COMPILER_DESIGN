@@ -856,8 +856,8 @@ jump_statement
 	: GOTO IDENTIFIER ';' {$$=new Type();}
 	| CONTINUE ';' {$$=new Type();}
 	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;}
-	| RETURN ';' {global_code.push_back(gen_return(""));}
-	| RETURN initializer ';' {global_code.push_back(gen_return($2->type->place));}
+	| RETURN ';' {Type* type=new Type();type->isvoid=true;check_for_assign(func_ret_type,type,"=");global_code.push_back(gen_return(""));}
+	| RETURN initializer ';' {check_for_assign(func_ret_type,$2->type,"=");global_code.push_back(gen_return($2->type->place));}
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
 	: external_declaration {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
@@ -895,6 +895,7 @@ function_definition /*(function_definition <- node ) */
 		current_param_vector.pop_back();
 	}
 	cout << "current params list cleared" << endl;
+	func_ret_type==nullptr;
 	lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */

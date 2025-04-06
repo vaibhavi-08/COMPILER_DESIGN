@@ -14,14 +14,23 @@ int line_num=1;
 set<string> labelset;
 stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 Symbol_Info::Symbol_Info(string name,string type, string level_name,int level,string scope,string access,Type* t){
+    cout << "symbol info constructor called" << endl;
     this->name=name;
+    cout << "name accessed" << endl;
     this->type=type;
+    cout << "type accessed" << endl;
     this->level_name=level_name;
+    cout << "level name accesed" << endl;
     this->level=level;
-    this->access=access;
+    cout << "level accesed" << endl;
     this->scope=scope;
+    cout << "scope accesed" << endl;
+    this->access=access;
+    cout << "access accesed" << endl;
     this->t=t;
+    cout << "type accesed" << endl;
     this->tempname="";
+    cout << "tempname accesed" << endl;
 }
 void add_to_local_class_struct_union_info(){
     if(!current_class_struct_union_info.empty()){
@@ -307,7 +316,7 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
             }
         }
         else if(dtype=="function"){
-            cout << "this is a function" << endl;
+            cout << "this is  function" << endl;
             if(ds->scs.empty()&&ds->tq.empty()){
                 t->isfunction=true;
                 Type* g=new Type();
@@ -1048,7 +1057,7 @@ vector<Type*> get_const_params(Parameter_List* p){
     }
     if(s.size()!=prms.size()){
         cout << "error: " << "all parameters should have unique name" <<"in line :"<< line_num<< endl;
-        exit(0);
+        exit(1);
     }
     return ans;
 }
@@ -1292,7 +1301,7 @@ Type* check_if_id_in_obj(Type* t,string id){
     }
     }
     cout << "class not found " << t->obj_class  << endl;
-    exit(0);
+    exit(1);
 }
 
 Argument_Expression_List :: Argument_Expression_List(){
@@ -1316,18 +1325,18 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
         else isconst=t1->isconst;
         if(t1->isfunction){
             cout << "functions cannot be assigned a value" << endl;
-            exit(0);
+            exit(1);
         }
         else if(t1->isconst){
             cout << "cannot change value of a constant" << endl;
-            exit(0);
+            exit(1);
         }
         else if(t1->isnull){
             cout << "cannot assign value to nullptr" << endl;
         }
         else if(t2->isvoid||t2->isvoid){
             cout << "cannot assign a void type to anything" << endl;
-            exit(0);
+            exit(1);
         }
         else if(t1->isauto){
             return t2;
@@ -1751,7 +1760,7 @@ Symbol_Info* get_symbol_info_id(string id){
     }
     //parameters not handled
     cout << "identifier not found " << id  << endl;
-    exit(0);
+    exit(1);
 }
 Type* get_type_id(string id) {
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
@@ -1826,16 +1835,57 @@ Type* get_type_id(string id) {
         return y;
     }
     cout << "identifier not found " << id  << endl;
-    exit(0);
+    exit(1);
+}
+Type::Type(const Type& other) {
+    isconst = other.isconst;
+    isvoid = other.isvoid;
+    isvolatile = other.isvolatile;
+    isfunction = other.isfunction;
+    isbasic = other.isbasic;
+    isobj = other.isobj;
+    isstatic = other.isstatic;
+    isauto = other.isauto;
+    isextern = other.isextern;
+    isregister = other.isregister;
+    isigned = other.isigned;
+    isunsigned = other.isunsigned;
+    isnull = other.isnull;
+    isenum = other.isenum;
+
+    func_ret_type = other.func_ret_type ? new Type(*other.func_ret_type) : nullptr;
+
+    prms.clear();
+    for (Type* t : other.prms) {
+        prms.push_back(t ? new Type(*t) : nullptr);
+    }
+
+    code = other.code;
+    place = other.place;
+
+    el = other.el; // shallow copy
+    base = other.base;
+    objtype = other.objtype;
+    obj_class = other.obj_class;
+
+    base_classes = other.base_classes; // shallow copy of vector of pointers
+
+    array_dim = other.array_dim;
+    ptr_level = other.ptr_level;
+    func_ptr_lev = other.func_ptr_lev;
+    ptrtql = other.ptrtql;
 }
 
-void check_if_array_or_pointer(Type* t){
+Type* check_if_array_or_pointer(Type* t){
+    Type* T=new Type(*t);
     if(t->array_dim){
-        t->array_dim--;
+        T->array_dim--;
+        return T;
     }
-    else if(t->ptr_level){
-        t->ptr_level--;
-        t->ptrtql.pop_back();
+    else if(T->ptr_level){
+        T->ptr_level--;
+        T->ptrtql.pop_back();
+        return T;
     }
     else{
         cout << "only pointer or array and be used with square braces" << endl;
@@ -2173,7 +2223,7 @@ void Declarator :: check_for_func(){
     string t=this->check_declarator();
     if(t!="function"){
         cout << "error : invalid function declarator " << this->id <<"in line :"<< line_num<< endl;
-        exit(0); 
+        exit(1); 
     }
 }
 Pointer::Pointer(Type_Qualifier_List* tql, Pointer* p) 
@@ -2388,6 +2438,7 @@ void add_to_local_table(Enumerator_List* e,Type* t){
     string scope;
     if(current_level==0)scope="global";
     else scope="local";
+    cout<<"inside add_to_local_table el,t"<<endl;
     for(auto x:e->e){
         if(current_table!=nullptr){
             Symbol_Info* info=new Symbol_Info(x->id,"enum "+t->obj_class,level_name,level,scope,"-",t);
@@ -2398,7 +2449,21 @@ void add_to_local_table(Enumerator_List* e,Type* t){
             current_table->lst[x->id]=info;
         }
         else{
-            Symbol_Info* info=new Symbol_Info(x->id,"enum "+t->obj_class,level_name,level,scope,"-",t);
+            cout<<"enum " + t->obj_class<<endl;
+            assert(x!=nullptr);
+            cout << "x not null" << endl;
+            cout << "x->id = " << x->id << endl;
+            if (t != nullptr) {
+                cout << "t->obj_class = " << t->obj_class << endl;
+            } else {
+                cout << "t is null!" << endl;
+            }
+            cout << "level_name = " << level_name << endl;
+            cout << "level = " << level << endl;
+            cout << "scope = " << scope << endl;
+
+            Symbol_Info* info=new Symbol_Info(x->id, "enum " + t->obj_class,level_name,level,scope,"-",t);
+            cout<<"obj successfully created of symbol info"<<endl;
             if(gst->gst.find(x->id)!=gst->gst.end()){
                 cout << "error :" << "redeclaration of " << x->id <<"in line :"<< line_num<< endl;
                 exit(1);
@@ -2655,7 +2720,8 @@ Declarator::Declarator(Pointer* p, Direct_Declarator* dd)
     this->type = this->check_declarator();  // Store the result of check_declarator()
 }
 
-Enumerator_List::Enumerator_List() : e() {
+Enumerator_List::Enumerator_List()  {
+    this->e=vector<Enumerator*>();
 }
 
 Initializer::Initializer(Type* type, string name, Initializer_List* ini_lst,string class_id, Argument_Expression_List* arg_exp_lst)
@@ -2685,8 +2751,9 @@ Struct_Declarator_List::Struct_Declarator_List() {
    this->sd={};
 }
 
-Enumerator::Enumerator(const std::string& id, Type* ce)
-    : id(id), ce(ce) { 
+Enumerator::Enumerator(string id, Type* ce){ 
+    this->id=id;
+    this->ce=ce;
 }
 
 Struct_Declarator::Struct_Declarator(Declarator* d){

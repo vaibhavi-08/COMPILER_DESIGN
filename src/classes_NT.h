@@ -72,7 +72,7 @@ Type* get_type_exp(string s);
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type);
 Node* create_node();
 struct Tq;
-void check_if_array_or_pointer(Type* t);
+Type* check_if_array_or_pointer(Type* t);
 Type* check_if_function(Type* t);
 Function_Definition* create_func_def(Declaration_Specifiers* ds,Declarator* dc,Compound_Statement* cs);
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst);
@@ -90,7 +90,6 @@ Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
 Struct_Declarator* create_struct_declarator_obj(Declarator* d);
 void check_if_obj_ptr(Type* s);
 void check_if_obj(Type* s);
-void check_if_array_or_pointer(Type* t);
 Type* check_if_id_in_obj(Type* t,string id);
 void check_argument_with_params(vector<Type*> prms,vector<Type*> args);
 Type* check_for_arithmatic_op(Type* s1, Type* s2);
@@ -175,6 +174,7 @@ class Type {
     int func_ptr_lev;
     vector<Tq> ptrtql;  // Now this will work, assuming Tq is defined earlier
     Type();
+    Type(const Type& other);
 };
 
 
@@ -414,7 +414,7 @@ class Enumerator:public Node{
     public:
     string id;
     Type* ce;
-    Enumerator(const std::string& id, Type* ce);
+    Enumerator(string id, Type* ce);
 };
 
 class Declarator: public Node{

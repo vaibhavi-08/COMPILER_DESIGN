@@ -195,7 +195,7 @@ primary_expression
 	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();t->place=nn;$$=t;}
 	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
 	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;$$=t;}
-	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;$$=t;}
+	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;$$=t;} 
 	| '(' expression ')' {Type* t=$2;string nn=get_new_temp();t->place=nn;$$=t;}
 	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;$$=t;}
 	;
@@ -206,7 +206,7 @@ class_name
 
 postfix_expression
 	: primary_expression {$$=$1;}
-	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;}
+	| postfix_expression '[' expression ']' {Type* t=check_if_array_or_pointer($1);$$=t;}
 	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());$$=t;}
 	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
 	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
@@ -385,7 +385,7 @@ type_specifier
 	| UNSIGNED {$$=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);cout<<"hurrah"<<endl;}
 	| struct_or_union_specifier {cout<<"struct_or_union_specifier found"<<endl;$$=create_ts_obj("",$1,nullptr,nullptr);}
     | class_specifier {cout<<"completed class specifier"<<endl;$$=create_ts_obj("",nullptr,$1,nullptr);}
-	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$1);}
+	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$1);cout<<" found enum in type specifier"<<endl;}
 	/*| TYPE_NAME {$$=create_ts_obj("TYPE_NAME",nullptr,nullptr,nullptr);}*/
 	;
 
@@ -393,7 +393,7 @@ struct_or_union_specifier
 	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->get_parent(); lvl_name.pop();add_to_local_class_struct_union_info(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
 	/*| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*//* same as above */
 	| struct IDENTIFIER {cout<<"struct identifier reached"<<endl;check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
-	| union union_id '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	| union union_id '{' struct_declaration_list '}' {cout<<"union uid sdl started"<<endl;$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
 	/*| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*/ /* same as above */
 	| union IDENTIFIER {check_if_declared(current_table,$2,"union");$$=create_struct_union_spec_obj($1,$2,nullptr);/* whether this identifier is declared before use */}
 	;
@@ -402,13 +402,13 @@ struct_id
 	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));cout<<"got struct identifier"<<endl;}
 	;
 union_id
-	: IDENTIFIER {lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));}
+	: IDENTIFIER {cout<<"identifier in uid started"<<endl;lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));cout<<"Passed IDENTIFIER to uid"<<endl;}
 	;
 struct
 	: STRUCT /*just pass */ {$$="STRUCT";cout <<"finally reached to struct"<<endl;}
 	;
 union
-	: UNION {$$="UNION";}
+	: UNION {$$="UNION";cout<<"passed UNION"<<endl;}
 	;
 
 struct_declaration_list
@@ -428,7 +428,7 @@ specifier_qualifier_list
 	;
 
 struct_declarator_list
-	: struct_declarator  {Struct_Declarator_List* x=new Struct_Declarator_List();x->sd.push_back($1);}/* create struct declarator list object . add struct declarator to it . */
+	: struct_declarator  {cout<<"got struct declarator"<<endl;Struct_Declarator_List* x=new Struct_Declarator_List();x->sd.push_back($1);cout<<"struct declarator done"<<endl;}/* create struct declarator list object . add struct declarator to it . */
 	| struct_declarator_list ',' struct_declarator  {Struct_Declarator_List* x=$1;x->sd.push_back($3);}/* add struct declarator to existing list */
 	;
 
@@ -493,17 +493,17 @@ member_declaration
 
 enum_specifier
 	/*: ENUM '{' enumerator_list '}' {$$=new Enum_Specifier(std::string(""),$3);}*/
-	: ENUM IDENTIFIER '{' enumerator_list '}' {$$=new Enum_Specifier(std::string($2),$4);Type* t=new Type();t->isenum=true;t->isobj=true;t->obj_class=$2;t->objtype="enum";add_to_local_table($4,t);}
+	: ENUM IDENTIFIER '{' enumerator_list '}' {cout<<"enum id el started"<<endl; cout << $4->e.back()->id << "!!!!" << endl;$$=new Enum_Specifier(std::string($2),$4);cout<<"enum specifier object created"<<endl;Type* t=new Type();t->isenum=true;t->isobj=true;t->obj_class=$2;t->objtype="enum";cout<<"no bt upto t->objtype"<<endl;add_to_local_table($4,t);cout<<"enum id el done"<<endl;}
 	| ENUM IDENTIFIER {$$=new Enum_Specifier(std::string($2),nullptr);check_if_declared(current_table,std::string($2),"enum");}
 	;
 
 enumerator_list
-	: enumerator {Enumerator_List* x=new Enumerator_List();x->e.push_back($1);}
-	| enumerator_list ',' enumerator {Enumerator_List* x=$1;x->e.push_back($3);}
+	: enumerator {cout<<"enumerator started"<<endl;Enumerator_List* x=new Enumerator_List();x->e.push_back($1); cout<<"got enumerator in el"<<endl;$$=x;}
+	| enumerator_list ',' enumerator {cout<<"enumerator list + enumerator started"<<endl;cout << $3->id << "$#@$#@" << endl;$1->e.push_back($3);cout << $1->e.back()->id << "@#$" << endl;cout<<"enumerator list + enumerator returned"<<endl;$$=$1;}
 	;
 
 enumerator
-	: IDENTIFIER {$$=new Enumerator(std::string($1),nullptr);}
+	: IDENTIFIER {$$=new Enumerator(std::string($1),new Type());cout<<"id in enumerator"<<endl;cout<<($1)<<endl;}
 	| IDENTIFIER '=' constant_expression {$$=new Enumerator(std::string($1),$3);check_int_comp($3);}
 	;
 
@@ -599,7 +599,7 @@ initializer_list
 
 statement
 	: labeled_statement {$$=$1;}
-	| compound_statement {int z=0;for(int i:$1->st){if(i==1)z=1;}return z;cout<<"finally statement has compound statement"<<endl;}
+	| compound_statement {int z=0;for(int i:$1->st){if(i==1)z=1;}$$=z;cout<<"finally statement has compound staement"<<endl;}
 	| expression_statement {$$=$1;}
 	| selection_statement {$$=$1;}
 	| iteration_statement {$$=$1;}
@@ -642,7 +642,7 @@ expression_statement
 
 selection_statement
 	: IF '(' expression ')' statement {$$=$5;}
-	| IF '(' expression ')' statement ELSE statement {$$=($5|$7);}
+	| IF '(' expression ')' statement ELSE statement {cout<<"if else started###"<<endl;$$=($5|$7);cout << "if else parsed" << endl;}
 	| SWITCH '(' expression ')' statement {cout<<"switch found"<<endl;$$=$5;}
 	;
 
@@ -658,25 +658,25 @@ jump_statement
 	: GOTO IDENTIFIER ';' {$$=0;}
 	| CONTINUE ';' {$$=0;}
 	| BREAK ';' {$$=0;cout<<"found break"<<endl;}
-	| RETURN ';' {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(0);}$$=1;if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
-	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{/*cout << "return not allowed here" << endl;exit(0);*/cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done in return" << endl;$$=1;}
+	| RETURN ';' {if(current_level==lvl_name.size()){/*assert(func_ret_type!=nullptr);*/}else{cout << "return not allowed here" << endl;exit(1);}$$=1;if(!func_ret_type->isvoid){cout << "only void functions can have return;"<<endl;}}
+	| RETURN initializer ';' {if(current_level==lvl_name.size()){cout << lvl_name.top() << endl;assert(func_ret_type!=nullptr);cout<<"jump staement if done in return"<<endl;}else{cout << "return not allowed here" << endl;cout<<"jump staement else done in return"<<endl;} check_compatibility($2,func_ret_type);cout << "check_compatibility done in return" << endl;$$=1;}
 	;
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
 	: external_declaration {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
-	| translation_unit external_declaration {Node* ext=create_node();}
+	| translation_unit external_declaration {Node* ext=create_node();cout<<"t_u and e_d"<<endl;}
 	;
 
 external_declaration /* (type:node*) storing pointers to function_definition and declaration */
-	: function_definition  {add_to_gst($1,gst);cout<<"add to gst"<<endl;$$=$1;}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
+	: function_definition  {cout<<"external declaration started"<<endl;add_to_gst($1,gst);cout<<"add to gst"<<endl;$$=$1;cout<<"external declaration started"<<endl;}/* assign pointer of function declaration to external declaration pointer. add function definition to gst*/
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);cout << "create type for func decl done successfully"<<endl;$2->check_for_func();cout << "check for func done successfully in func decl" << endl;$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));cout<<"final func decl done huuh"<<endl;}
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);cout << "create type for func decl done successfully"<<endl;$2->check_for_func();cout << "check for func done successfully in func decl " <<$2->id<< endl;$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));cout<<"final func decl done huuh"<<endl;}
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();if(!$2->have_ret){cout << "return type needed in func" << endl;exit(1);}func_ret_type=nullptr;}*/ /* create function definition object.parameter. assign type. assign size. */
-	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);cout<<"create func def done"<< endl;current_params_list.clear();cout << "current params list cleared" << endl;lvl_name.pop();}/*same as above */
+	: function_declaration compound_statement {cout<<"function_definition started"<<endl;Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);cout<<"create func def done"<< endl;current_params_list.clear();cout << "current params list cleared" << endl;lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
 	;
@@ -715,7 +715,7 @@ int main(int argc, char *argv[]){
 	}
 	else{
 		std::cout << "Input file does not exist!" << endl;
-		exit(0);
+		exit(1);
 	}
 	Node* root= new Node();
 	gst=new Global_Symbol_Table();

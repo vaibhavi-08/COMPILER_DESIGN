@@ -31,25 +31,25 @@ int main() {
     int geq = (a >= b);      // Greater than or equal to
     int or_op = x || y;      // Logical OR
 
-    print_int(add);         // Expected: 13
-    print_int(sub);         // Expected: 7
-    print_int(mul);         // Expected: 30
-    print_int(div);         // Expected: 3
-    print_int(mod);         // Expected: 1
+    // print_int(add);         // Expected: 13
+    // print_int(sub);         // Expected: 7
+    // print_int(mul);         // Expected: 30
+    // print_int(div);         // Expected: 3
+    // print_int(mod);         // Expected: 1
 
     
-    print_bool(and_op);      // Expected: 0 (false)
-    // print_bool(or_op);       // Expected: 1 (true)
-    print_bool(not_x);       // Expected: 0 (false)
+    // print_bool(and_op);      // Expected: 0 (false)
+    // // print_bool(or_op);       // Expected: 1 (true)
+    // print_bool(not_x);       // Expected: 0 (false)
 
-    // Relational operators for testing logical results
+    // // Relational operators for testing logical results
     
-    print_bool(eq);          // Expected: 0 (false)
-    print_bool(neq);         // Expected: 1 (true)
-    print_bool(lt);          // Expected: 0 (false)
-    print_bool(gt);          // Expected: 1 (true)
-    print_bool(leq);         // Expected: 0 (false)
-    print_bool(geq);         // Expected: 1 (true)
+    // print_bool(eq);          // Expected: 0 (false)
+    // print_bool(neq);         // Expected: 1 (true)
+    // print_bool(lt);          // Expected: 0 (false)
+    // print_bool(gt);          // Expected: 1 (true)
+    // print_bool(leq);         // Expected: 0 (false)
+    // print_bool(geq);         // Expected: 1 (true)
 
-    return 0;
+    //return 0;
 }

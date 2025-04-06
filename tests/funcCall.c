@@ -1,9 +1,14 @@
 
-int add (){
-    int a=1;
+int add (int x){
+
+    return x;
 }
 
 int main() {
-    int x=add();
+    int a=4;
+    int b=9;
+    int c;
+    int x=add(c);
+    c=a+d;
     return 0;
 }

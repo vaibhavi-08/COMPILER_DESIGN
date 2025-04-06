@@ -49,8 +49,6 @@ void fill_eqeq_exp1(int index, string s){
             global_code[index].insert(pos + 3, s);
             
         }
-
-
 }
 void fill_eqeq_exp2(vector<int>list, string s){
     for(int index: list){
@@ -60,9 +58,7 @@ void fill_eqeq_exp2(vector<int>list, string s){
             global_code[index].insert(pos + 3, s);
 
         }
-
     }
-
 }
 string get_code_array(string a1,string a2,string res){
     string s="";

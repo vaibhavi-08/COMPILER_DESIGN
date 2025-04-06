@@ -2,9 +2,61 @@ Original Symbol Table:
 -------------------------------------------------------------------------------
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
-| <<                                   | LEFT_OP                              |
+| .                                    | SEPERATOR                            |
+| p1                                   | IDENTIFIER                           |
+| *                                    | MUL                                  |
+| p                                    | IDENTIFIER                           |
+| 10                                   | INTEGER                              |
+| struct                               | STRUCT                               |
+| {                                    | SEPERATOR                            |
+| )                                    | SEPERATOR                            |
+| int                                  | INT                                  |
+| x                                    | IDENTIFIER                           |
+| ;                                    | SEPERATOR                            |
+| ptr                                  | IDENTIFIER                           |
+| }                                    | SEPERATOR                            |
+| a                                    | IDENTIFIER                           |
+| &                                    | BITWISE_AND                          |
+| main                                 | IDENTIFIER                           |
+| =                                    | ASSIGN                               |
+| (                                    | SEPERATOR                            |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
-<<
+struct
+p
+{
+int
+x
+;
+}
+;
+int
+main
+(
+)
+{
+int
+a
+=
+10
+;
+int
+*
+ptr
+=
+&
+a
+;
+struct
+p
+p1
+;
+p1
+.
+x
+=
+10
+;
+}
 

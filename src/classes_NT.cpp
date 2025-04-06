@@ -2396,6 +2396,7 @@ vector<pair<string, pair<string,Type*>>> create_name_type_list(Declaration_Speci
             cout<<"true of create_name_type_list"<<endl;
             Type* t=new Type();
             string type = create_type(ds, d, t);
+            t->place=d->tempname;
             cout << t->base << endl;
             cout << "create type in create name type list done" << endl;
             if(type == "class" || type == "struct" || type == "union" || type == "enum") {
@@ -2485,17 +2486,28 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
     }
 }
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
-    int z=0;
+
     for(auto i:symbol->name_type_list){
+        if(symbol->init_dec_list!=nullptr){
+            for(auto j:symbol->init_dec_list->idl){
+                if(j->ini){
+                    cout<<"check compatilblity started"<<endl;
+                    check_compatibility(j->ini,i.second.second);
+                    cout<<"check compatiblity done"<<endl;
+                }
+            }
+        }
         Symbol_Info* x=new Symbol_Info(i.first,i.second.first,symbol->level_name,symbol->level,symbol->scope,"-",i.second.second);
-        x->tempname=symbol->init_dec_list->idl[z]->tempname;
-        final_symtab[x->tempname]=x;
+        cout << "this constructor is called successfully" << endl;
+        x->tempname=i.second.second->place;
+        if(x->tempname!=""){
+            final_symtab[x->tempname]=x;
+        }
         if(gst->gst.find(i.first)!=gst->gst.end()){
             cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
             exit(1);
         }
         gst->gst[i.first]=x;
-        z++;
     }
 
 }
@@ -2588,8 +2600,10 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         cout << i.second.second->base << endl;
         cout << "got type from declaration" << endl;
         Symbol_Info* x=new Symbol_Info(i.first,i.second.first,d->level_name,current_level-lvl_name.size()+1,d->scope,"-",i.second.second);
-        x->tempname=d->init_dec_list->idl[z]->tempname;
-        final_symtab[x->tempname]=x;
+        x->tempname=i.second.second->place;
+        if(x->tempname!=""){
+            final_symtab[x->tempname]=x;
+        }
         cout << x->t->base << endl;
         cout << "type correctly added to symbol info" << endl;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){

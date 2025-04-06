@@ -61,6 +61,7 @@ extern Type* func_ret_type;
 extern set<string> labelset;
 extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 Type* myFunction();
+string get_string_type(Type* t);
 void add_to_local_table(Local_Symbol_Table* current_table,Struct_Declaration* sd);
 void add_to_local_table(Local_Symbol_Table* current_table,Function_Definition* fd);
 void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d);
@@ -172,6 +173,9 @@ class Type {
     int array_dim;
     int ptr_level;
     int func_ptr_lev;
+    vector<int> truelist;
+    vector<int> falselist;
+    vector<int> nextlist;
     vector<Tq> ptrtql;  // Now this will work, assuming Tq is defined earlier
     Type();
     Type(const Type& other);
@@ -248,10 +252,9 @@ class Declaration_Specifiers : public Node{
 };
 class Compound_Statement : public Node{
     public:
-    vector<int> st;
-    int have_ret;
+    Type* st;
     Declaration_List* dl;
-    Compound_Statement(vector<int> st,Declaration_List* dl);
+    Compound_Statement(Type* st,Declaration_List* dl);
 };
 
 

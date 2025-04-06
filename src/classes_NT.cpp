@@ -2140,11 +2140,39 @@ void check_if_obj_ptr(Type* s) {
     }
 }
 
-
+string get_string_type(Type* t){
+    if(t->isbasic){
+        return t->base;
+    }
+    else if(t->isobj){
+        return t->objtype+" "+t->obj_class;
+    }
+    else{
+        cout << "these types are yet to be done" << endl;
+        exit(1);
+    }
+}
 Type* get_type_unary_expression(string t1, Type* t2) {
     Type* t = t2;
+
     if (t1 == "*") {
+        if(t->ptr_level>0)t->ptr_level--;
+        else{
+            cout << "dereferencing can be done only on pointers" << endl;
+            exit(1);
+        }
+    }
+    else if(t1=="&"){
         t->ptr_level++;
+    }
+    else if(t1=="+"||t1=="-"||t1=="~"||t1=="!"){
+        if(t->isbasic&&t->ptr_level==0&&t->func_ptr_lev==0&&!t->isfunction){
+            return t;
+        }
+        else{
+            cout << "only basic types are allowed for unary operator +,-,~,!" << endl;
+            exit(1);
+        }
     }
     return t;
 }
@@ -2513,7 +2541,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_Li
     current_table->lst[name]=x;
 
 }
-Compound_Statement::Compound_Statement(vector<int> st, Declaration_List* dl)
+Compound_Statement::Compound_Statement(Type* st, Declaration_List* dl)
     : st(st), dl(dl){ 
         cout << "compound statement constructor called" << endl;
 }

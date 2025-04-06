@@ -190,7 +190,8 @@ Node* root;
 %type <pl> parameter_list parameter_type_list
 %type <tql> type_qualifier_list
 %type <par_dec> parameter_declaration
-%type <int_value> m crb els srb doo smc 
+%type <int_value> m crb els srb doo smc colon emp
+%type <str> swtch
 %start translation_unit
 %%
 
@@ -211,13 +212,13 @@ class_name
 
 postfix_expression
 	: primary_expression {$$=$1;}
-	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;string nn=}
+	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;}
 	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());$$=t;}
 	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
 	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
 	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type* type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
 	| postfix_expression INC_OP  {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));$$->place=nn;}
-	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));$$->place=nn;}
+	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4("",$1->place,"--",nn));$$->place=nn;}
 	;
 
 argument_expression_list
@@ -370,7 +371,7 @@ expression
 	;
 
 constant_expression
-	: conditional_expression {$$=$1;}
+	: conditional_expression {$$=$1; backpatch($$->truelist, global_code.size()); backpatch($$->falselist,global_code.size());}
 	;
 /* stack dekho and level name vali fied bharo iski */
 /* fix error notebook ka 1 */
@@ -642,7 +643,7 @@ initializer_list
 	;
 
 statement
-	: labeled_statement {$$=$1;}
+	: labeled_statement {$$=$1; }
 	| compound_statement {$$=$1->st;cout<<"finally statemeexpression_statementnt has compound statement"<<endl;}
 	| expression_statement {$$=$1;}
 	| selection_statement {$$=$1;}
@@ -657,10 +658,29 @@ delete_statement
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement {if(labelset.find($1)==labelset.end())labelset.insert($1);else {cout << "label declared twice" << endl;exit(1);}$$=$3;}
-	| CASE constant_expression ':' statement {$$=$4;}
+	: IDENTIFIER ':' m statement {if(labelset.find($1)==labelset.end())labelset.insert($1);else {cout << "label declared twice" << endl;exit(1);}$$=$4;
+		backpatch(goto_label, $3);
+		labelgoto.push_back($1);
+		labelmap[$1]=$3;
+		}
+	| CASE constant_expression colon statement {$$=$4; 
+	
+		fill_eqeq_exp1($3-2,$2->place);
+		backpatch1($3-2,$3);
+		backpatch1($3-1, global_code.size()+1);
+		}
 	| DEFAULT ':' statement {cout<<"finally reached to default"<<endl;$$=$3;}
 	;
+
+colon
+	: ':' { switch_true.push_back(global_code.size());
+			global_code.push_back(get_if_true_code("=="));	
+			switch_false.push_back(global_code.size());		
+			global_code.push_back(get_if_false_code());
+			$$=global_code.size();
+
+			}
+
 
 compound_statement
 	: '{' '}' {Compound_Statement* x=new Compound_Statement(new Type(),nullptr);$$=x;}
@@ -687,7 +707,8 @@ smc
 	: ';' {$$=global_code.size();}
 selection_statement
 	: IF '(' expression crb statement { cout << "other if else done" << endl;
-		backpatch($3->truelist,$4); Type* zz=new Type();
+		backpatch($3->truelist,$4);
+		 Type* zz=new Type();
 		zz->nextlist=merge($3->falselist, $5->nextlist);backpatch(zz->nextlist,global_code.size());$$=zz; 
 	}
 	| IF '(' expression crb statement els statement  {cout << "if_else done" << endl;
@@ -696,10 +717,25 @@ selection_statement
 		Type* zz=new Type(); zz->nextlist=merge($5->nextlist,$7->nextlist);
 		backpatch(zz->nextlist,global_code.size()); $$=zz;}
 
-	| SWITCH '(' expression ')' statement {$$=$5;}
+	| SWITCH '(' expression crb emp statement {$$=$6;
+		backpatch($3->truelist, $4);
+		backpatch($3->falselist, $4);
+		backpatch(break_label, global_code.size());
+		fill_eqeq_exp2(switch_true, $3->place);
+		}
 	;
+
+emp
+	: {
+		$$=global_code.size();
+		
+		
+	  }
+
+
 m 
 	: {$$=global_code.size();}
+
 
 iteration_statement
 	: WHILE srb expression crb statement {$$=$5;
@@ -708,6 +744,8 @@ iteration_statement
 	$$->nextlist=$3->falselist;
 	global_code.push_back(get_while_code($2));
 	backpatch($$->nextlist, global_code.size());
+	backpatch(break_label, global_code.size());
+	backpatch(continue_label, $2);
 	}
 
 
@@ -717,32 +755,42 @@ iteration_statement
 	$$->nextlist=$3->falselist;
 	global_code.push_back(get_while_code($2));
 	backpatch($$->nextlist, global_code.size());
+	backpatch(break_label, global_code.size());
+	backpatch(continue_label, $2);
 	}
 
 	| doo statement WHILE srb expression ')' ';' {$$=$2;
 	$$->nextlist=$5->falselist;
 	backpatch($5->truelist, $1);
 	backpatch($$->nextlist, global_code.size());
+	backpatch(break_label, global_code.size());
+	backpatch(continue_label, $1);
 	}
 
-	| FOR '(' expression smc expression smc ')' statement {$$=$8;
+	| FOR '(' expression smc expression smc ')' statement { $$=$8;
 		backpatch($5->truelist,$6);
 		$$->nextlist=$5->falselist;
 		global_code.push_back(get_while_code($4));
 		backpatch($5->falselist,global_code.size());
+		backpatch(break_label, global_code.size());
+		backpatch(continue_label, $4);
 		}
 
 
-	| FOR '(' expression smc expression smc expression fcrb statement {
+	| FOR '(' expression smc expression smc expression fcrb statement { $$=$9;
 		backpatch($5->truelist,$8->pos);
 		backpatch($8->nextlist,$4);
 		global_code.push_back(get_while_code($6));
 		backpatch($5->falselist,global_code.size());
-		$$=$7;$$->nextlist=$5->falselist;}
+		$$=$7;$$->nextlist=$5->falselist;
+		backpatch(break_label, global_code.size());
+		backpatch(continue_label, $4);
+		}
 	;
 
 fcrb
 	: ')' {FCRB* t=new FCRB();t->nextlist.push_back(global_code.size());global_code.push_back(get_if_false_code());t->pos=global_code.size();$$=t;}
+
 doo
 	: DO {$$=global_code.size();}
    
@@ -758,9 +806,20 @@ srb
 
 
 jump_statement
-	: GOTO IDENTIFIER ';' {$$=new Type();}
-	| CONTINUE ';' {$$=new Type();}
-	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;}
+	: GOTO IDENTIFIER ';' {$$=new Type();
+		goto_label.push_back(global_code.size());
+		if(identifier_found(labelgoto, $2)){
+		global_code.push_back(get_while_code(labelmap[$2]));
+		}
+		else{
+		global_code.push_back(get_if_false_code());}
+		}
+	| CONTINUE ';' {$$=new Type();
+		continue_label.push_back(global_code.size());
+		global_code.push_back(get_if_false_code());}
+	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;
+		break_label.push_back(global_code.size());
+		global_code.push_back(get_if_false_code());}
 	| RETURN ';' 
 	| RETURN initializer ';' 
 

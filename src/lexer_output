@@ -2,23 +2,25 @@ Original Symbol Table:
 -------------------------------------------------------------------------------
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
-| }                                    | SEPERATOR                            |
-| +                                    | PLUS                                 |
-| x                                    | IDENTIFIER                           |
-| int                                  | INT                                  |
-| ++                                   | INC_OP                               |
+| 7                                    | INTEGER                              |
+| goto                                 | GOTO                                 |
+| label1                               | IDENTIFIER                           |
 | (                                    | SEPERATOR                            |
+| 6                                    | INTEGER                              |
 | )                                    | SEPERATOR                            |
 | {                                    | SEPERATOR                            |
-| <                                    | LESSTHAN                             |
+| }                                    | SEPERATOR                            |
+| 3                                    | INTEGER                              |
+| 2                                    | INTEGER                              |
+| :                                    | SEPERATOR                            |
+| +                                    | PLUS                                 |
+| 5                                    | INTEGER                              |
 | main                                 | IDENTIFIER                           |
-| for                                  | FOR                                  |
 | i                                    | IDENTIFIER                           |
 | =                                    | ASSIGN                               |
-| 1                                    | INTEGER                              |
-| 0                                    | INTEGER                              |
 | ;                                    | SEPERATOR                            |
-| 7                                    | INTEGER                              |
+| int                                  | INT                                  |
+| 4                                    | INTEGER                              |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
@@ -30,33 +32,42 @@ main
 int
 i
 =
-0
+2
 ;
-for
-(
 i
 =
-0
+i
++
+3
 ;
 i
-<
+=
+i
++
+4
+;
+label1
+:
+i
+=
+i
++
+5
+;
+i
+=
+i
++
+6
+;
+goto
+label1
+;
+i
+=
+i
++
 7
 ;
-++
-i
-)
-{
-int
-x
-=
-0
-;
-x
-=
-x
-+
-1
-;
-}
 }
 

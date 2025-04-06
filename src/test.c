@@ -1,9 +1,21 @@
 int main(){
-    int i=0;
+    int i=2;
     
-    for(i=0; i<7;++i){
-        int x=0;
-        x=x+1;
-    }
+            i=i+3;
+           
+    
+            i=i+4;
+       
+     
+    label1: i=i+5;
+     
+      
+            i=i+6;
+     goto label1;
+  
+
+            i=i+7;
+   
+        
     
 }

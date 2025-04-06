@@ -2211,7 +2211,7 @@ string get_string_type(Type* t){
     }
 }
 Type* get_type_unary_expression(string t1, Type* t2) {
-    Type* t = t2;
+    Type* t = new Type(*t2);
 
     if (t1 == "*") {
         if(t->ptr_level>0)t->ptr_level--;

@@ -2,42 +2,38 @@ Original Symbol Table:
 -------------------------------------------------------------------------------
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
-| .                                    | SEPERATOR                            |
-| p1                                   | IDENTIFIER                           |
-| *                                    | MUL                                  |
-| p                                    | IDENTIFIER                           |
-| 10                                   | INTEGER                              |
-| struct                               | STRUCT                               |
-| {                                    | SEPERATOR                            |
-| )                                    | SEPERATOR                            |
+| 0                                    | INTEGER                              |
+| --                                   | DEC_OP                               |
+| else                                 | ELSE                                 |
+| ++                                   | INC_OP                               |
 | int                                  | INT                                  |
+| return                               | RETURN                               |
+| 40                                   | INTEGER                              |
+| (                                    | SEPERATOR                            |
+| )                                    | SEPERATOR                            |
+| {                                    | SEPERATOR                            |
+| if                                   | IF                                   |
 | x                                    | IDENTIFIER                           |
-| ;                                    | SEPERATOR                            |
-| ptr                                  | IDENTIFIER                           |
-| }                                    | SEPERATOR                            |
-| a                                    | IDENTIFIER                           |
+| ==                                   | EQ_OP                                |
+| 20                                   | INTEGER                              |
 | &                                    | BITWISE_AND                          |
 | main                                 | IDENTIFIER                           |
 | =                                    | ASSIGN                               |
-| (                                    | SEPERATOR                            |
+| 10                                   | INTEGER                              |
+| }                                    | SEPERATOR                            |
+| ptr                                  | IDENTIFIER                           |
+| ;                                    | SEPERATOR                            |
+| *                                    | MUL                                  |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
-struct
-p
-{
-int
-x
-;
-}
-;
 int
 main
 (
 )
 {
 int
-a
+x
 =
 10
 ;
@@ -46,17 +42,37 @@ int
 ptr
 =
 &
-a
-;
-struct
-p
-p1
-;
-p1
-.
 x
+;
+*
+ptr
 =
-10
+20
+;
+*
+ptr
+=
+40
+;
+if
+(
+x
+==
+20
+)
+{
+x
+++
+;
+}
+else
+{
+x
+--
+;
+}
+return
+0
 ;
 }
 

@@ -135,7 +135,7 @@ Node* root;
 
 %token TYPEDEF EXTERN STATIC AUTO REGISTER
 %token CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE CONST VOLATILE VOID 
-%token STRUCT UNION ENUM ELLIPSIS NULL_TOKEN
+%token STRUCT UNION ENUM ELLIPSIS NULL_TOKEN MEMBER
 
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token CLASS DELETE NEW PRIVATE PUBLIC PROTECTED THIS UNTIL BOOL TRUE FALSE
@@ -449,13 +449,18 @@ type_specifier
 	| SIGNED {$$=create_ts_obj("SIGNED",nullptr,nullptr,nullptr);}
 	| UNSIGNED {$$=create_ts_obj("UNSIGNED",nullptr,nullptr,nullptr);cout<<"hurrah"<<endl;}
 	| struct_or_union_specifier {cout<<"struct_or_union_specifier found"<<endl;$$=create_ts_obj("",$1,nullptr,nullptr);}
-    | class_specifier {cout<<"completed class specifier"<<endl;$$=create_ts_obj("",nullptr,$1,nullptr);}
+   /* | class_specifier {cout<<"completed class specifier"<<endl;$$=create_ts_obj("",nullptr,$1,nullptr);}*/
 	| enum_specifier {$$=create_ts_obj("",nullptr,nullptr,$1);cout<<" found enum in type specifier"<<endl;}
 	/*| TYPE_NAME {$$=create_ts_obj("TYPE_NAME",nullptr,nullptr,nullptr);}*/
 	;
 
 struct_or_union_specifier
-	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->parent; lvl_name.pop();add_to_local_class_struct_union_info(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4);
+	 cout << "create struct union spec object done" << endl;
+	current_level--; current_table=current_table->parent;
+	 lvl_name.pop();add_to_local_class_struct_union_info();
+	 cout << "add to local class struct union info done" << endl;
+	}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
 	/*| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->parent;lvl_name.pop();add_to_local_class_struct_union_info();}*//* same as above */
 	| struct IDENTIFIER {cout<<"struct identifier reached"<<endl;check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
 	| union union_id '{' struct_declaration_list '}' {cout<<"union uid sdl started"<<endl;$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->parent;lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
@@ -470,14 +475,15 @@ union_id
 	: IDENTIFIER {cout<<"identifier in uid started"<<endl;lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));cout<<"Passed IDENTIFIER to uid"<<endl;}
 	;
 struct
-	: STRUCT /*just pass */ {$$="STRUCT";cout <<"finally reached to struct"<<endl;}
+	: STRUCT /*just pass */ {$$="struct";cout <<"finally reached to struct"<<endl;}
 	;
 union
-	: UNION {$$="UNION";cout<<"passed UNION"<<endl;}
+	: UNION {$$="union";cout<<"passed UNION"<<endl;}
 	;
 
 struct_declaration_list
-	: struct_declaration {current_level++;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table();add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
+	: struct_declaration {cout << "struct declaration list done" << endl;
+	current_level++;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table();add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
 	| struct_declaration_list struct_declaration {Struct_Declaration_List* x=$1;x->sdl.push_back($2);$$=x;add_to_local_table(current_table,$2);} /* add struct decl. to already made object.  add struct declaration to current table*/
 	;
 
@@ -486,15 +492,15 @@ struct_declaration
 	;
 
 specifier_qualifier_list
-	: type_specifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->ts.push_back($1);} /* add type_specifier to specifier_qualifier_list object already created */
-	| type_specifier {cout<<"type spec in sql started"<<endl;Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back($1);cout<<"type spec in sql ended"<<endl;}/* create object of specifier_qualifier_list . add type_specifier to it */
-	| type_qualifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->tq.push_back($1);}  /* same as above rule */
-	| type_qualifier {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->tq.push_back($1);} /* same as above rule */
+	: type_specifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->ts.push_back($1);$$=x;} /* add type_specifier to specifier_qualifier_list object already created */
+	| type_specifier {cout<<"type spec in sql started"<<endl;Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->ts.push_back($1);cout<<"type spec in sql ended"<<endl;$$=x;}/* create object of specifier_qualifier_list . add type_specifier to it */
+	| type_qualifier specifier_qualifier_list {Specifier_Qualifier_List* x=$2;x->tq.push_back($1);$$=x;}  /* same as above rule */
+	| type_qualifier {Specifier_Qualifier_List* x=new Specifier_Qualifier_List();x->tq.push_back($1);$$=x;} /* same as above rule */
 	;
 
 struct_declarator_list
-	: struct_declarator  {cout<<"got struct declarator"<<endl;Struct_Declarator_List* x=new Struct_Declarator_List();x->sd.push_back($1);cout<<"struct declarator done"<<endl;}/* create struct declarator list object . add struct declarator to it . */
-	| struct_declarator_list ',' struct_declarator  {Struct_Declarator_List* x=$1;x->sd.push_back($3);}/* add struct declarator to existing list */
+	: struct_declarator  {cout<<"got struct declarator"<<endl;Struct_Declarator_List* x=new Struct_Declarator_List();x->sd.push_back($1);cout<<"struct declarator done"<<endl;$$=x;}/* create struct declarator list object . add struct declarator to it . */
+	| struct_declarator_list ',' struct_declarator  {Struct_Declarator_List* x=$1;x->sd.push_back($3);$$=x;}/* add struct declarator to existing list */
 	;
 
 struct_declarator
@@ -504,13 +510,13 @@ struct_declarator
 	;
 
 class_specifier
-    : CLASS class_name class_body  {$$=new Class_Specifier(std::string($2),nullptr,$3);} /*  make class_specifier object and add all info.  */
-    | CLASS class_name inheritance_specifier class_body {$$=new Class_Specifier(std::string($2),$3,$4);}/* make object add all info . add base classes also in class_specifier */
-	| CLASS class_name {$$=new Class_Specifier(std::string($2),nullptr,nullptr);check_if_declared(current_table,std::string($2),"class");}/* check whether variable already declared */
+    : CLASS class_name class_body  {$$=new Class_Specifier(std::string($2),nullptr,$3);} 
+    | CLASS class_name inheritance_specifier class_body {$$=new Class_Specifier(std::string($2),$3,$4);}
+	| CLASS class_name {$$=new Class_Specifier(std::string($2),nullptr,nullptr);check_if_declared(current_table,std::string($2),"class");}
     ;
 
 inheritance_specifier
-    : ':' base_class_list /* pass */ {$$=new Inheritance_Specifier($2);}
+    : ':' base_class_list {$$=new Inheritance_Specifier($2);}
     ;
 
 base_class_list
@@ -562,8 +568,8 @@ class_member_declaration
     ;
 
 member_declaration
-	: function_definition {$$=new Member_Declaration(nullptr,nullptr,$1);add_to_local_table(current_table,$1);}
-    | specifier_qualifier_list declarator ';' {$$=new Member_Declaration($1,$2,nullptr);add_to_local_table(current_table,$1,$2);} /* do not add directly in local symtab , change grammar*/
+	: MEMBER function_definition {$$=new Member_Declaration(nullptr,nullptr,$1);add_to_local_table(current_table,$1);}
+    | MEMBER specifier_qualifier_list declarator ';' {$$=new Member_Declaration($1,$2,nullptr);add_to_local_table(current_table,$1,$2);} /* do not add directly in local symtab , change grammar*/
     ;
 
 enum_specifier

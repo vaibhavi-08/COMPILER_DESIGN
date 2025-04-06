@@ -266,7 +266,7 @@ class Type_Specifier: public Node{
     Struct_or_Union_Specifier* struct_union_type;
     Class_Specifier* class_type;
 	Enum_Specifier* enum_type;
-    Type_Specifier(const string& str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
+    Type_Specifier(string str,Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type);
 };
 class Struct_or_Union_Specifier: public Node{
     public:

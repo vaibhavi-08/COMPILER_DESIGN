@@ -75,6 +75,7 @@ string get_code_array(string a1,string a2,string res){
     s+=']';
     return s;
 }
+
 string get_code_func(string res,string a1){
     string s="";
     s+=res;

@@ -214,7 +214,7 @@ class_name
 
 postfix_expression
 	: primary_expression {$$=$1;}
-	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;string nn=get_new_temp();
+	| postfix_expression '[' expression ']' {Type* type=check_if_array_or_pointer($1);$$=type;string nn=get_new_temp();
 	backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());global_code.push_back(get_code_array($1->place,$3->place,nn));$$->place=nn;}
 	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());
 		string nn=get_new_temp();

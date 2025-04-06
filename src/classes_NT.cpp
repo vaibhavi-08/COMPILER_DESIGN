@@ -1317,6 +1317,7 @@ Argument_Expression_List :: Argument_Expression_List(){
 Type* check_for_assign(Type* t1, Type* t2,string op) {
     cout << t1->base << " " << t2->base << endl;
     cout<< t1->isbasic<<" " <<t2->isbasic<<endl;
+    cout << t1->ptr_level << " " << t2->ptr_level << endl;
     cout << "base checked" << endl;
     if(op=="="){
         bool isconst=false;
@@ -1327,6 +1328,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
             cout<<"completed inside pointer"<<endl;
         }
         else isconst=t1->isconst;
+        cout << isconst << endl;
         if(t1->isfunction){
             cout << "functions cannot be assigned a value" << endl;
             exit(1);
@@ -1411,8 +1413,11 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
             }
         }
         else if(t1->ptr_level>0||t2->ptr_level>0){
+            cout << "reached correct block" << endl;
             if(t1->isbasic||t2->isbasic){
+                cout << "reached is basic block" << endl;
                 if(is_equal(t1,t2)){
+                    cout << "problem in isequal function" << endl;
                     return t2;
                 }
                 else{
@@ -1559,16 +1564,35 @@ void check_typecast_compatibility(Type* t1,Type* t2){
     check_for_assign(t1,t2,"=");
 }
 bool is_equal(Type* t1,Type* t2){
+    cout << "reached is equal function" << endl;
     bool check=true;
+    cout << "hello" << endl;
+    cout << t1->prms.size() << endl;
+    cout << "hello2" << endl;
+    if(t1->prms.empty()&&!t2->prms.empty())check=false;
+    else if(t2->prms.empty()&&!t1->prms.empty())check=false;
+    else if(!t1->prms.empty()&&!t2->prms.empty()){
+
+    
     if(t1->prms.size()==t2->prms.size()){
+        cout << "checking params" << endl;
         int n=t1->prms.size();
         for(int i=0;i<n;i++){
-            if(!is_equal(t1->prms[i],t2->prms[i])){
+            bool check3=true;
+            check3=is_equal(t1->prms[i],t2->prms[i]);
+            if(!check3){
                 check=false;
                 break;
             }
         }
     }
+    else check=false;
+}
+cout << "reached here correctly" << endl; 
+bool check2=true;
+if(t1->func_ret_type!=nullptr&&t2->func_ret_type==nullptr)check2=false;
+else if(t1->func_ret_type==nullptr&&t2->func_ret_type!=nullptr)check2=false;
+else if(t1->func_ret_type!=nullptr&&t2->func_ret_type!=nullptr)check2=is_equal(t1->func_ret_type,t2->func_ret_type);
     return (
         check&&
         t1->isfunction==t2->isfunction &&
@@ -1577,7 +1601,7 @@ bool is_equal(Type* t1,Type* t2){
         t1->isauto==t2->isauto &&
         t1->isnull==t2->isnull &&
         t1->isenum==t2->isenum &&
-        is_equal(t1->func_ret_type,t2->func_ret_type)&&
+        check2&&
         t1->base==t2->base&&
         t1->objtype==t2->objtype&&
         t1->obj_class==t2->obj_class&&
@@ -1938,6 +1962,8 @@ Type* check_for_arithmatic_op(Type* s1, Type* s2){
     //Type* t=new Type();
     cout << s1->base << " " << s2->base << endl;
     cout << s1->isbasic << " " << s2->isbasic << endl;
+    cout << s1->ptr_level << " " << s2->ptr_level << endl;
+    cout << s1->array_dim << " " << s2->array_dim << endl;
 //     if(s1->isobj || s2->isobj){
 //         if((s1->base=="INT" && s2->objtype=="enum") || (s1->objtype=="enum" && s2->base=="INT") || (s1->base=="INT" && s2->objtype=="enum")){
 //             t->base="INT";

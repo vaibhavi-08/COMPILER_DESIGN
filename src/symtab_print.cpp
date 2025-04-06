@@ -407,7 +407,7 @@ void print_full_symbol_table() {
         cout << "===============================================\n";
         
         if (gst) print_global_symbol_table();
-        print_current_scope_info();
+        //print_current_scope_info();
         print_labels();
         cout << "\n===============================================\n";
         

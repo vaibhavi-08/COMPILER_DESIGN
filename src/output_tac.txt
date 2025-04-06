@@ -1,48 +1,4 @@
 ====================== FINAL SYMBOL TABLE ======================
 
-Temp: t3
-  Name: add
-  Type: INT
-  Scope: add:
-  Level: 0
-
-Temp: t5
-  Name: b
-  Type: 
-  Scope: 
-  Level: 0
-
-Temp: t4
-  Name: a
-  Type: 
-  Scope: 
-  Level: 0
-
-Temp: t7
-  Name: i
-  Type: INT
-  Scope: add:
-  Level: 1
-
-Temp: t2
-  Name: z
-  Type: INT
-  Scope: 
-  Level: 1
-
 ====================== THREE ADDRESS CODE ======================
 
-   0: t1=1
-   1: if t1 goto 3
-   2: goto 3
-   3: t2=t1
-   4: t3 : 
-   5: arg t4
-   6: arg t5
-   7: t6=2
-   8: if t6 goto 10
-   9: goto 10
-  10: t7=t6
-  11: t8=t4+t5
-  12: if t8 goto 14
-  13: goto 14

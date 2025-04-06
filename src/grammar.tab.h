@@ -158,29 +158,30 @@ extern int yydebug;
     ENUM = 305,                    /* ENUM  */
     ELLIPSIS = 306,                /* ELLIPSIS  */
     NULL_TOKEN = 307,              /* NULL_TOKEN  */
-    CASE = 308,                    /* CASE  */
-    DEFAULT = 309,                 /* DEFAULT  */
-    IF = 310,                      /* IF  */
-    ELSE = 311,                    /* ELSE  */
-    SWITCH = 312,                  /* SWITCH  */
-    WHILE = 313,                   /* WHILE  */
-    DO = 314,                      /* DO  */
-    FOR = 315,                     /* FOR  */
-    GOTO = 316,                    /* GOTO  */
-    CONTINUE = 317,                /* CONTINUE  */
-    BREAK = 318,                   /* BREAK  */
-    RETURN = 319,                  /* RETURN  */
-    CLASS = 320,                   /* CLASS  */
-    DELETE = 321,                  /* DELETE  */
-    NEW = 322,                     /* NEW  */
-    PRIVATE = 323,                 /* PRIVATE  */
-    PUBLIC = 324,                  /* PUBLIC  */
-    PROTECTED = 325,               /* PROTECTED  */
-    THIS = 326,                    /* THIS  */
-    UNTIL = 327,                   /* UNTIL  */
-    BOOL = 328,                    /* BOOL  */
-    TRUE = 329,                    /* TRUE  */
-    FALSE = 330                    /* FALSE  */
+    MEMBER = 308,                  /* MEMBER  */
+    CASE = 309,                    /* CASE  */
+    DEFAULT = 310,                 /* DEFAULT  */
+    IF = 311,                      /* IF  */
+    ELSE = 312,                    /* ELSE  */
+    SWITCH = 313,                  /* SWITCH  */
+    WHILE = 314,                   /* WHILE  */
+    DO = 315,                      /* DO  */
+    FOR = 316,                     /* FOR  */
+    GOTO = 317,                    /* GOTO  */
+    CONTINUE = 318,                /* CONTINUE  */
+    BREAK = 319,                   /* BREAK  */
+    RETURN = 320,                  /* RETURN  */
+    CLASS = 321,                   /* CLASS  */
+    DELETE = 322,                  /* DELETE  */
+    NEW = 323,                     /* NEW  */
+    PRIVATE = 324,                 /* PRIVATE  */
+    PUBLIC = 325,                  /* PUBLIC  */
+    PROTECTED = 326,               /* PROTECTED  */
+    THIS = 327,                    /* THIS  */
+    UNTIL = 328,                   /* UNTIL  */
+    BOOL = 329,                    /* BOOL  */
+    TRUE = 330,                    /* TRUE  */
+    FALSE = 331                    /* FALSE  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -236,7 +237,7 @@ union YYSTYPE
 	Initializer* ini;
 	FCRB* for_cb;
 
-#line 240 "grammar.tab.h"
+#line 241 "grammar.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

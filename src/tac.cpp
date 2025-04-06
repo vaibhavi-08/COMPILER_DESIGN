@@ -64,30 +64,6 @@ void fill_eqeq_exp2(vector<int>list, string s){
     }
 
 }
-tring get_code_array(string a1,string a2,string res){
-    string s="";
-    s+=res;
-    s+="=";
-    s+=a1;
-    s+='[';
-    s+=a2;
-    s+=']';
-    return s;
-}
-string get_code_func(string res,string a1){
-    string s="";
-    s+=res;
-    s+="=";
-    s+="call ";
-    s+=a1;
-    return s;
-}
-string get_param_code(string p){
-    string s="";
-    s+="param ";
-    s+=p;
-    return s;
-}
 string get_code_array(string a1,string a2,string res){
     string s="";
     s+=res;
@@ -98,6 +74,7 @@ string get_code_array(string a1,string a2,string res){
     s+=']';
     return s;
 }
+
 string get_code_func(string res,string a1){
     string s="";
     s+=res;

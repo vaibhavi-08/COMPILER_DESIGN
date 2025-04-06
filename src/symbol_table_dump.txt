@@ -1,0 +1,45 @@
+
+===============================================
+             SYMBOL TABLE DUMP                 
+===============================================
+
+=== GLOBAL SYMBOL TABLE ===
+
+Global Symbols:
+NAME                     TYPE                DETAILS
+----------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
+
+Class/Struct/Union Definitions:
+
+Local Scopes:
+
+=== CURRENT SCOPE INFORMATION ===
+Current level: 0
+
+Level name stack (from top):
+--------------------------------------------------
+2   | class member
+1   | class Color
+--------------------------------------------------
+Current table: nullptr
+
+Access specifier stack (from top):
+------------------------------
+------------------------------
+
+Current parameters list:
+  (empty)
+
+Current class/struct/union stack (from top):
+---------------------------------------------
+LEVELNAME                     TABLE STATUS
+---------------------------------------------
+2    member                   No symbol table yet
+1    Color                    No symbol table yet
+---------------------------------------------
+
+=== LABEL SET ===
+  (no labels defined)
+
+===============================================

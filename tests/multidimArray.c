@@ -1,3 +1,4 @@
+
 void main() {
     int arr[2][3] = { {1, 2, 3}, {4, 5, 6} }; // 2x3 multidimensional array
     int i, j;

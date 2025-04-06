@@ -1,7 +1,10 @@
 
 
 int main() {
-   int a=10;
-   int* ptr= &a;
+   int i=1;
+   int j=10;
+   do {
+      j++;
+  } while (i>0);
 }
 

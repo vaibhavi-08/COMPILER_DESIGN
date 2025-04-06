@@ -12,7 +12,7 @@ int main() {
 //     printf("\n\nTesting continue:\n");
     for ( i = 0; i < 5; i++) {
         if (i == 2){
-            contine;
+            continue;
         }
         //printf("%d ", i);
     }

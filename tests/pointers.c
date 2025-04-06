@@ -2,19 +2,14 @@
 
 int main() {
     int x = 10;
-    int *ptr = &x; // pointer storing address of x
-
-  
-    // Change the value of x using the pointer
+    int *ptr = &x; 
     *ptr = 20;
+    *ptr=40;
 
-     printf("Modified value of x: %d\n", x);
-     printf("Modified value using pointer: %d\n", *ptr);
-
-    if (x == 20 && *ptr == 20) {
-        printf("Test Passed: Pointer is working correctly.\n");
+    if (x == 20) {
+        x++;
     } else {
-        printf("Test Failed: Pointer is not working correctly.\n");
+       x--;
     }
 
    return 0;

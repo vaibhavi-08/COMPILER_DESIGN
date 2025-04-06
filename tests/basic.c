@@ -1,24 +1,23 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 
+struct p{
+    int x;
+    char* y;
+    double z;
+
+};
 
 
 int main(){
     int a=10;
     int* ptr=&a;
+    struct p p1;
+    p1.x=10;
+    p1.y="hello";
+    p1.z=3.4;
 }
-=======
-struct P{
-    int x;
-};
->>>>>>> e51116577ca0756965c528cc62da408d7fe5abfb
-=======
-class Color{
-   member int x;
-   member int y;
 
-};
-int main(){
-    class Color c;
-}
->>>>>>> d7942a8 (KKK)
+
+
+
+
+

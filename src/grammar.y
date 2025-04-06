@@ -228,8 +228,20 @@ postfix_expression
 		global_code.push_back(get_code_func(nn,$1->place));
 		cout << "got argument list here" << endl;t->place=nn;
 		$$=t;}
-	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
-	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type* type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
+	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);
+		string nn1=get_new_temp();
+		string nn2=get_new_temp();
+		global_code.push_back(get_code4($1->place, nn1, ".",nn2));$$=type;
+		$$->place=nn2;
+
+		;
+	}
+	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type* type=check_if_id_in_obj($1,$3);
+		string nn1=get_new_temp();
+		string nn2=get_new_temp();
+		global_code.push_back(get_code4($1->place, nn1, "->",nn2));
+		$$=type;
+		$$->place=nn2;}
 	| postfix_expression INC_OP  {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;}
 	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","--",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;}
 	;
@@ -856,8 +868,8 @@ jump_statement
 	: GOTO IDENTIFIER ';' {$$=new Type();}
 	| CONTINUE ';' {$$=new Type();}
 	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;}
-	| RETURN ';' {global_code.push_back(gen_return(""));}
-	| RETURN initializer ';' {global_code.push_back(gen_return($2->type->place));}
+	| RETURN ';' {Type* type=new Type();type->isvoid=true;check_for_assign(func_ret_type,type,"=");global_code.push_back(gen_return(""));}
+	| RETURN initializer ';' {check_for_assign(func_ret_type,$2->type,"=");global_code.push_back(gen_return($2->type->place));}
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
 	: external_declaration {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
@@ -1025,17 +1037,6 @@ int main(int argc, char *argv[]){
         cout << "Three address code written to '" << tacOutputFile << "'" << endl;
     }
 
-	cout << "FINAL SYMTAB: " << endl;
-	for(auto i:final_symtab){
-		cout << i.first << ":" << endl;
-		cout << i.second->name << " " << i.second->type << " " << i.second->level_name << " " << i.second->level << endl;
-	}
-	cout << "==================================================" << endl;
-	cout << endl;
-	cout << endl;
-	for(int i=0;i<global_code.size();i++){
-		cout <<  i << ": " << global_code[i] <<  endl;
-	}
-	cout << "==================================================" << endl;
+	
     return 0;
 }

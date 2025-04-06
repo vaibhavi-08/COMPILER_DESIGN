@@ -59,6 +59,7 @@ extern int current_level;
 extern stack<string> access_spec_stk;
 extern Type* func_ret_type;
 extern set<string> labelset;
+extern vector<pair<string,Type*>> current_param_vector;
 extern stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
 Type* myFunction();
 string get_string_type(Type* t);
@@ -87,7 +88,7 @@ Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_
 Declaration* create_declaration_object(Declaration_Specifiers* ds, Init_Declarator_List* init_dl,Typedef_Specifier* ts);
 Struct_or_Union_Specifier* create_struct_union_spec_obj(const std::string& sou, const std::string& name, Struct_Declaration_List* sdl);
 Struct_Declaration*  create_struct_dec_obj(Specifier_Qualifier_List* sql,Struct_Declarator_List* sdl);
-Local_Symbol_Table* next_table(Local_Symbol_Table* current_table);
+Local_Symbol_Table* next_table();
 Struct_Declarator* create_struct_declarator_obj(Declarator* d);
 void check_if_obj_ptr(Type* s);
 void check_if_obj(Type* s);
@@ -190,7 +191,7 @@ class Local_Symbol_Table{
     unordered_map<string,Symbol_Info*> lst;
     bool ispargst;
     Local_Symbol_Table* parent;
-    Local_Symbol_Table(bool ispargst, Local_Symbol_Table* parent);
+    Local_Symbol_Table(bool ispargst);
     Local_Symbol_Table* get_parent();
 };
 class Node{
@@ -241,6 +242,7 @@ class Init_Declarator_List: public Node{
 class Argument_Expression_List: public Node{
     public:
     vector<Type*> vec_exp;
+    vector<string> prm_temps;
     Argument_Expression_List();
 };
 class Declaration_Specifiers : public Node{
@@ -424,6 +426,7 @@ class Declarator: public Node{
     public:
     Pointer* p;
     Direct_Declarator* dd;
+    string tempname;
     string type;
     string id;
     Initializer* ini;

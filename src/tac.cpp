@@ -64,6 +64,54 @@ void fill_eqeq_exp2(vector<int>list, string s){
     }
 
 }
+tring get_code_array(string a1,string a2,string res){
+    string s="";
+    s+=res;
+    s+="=";
+    s+=a1;
+    s+='[';
+    s+=a2;
+    s+=']';
+    return s;
+}
+string get_code_func(string res,string a1){
+    string s="";
+    s+=res;
+    s+="=";
+    s+="call ";
+    s+=a1;
+    return s;
+}
+string get_param_code(string p){
+    string s="";
+    s+="param ";
+    s+=p;
+    return s;
+}
+string get_code_array(string a1,string a2,string res){
+    string s="";
+    s+=res;
+    s+="=";
+    s+=a1;
+    s+='[';
+    s+=a2;
+    s+=']';
+    return s;
+}
+string get_code_func(string res,string a1){
+    string s="";
+    s+=res;
+    s+="=";
+    s+="call ";
+    s+=a1;
+    return s;
+}
+string get_param_code(string p){
+    string s="";
+    s+="param ";
+    s+=p;
+    return s;
+}
 string get_if_false_code(){
     string s="";
     s+="goto ";
@@ -100,15 +148,32 @@ void backpatch(vector<int>& list,int label){
         //cout << "line no:" << i << endl;
         cout << list[i] << endl;
         cout << global_code[list[i]] << endl;
-        global_code[list[i]]+=to_string(label);
+        int n=global_code[list[i]].size();
+        if(global_code[list[i]][n-1]==' '){
+            global_code[list[i]]+=to_string(label);
+        }
         cout << global_code[list[i]] << endl;
 
     }
 }
 void backpatch1(int i,int label){
-  
-        global_code[i]+=to_string(label);
-     
+
+  global_code[i]+=to_string(label);
+}
+string gen_return(string temp){
+    string s="return ";
+    s+=temp;
+    return s;
+}
+string get_label(string temp){
+    string s=temp;
+    s+=" : ";
+    return s;
+}
+string get_label_param(string nn){
+    string s="arg ";
+    s+=nn;
+    return s;
 }
 vector<int> merge(vector<int>& l1,vector<int>& l2){
     set<int> res;

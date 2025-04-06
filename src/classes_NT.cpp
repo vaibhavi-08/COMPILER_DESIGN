@@ -8,6 +8,7 @@ std::unordered_map<std::string, Type*> current_params_list; // Definition
 std::stack<std::string> lvl_name; // Definition
 Local_Symbol_Table* current_table = nullptr; // Definition
 stack<string> access_spec_stk;
+vector<pair<string,Type*>> current_param_vector;
 Type* func_ret_type;
 int current_level = 0;
 int line_num=1;
@@ -1236,7 +1237,7 @@ Type* check_if_id_in_obj(Type* t,string id){
         }
         else{
             ccl--;
-            cct=cct->get_parent();
+            cct=cct->parent;
         }
     }
     else{
@@ -1263,8 +1264,10 @@ Type* check_if_id_in_obj(Type* t,string id){
             }
         }
         else{
-            ccl--;
-            cct=cct->get_parent();
+            if(cct!=nullptr){
+                ccl--;
+                cct=cct->parent;
+            }
             copy.pop();
         }
     }
@@ -1306,6 +1309,7 @@ Type* check_if_id_in_obj(Type* t,string id){
 
 Argument_Expression_List :: Argument_Expression_List(){
     this->vec_exp={};
+    this->prm_temps=vector<string>();
 }
 
 
@@ -1693,7 +1697,10 @@ string Abstract_Declarator:: check_abstract_declarator(){
 Symbol_Info* get_symbol_info_id(string id){
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
     cout << "copy made here" << endl;
+    cout << "this is get symbol info id" << endl;
+    cout << "x is there after reching get symbol info id" << endl;
     int ccl=current_level;
+    cout << "current level: " << ccl << endl;
     Local_Symbol_Table* cct=current_table;
     while(ccl>=0){
         if(ccl>=1){
@@ -1735,15 +1742,16 @@ Symbol_Info* get_symbol_info_id(string id){
                     }
                 } else {
                     ccl--;
-                    cct=cct->get_parent();
+                    cct=cct->parent;
                 }
             } else {
                 cout << "else block " << endl;
                 ccl--;
-                cct=cct->get_parent();
+                cct=cct->parent;
                 copy.pop();
             }
         } else {
+            cout << "serching in global symtab" << endl;
             Global_Symbol_Table* ccg=gst;
             if(ccg->gst.find(id)!=ccg->gst.end()){
                 Symbol_Info* z=ccg->gst[id];
@@ -1758,6 +1766,14 @@ Symbol_Info* get_symbol_info_id(string id){
             ccl--;
         }
     }
+    if(current_params_list.find(id)!=current_params_list.end()){
+        cout << "found id in parameter map" << endl;
+        Type* y=current_params_list[id];
+        Symbol_Info* si=new Symbol_Info(id,"","",0,"","",y);
+        si->tempname=y->place;
+        final_symtab[si->tempname]=si;
+        return si;
+    }
     //parameters not handled
     cout << "identifier not found " << id  << endl;
     exit(1);
@@ -1766,9 +1782,12 @@ Type* get_type_id(string id) {
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
     cout << "copy made here" << endl;
     int ccl=current_level;
+    cout << "current level " << ccl << endl;
     Local_Symbol_Table* cct=current_table;
     while(ccl>=0){
         if(ccl>=1){
+            cout << "ccl" << endl;
+            cout <<ccl << endl;
             if(ccl>copy.size()){
                 cout << "if block of get type id" << endl;
                 auto it = cct->lst.find(id);
@@ -1794,6 +1813,7 @@ Type* get_type_id(string id) {
                         }
                     }
                 } else if(cct==nullptr){
+                    cout <<"cct nullptr"<<endl;
                     Global_Symbol_Table* ccg=gst;
                     if(ccg->gst.find(id)!=ccg->gst.end()){
                         Symbol_Info* z=ccg->gst[id];
@@ -1806,20 +1826,24 @@ Type* get_type_id(string id) {
                         }
                     }
                 } else {
+                    cout << "got to parent" <<endl;
                     ccl--;
-                    cct=cct->get_parent();
+                    cct=cct->parent;
                 }
             } else {
                 cout << "else block " << endl;
                 ccl--;
-                cct=cct->get_parent();
+                cct=cct->parent;
                 copy.pop();
             }
         } else {
             Global_Symbol_Table* ccg=gst;
+            cout << "is it serching in global symtab" << endl;
             if(ccg->gst.find(id)!=ccg->gst.end()){
+                cout << "found id in global symtab " << endl;
                 Symbol_Info* z=ccg->gst[id];
                 Type* y=z->t;
+                cout << z->name << endl;
                 if(!y->isobj&&y->objtype!=""){
                     cout << "cannot access a struct class or union declaration" << endl;
                     exit(1);
@@ -1827,10 +1851,12 @@ Type* get_type_id(string id) {
                     return y;
                 }
             }
+            cout << "came out of this global symtab block" << endl;
             ccl--;
         }
     }
     if(current_params_list.find(id)!=current_params_list.end()){
+        cout << "found id in parameter map" << endl;
         Type* y=current_params_list[id];
         return y;
     }
@@ -2276,6 +2302,7 @@ void add_params_to_map(Parameter_List* pl) {
             exit(1);
         }
         current_params_list[param.first] = param.second;
+        current_param_vector.emplace_back(param);
         cout << "params pushed in map" << endl;
     }
 }
@@ -2383,6 +2410,7 @@ Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
         cout << "get params done successfully" << endl;
         for(auto i:z->prms){
             current_params_list[i.first]=i.second;
+            current_param_vector.push_back(i);
             cout << "added prms to map" << endl;
         }
     }
@@ -2433,16 +2461,18 @@ void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
     assert(symbol!=nullptr);
     assert(gst!=nullptr);
     Symbol_Info* x=new Symbol_Info(symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,"-",symbol->t);
+    x->tempname=symbol->decl->tempname;
+    final_symtab[x->tempname]=x;
     if(gst->gst.find(symbol->name)!=gst->gst.end()){
         cout << "error :" << "redeclaration of function " << symbol->name <<"in line :"<< line_num<< endl;
         exit(1);
     }
     gst->gst[symbol->name]=x;
 }
-Local_Symbol_Table* next_table(Local_Symbol_Table* current_table){
+Local_Symbol_Table* next_table(){
     bool checkgst=false;
     if(current_table==nullptr)checkgst=true;
-    Local_Symbol_Table* new_table=new Local_Symbol_Table(checkgst,current_table);
+    Local_Symbol_Table* new_table=new Local_Symbol_Table(checkgst);
     if(current_table!=nullptr)current_table->children.push_back(new_table);
     else {
         gst->children.push_back(new_table);
@@ -2522,6 +2552,8 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
             exit(1);
         }
         current_table->lst[i.first]=x;
+        cout << "current level : " << current_level << endl;
+        cout << "symbol added : " << i.first << endl;
         cout << current_table->lst[i.first]->t->base << endl;
         cout << "type correctly added to current table" << endl;
         /*check if initializer is matching with type*/
@@ -2618,10 +2650,10 @@ Global_Symbol_Table::Global_Symbol_Table() {
     this->children = {};
 }
 
-Local_Symbol_Table::Local_Symbol_Table(bool ispargst,Local_Symbol_Table* parent) {
+Local_Symbol_Table::Local_Symbol_Table(bool ispargst) {
     this->children = {};
     this->ispargst = ispargst ;
-    this->parent = parent;
+    this->parent = current_table;
 }
 Local_Symbol_Table* Local_Symbol_Table :: get_parent(){
     if(this->ispargst){
@@ -2746,6 +2778,7 @@ Enum_Specifier::Enum_Specifier(const std::string& id, Enumerator_List* enuml)
 Declarator::Declarator(Pointer* p, Direct_Declarator* dd)
     : p(p), dd(dd), type(""), id(""), prms(), isfunction(false) {
     this->type = this->check_declarator();  // Store the result of check_declarator()
+    this->tempname="";
 }
 
 Enumerator_List::Enumerator_List()  {

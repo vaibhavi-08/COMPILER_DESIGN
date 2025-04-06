@@ -196,7 +196,9 @@ Node* root;
 %%
 
 primary_expression
-	: IDENTIFIER {Type* t=get_type_id($1);cout << t->base << endl;cout << "get type id in primary exp done" << endl;Symbol_Info* x=get_symbol_info_id($1);if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;}t->place=x->tempname;$$=t;}
+	: IDENTIFIER {Type* t=get_type_id($1);
+	cout << t->base << endl;cout << "get type id in primary exp done" << endl;Symbol_Info* x=get_symbol_info_id($1);
+	if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;}t->place=x->tempname;$$=t;}
 	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;} 
 	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;}
 	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
@@ -212,25 +214,39 @@ class_name
 
 postfix_expression
 	: primary_expression {$$=$1;}
-	| postfix_expression '[' expression ']' {Type* t=check_if_array_or_pointer($1);$$=t;}
-	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());$$=t;}
-	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);$$=t;}
+	| postfix_expression '[' expression ']' {check_if_array_or_pointer($1);$$=$1;string nn=get_new_temp();
+	backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());global_code.push_back(get_code_array($1->place,$3->place,nn));$$->place=nn;}
+	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());
+		string nn=get_new_temp();
+		global_code.push_back(get_code_func(nn,$1->place));
+		$$=t;}
+	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);
+		for(auto i:$3->prm_temps){
+			global_code.push_back(get_param_code(i));
+		}
+		string nn=get_new_temp();
+		global_code.push_back(get_code_func(nn,$1->place));
+		cout << "got argument list here" << endl;t->place=nn;
+		$$=t;}
 	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);$$=type;$$=type;}/*check if $1 is object and idenfier is the member of that class*/
 	| postfix_expression PTR_OP IDENTIFIER {check_if_obj_ptr($1);Type* type=check_if_id_in_obj($1,$3);$$=type;}/*check if $1 is an pointer to class struct or union*/
-	| postfix_expression INC_OP  {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));$$->place=nn;}
-	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4("",$1->place,"--",nn));$$->place=nn;}
+	| postfix_expression INC_OP  {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;}
+	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","--",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;}
 	;
 
 argument_expression_list
-	: assignment_expression {Argument_Expression_List* z=new Argument_Expression_List();z->vec_exp.push_back($1);$$=z;backpatch($1->truelist,global_code.size());backpatch($1->falselist,global_code.size());}
-	| argument_expression_list ',' assignment_expression {$1->vec_exp.push_back($3);$$=$1;backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
+	: assignment_expression {Argument_Expression_List* z=new Argument_Expression_List();z->vec_exp.push_back($1);$$=z;
+	backpatch($1->truelist,global_code.size());$$->prm_temps.push_back($1->place);backpatch($1->falselist,global_code.size());}
+	| argument_expression_list ',' assignment_expression {$1->vec_exp.push_back($3);$$=$1;
+	cout << "backpatching of second arg done" << endl;
+	backpatch($3->truelist,global_code.size());$$->prm_temps.push_back($3->place);backpatch($3->falselist,global_code.size());}
 	;
 
 unary_expression
 	: postfix_expression {$$=$1;}
-	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"++",nn));$$->place=nn;}
-	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));$$->place=nn;}
-	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,$1,nn));$$->place=nn;}
+	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"++",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;}
+	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;}
+	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,$1,nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;}
 	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"SIZEOF",nn));$$->place=nn;}/* void , functiions */
 	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",get_string_type($3->type),"SIZEOF ",nn));$$->place=nn;}
 	;
@@ -322,6 +338,7 @@ inclusive_or_expression
 logical_and_expression
 	: inclusive_or_expression {cout << "logical end done" << endl;Type* type=$1;
 		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
+		cout << "####pushing if code ###" << endl;
 		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
 	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
 		string cod=get_code4($1->place,$4->place,"&&",nn);merge_code1(type->code,$4->code);type->code.push_back(cod);
@@ -367,7 +384,7 @@ assignment_operator
 
 expression
 	: assignment_expression {$$=$1; cout<<"finally expression has identifier"<<endl;}
-	| expression ',' assignment_expression {Type* t=new Type();$$=t;backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
+	| expression ',' assignment_expression {$$=$1;backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
 	;
 
 constant_expression
@@ -378,7 +395,7 @@ constant_expression
 /*check whether type is correct*/
 declaration
 	: declaration_specifiers ';' {$$=create_declaration_object($1,nullptr,nullptr);} /* make declaration object and assign its pointer to $$. add declaration specifiers to declaration object created. find the type using declaration specifiers. */
-	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);current_params_list.clear();cout << "current params list cleared" << endl;}/* create object as above but add both fields*/
+	| declaration_specifiers init_declarator_list ';' {$$=create_declaration_object($1,$2,nullptr);}/* create object as above but add both fields*/
 /* thik karna hai action*/	/*| typedef_specifier declarator ';' {$$=create_declaration_object($1,nullptr,nullptr);}*//* same as above . check whether typedef specifier is there in typedef table. */
 	;
 
@@ -398,7 +415,13 @@ declaration_specifiers
 	;
 
 init_declarator_list
-	: init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;cout<<"idl completeted"<<endl;}
+	: init_declarator {Init_Declarator_List* x=new Init_Declarator_List();x->idl.push_back($1);$$=x;
+	if($1->type=="function"){current_params_list.clear();
+	while(!current_param_vector.empty()){
+		current_param_vector.pop_back();
+	}
+	cout << "current params list cleared" << endl;}
+	cout<<"idl completeted"<<endl;}
 	| init_declarator_list ',' init_declarator { $1->idl.push_back($3); $$ = $1;}
 	;
 
@@ -432,11 +455,11 @@ type_specifier
 	;
 
 struct_or_union_specifier
-	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->get_parent(); lvl_name.pop();add_to_local_class_struct_union_info(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	/*| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*//* same as above */
+	:  struct struct_id '{' struct_declaration_list '}' { $$=create_struct_union_spec_obj(std::string($1),std::string($2),$4); current_level--; current_table=current_table->parent; lvl_name.pop();add_to_local_class_struct_union_info(); }/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	/*| struct'{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->parent;lvl_name.pop();add_to_local_class_struct_union_info();}*//* same as above */
 	| struct IDENTIFIER {cout<<"struct identifier reached"<<endl;check_if_declared(current_table,$2,"struct");$$=create_struct_union_spec_obj($1,$2,nullptr);}/* whether this identifier is declared before use */
-	| union union_id '{' struct_declaration_list '}' {cout<<"union uid sdl started"<<endl;$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
-	/*| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->get_parent();lvl_name.pop();add_to_local_class_struct_union_info();}*/ /* same as above */
+	| union union_id '{' struct_declaration_list '}' {cout<<"union uid sdl started"<<endl;$$=create_struct_union_spec_obj($1,$2,$4);current_level--;current_table=current_table->parent;lvl_name.pop();add_to_local_class_struct_union_info();}/* make a struct_or_union_specifier object. enter all info. move current table pointer to parent table */
+	/*| union '{' struct_declaration_list '}' {$$=create_struct_union_spec_obj($1,"",$3);current_level--;current_table=current_table->parent;lvl_name.pop();add_to_local_class_struct_union_info();}*/ /* same as above */
 	| union IDENTIFIER {check_if_declared(current_table,$2,"union");$$=create_struct_union_spec_obj($1,$2,nullptr);/* whether this identifier is declared before use */}
 	;
 
@@ -454,7 +477,7 @@ union
 	;
 
 struct_declaration_list
-	: struct_declaration {current_level++;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table(current_table);add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
+	: struct_declaration {current_level++;Struct_Declaration_List* x=new Struct_Declaration_List();x->sdl.push_back($1);$$=x;current_table=next_table();add_to_local_table(current_table,$1);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}} /* create struct declaration list object . add struct decl to it. make a new local table push it in children of current table. move to new table. add struct declaration to it . */
 	| struct_declaration_list struct_declaration {Struct_Declaration_List* x=$1;x->sdl.push_back($2);$$=x;add_to_local_table(current_table,$2);} /* add struct decl. to already made object.  add struct declaration to current table*/
 	;
 
@@ -507,20 +530,28 @@ access_specifier
     ;
 
 class_body
-    : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->get_parent();lvl_name.pop();while(!access_spec_stk.empty())access_spec_stk.pop();add_to_local_class_struct_union_info();}/*come to parent table from current table. pass above*/ 
+    : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->parent;lvl_name.pop();while(!access_spec_stk.empty())access_spec_stk.pop();add_to_local_class_struct_union_info();}/*come to parent table from current table. pass above*/ 
     | '{' '}' {lvl_name.pop();add_to_local_class_struct_union_info();}/* pass empty class member declaration list object */
     ;
 class_name
     : IDENTIFIER /* pass */ { $$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) ); }
     ;
 class_member_declaration_list
-    : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table(current_table);if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}  /* make obj class_member_declaration_list . add class_member_declaration. */
+    : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table();if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}  /* make obj class_member_declaration_list . add class_member_declaration. */
     | class_member_declaration_list class_member_declaration { $1->cd.push_back($2); $$ = $1;}/* add class_member_declaration to existing obj */
     ;
 
 constructor_declaration
-    : class_name'(' parameter_list ')' compound_statement {current_params_list.clear();add_params_to_map($3);$$=new Constructor_Declaration(std::string($1),$3,$5);} /* make a constructor declaration with class name and parameter list and body */
-	| class_name '(' ')' compound_statement {current_params_list.clear();$$=new Constructor_Declaration(std::string($1),nullptr,$4);}
+    : class_name'(' parameter_list ')' compound_statement {current_params_list.clear();
+	while(!current_param_vector.empty()){
+		current_param_vector.pop_back();
+	}
+	add_params_to_map($3);$$=new Constructor_Declaration(std::string($1),$3,$5);} /* make a constructor declaration with class name and parameter list and body */
+	| class_name '(' ')' compound_statement {current_params_list.clear();
+	while(!current_param_vector.empty()){
+		current_param_vector.pop_back();
+	}
+	$$=new Constructor_Declaration(std::string($1),nullptr,$4);}
     ;
 
 
@@ -565,7 +596,7 @@ declarator
 direct_declarator
 	: IDENTIFIER {$$=create_direct_declarator(std::string("id"),$1,nullptr,nullptr,nullptr,nullptr);}
 	| '(' declarator ')' {$$=create_direct_declarator(std::string("declarator"),"",$2,nullptr,nullptr,nullptr);}
-	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);check_int_comp($3);}
+	| direct_declarator '[' constant_expression ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);check_int_comp($3);backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());}
 	| direct_declarator '[' ']' {$$=create_direct_declarator(std::string("array"),"",nullptr,$1,nullptr,nullptr);}
 	| direct_declarator '(' parameter_type_list ')' {$$=create_direct_declarator(std::string("function"),"",nullptr,$1,nullptr,$3);}/* add parameters to current params list */
 /*	| direct_declarator '(' identifier_list ')' */
@@ -645,7 +676,7 @@ initializer_list
 statement
 	: labeled_statement {$$=$1; }
 	| compound_statement {$$=$1->st;cout<<"finally statemeexpression_statementnt has compound statement"<<endl;}
-	| expression_statement {$$=$1;}
+	| expression_statement {$$=$1; cout << "expression statement" << endl;}
 	| selection_statement {$$=$1;}
 	| iteration_statement {$$=$1;}
 	| jump_statement {$$=$1;}
@@ -685,12 +716,19 @@ colon
 compound_statement
 	: '{' '}' {Compound_Statement* x=new Compound_Statement(new Type(),nullptr);$$=x;}
 	| '{' statement_list '}' {Compound_Statement* x=new Compound_Statement($2,nullptr);cout<<"obj of compound statement done for st_lst"<<endl; cout<<"loop completed"<<endl;$$=x;cout<<"statement_list done in compound_statement"<<endl;}
-	| '{' declaration_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),$2);cout << "compound_statement parsed" << endl;current_level--;current_table->get_parent();$$=x;}
-	| '{' declaration_list statement_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),$2);current_level--;current_table->get_parent();$$=x;cout << "compound_statement parsed" << endl;}
+	| '{' declaration_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),$2);cout << "compound_statement parsed" << endl;
+	current_level--;current_table=current_table->parent;cout << current_level << "in compound statement" << endl;
+	$$=x;}
+	| '{' declaration_list statement_list '}' {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),$2);
+	current_level--;current_table=current_table->parent;
+	$$=x;cout << "compound_statement parsed" << endl;}
 	;
 
 declaration_list
-	: declaration {current_level++;cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back($1);current_table=next_table(current_table);cout << "next table working fine" << endl;add_to_local_table(current_table,$1);cout << "declaration list done successfully" << endl;$$=x;}
+	: declaration {current_level++;cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back($1);current_table=next_table();
+	cout << "next table working fine" << endl;add_to_local_table(current_table,$1);cout << "declaration list done successfully" << endl;
+	cout << current_level << "in declaration_list" << endl;
+	$$=x;}
 	| declaration_list declaration {cout<<"declaration_list done"<<endl;$1->dv.push_back($2);$$=$1;add_to_local_table(current_table,$2);}
 	;
 
@@ -701,7 +739,7 @@ statement_list
 
 expression_statement
 	: ';' {$$=new Type();cout<<"semi colon"<<endl;}
-	| expression {$$=$1;}
+	| expression {$$=$1;backpatch($1->truelist,global_code.size());backpatch($1->falselist,global_code.size());}
 	;
 smc
 	: ';' {$$=global_code.size();}
@@ -805,22 +843,11 @@ srb
 
 
 jump_statement
-	: GOTO IDENTIFIER ';' {$$=new Type();
-		goto_label.push_back(global_code.size());
-		if(identifier_found(labelgoto, $2)){
-		global_code.push_back(get_while_code(labelmap[$2]));
-		}
-		else{
-		global_code.push_back(get_if_false_code());}
-		}
-	| CONTINUE ';' {$$=new Type();
-		continue_label.push_back(global_code.size());
-		global_code.push_back(get_if_false_code());}
-	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;
-		break_label.push_back(global_code.size());
-		global_code.push_back(get_if_false_code());}
-	| RETURN ';' 
-	| RETURN initializer ';' 
+	: GOTO IDENTIFIER ';' {$$=new Type();}
+	| CONTINUE ';' {$$=new Type();}
+	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;}
+	| RETURN ';' {global_code.push_back(gen_return(""));}
+	| RETURN initializer ';' {global_code.push_back(gen_return($2->type->place));}
 
 translation_unit /* (type:node*) nothing much just keep pointers to all external declarations */
 	: external_declaration {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
@@ -832,12 +859,34 @@ external_declaration /* (type:node*) storing pointers to function_definition and
 	| declaration {add_to_gst($1,gst);$$=$1;}/* add this declaration to global symbol table. assign this pointer to ext declaration object*/
 	;
 function_declaration
-	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);Type* type=new Type();string t=create_type($1,$2,type);cout << "create type for func decl done successfully"<<endl;$2->check_for_func();cout << "check for func done successfully in func decl " <<$2->id<< endl;$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));cout<<"final func decl done huuh"<<endl;}
+	: declaration_specifiers declarator { Function_Declaration* x=new Function_Declaration($1,$2);
+		Type* type=new Type();
+		string t=create_type($1,$2,type);
+		cout << "create type for func decl done successfully"<<endl;
+		$2->check_for_func();cout << "check for func done successfully in func decl" << endl;
+		$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));
+		$2->tempname=get_new_temp();
+		global_code.push_back(get_label($2->tempname));
+		for(auto i:current_param_vector){
+			string nn=get_new_temp();
+			i.second->place=nn;
+			current_params_list[i.first]->place=nn;
+			global_code.push_back(get_label_param(nn));
+		}
+		cout<<"final func decl done huuh"<<endl;
+		}
 	;
 function_definition /*(function_definition <- node ) */
 	/*: declaration_specifiers declarator declaration_list compound_statement {Function_Definition* x=create_func_def($1,$2,$3,$4);current_params_list.clear();lvl_name.pop();func_ret_type=nullptr;}*/ /* create function definition object.parameter. assign type. assign size. */
-	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);cout<<"create func def done"<< endl;current_params_list.clear();cout << "current params list cleared" << endl;lvl_name.pop();}/*same as above */
-	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} /*same as above*/ 
+	: function_declaration compound_statement {Function_Declaration* x=$1;$$=create_func_def(x->ds,x->d,$2);
+	cout<<"create func def done"<< endl;
+	current_params_list.clear();
+	while(!current_param_vector.empty()){
+		current_param_vector.pop_back();
+	}
+	cout << "current params list cleared" << endl;
+	lvl_name.pop();}/*same as above */
+	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
 	;
 
@@ -883,6 +932,9 @@ int main(int argc, char *argv[]){
 	Node* root= new Node();
 	gst=new Global_Symbol_Table();
 	current_params_list.clear();
+	while(!current_param_vector.empty()){
+		current_param_vector.pop_back();
+	}
 	labelset.clear();
 	while (!lvl_name.empty()){
     lvl_name.pop();

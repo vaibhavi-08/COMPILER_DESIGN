@@ -2447,13 +2447,17 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
     }
 }
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
+    int z=0;
     for(auto i:symbol->name_type_list){
         Symbol_Info* x=new Symbol_Info(i.first,i.second.first,symbol->level_name,symbol->level,symbol->scope,"-",i.second.second);
+        x->tempname=symbol->init_dec_list->idl[z]->tempname;
+        final_symtab[x->tempname]=x;
         if(gst->gst.find(i.first)!=gst->gst.end()){
             cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
             exit(1);
         }
         gst->gst[i.first]=x;
+        z++;
     }
 
 }
@@ -2532,6 +2536,7 @@ void add_to_local_table(Enumerator_List* e,Type* t){
     }
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
+    int z=0;
     for(auto i:d->name_type_list){
         if(d->init_dec_list!=nullptr){
             for(auto j:d->init_dec_list->idl){
@@ -2545,6 +2550,8 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         cout << i.second.second->base << endl;
         cout << "got type from declaration" << endl;
         Symbol_Info* x=new Symbol_Info(i.first,i.second.first,d->level_name,current_level-lvl_name.size()+1,d->scope,"-",i.second.second);
+        x->tempname=d->init_dec_list->idl[z]->tempname;
+        final_symtab[x->tempname]=x;
         cout << x->t->base << endl;
         cout << "type correctly added to symbol info" << endl;
         if(current_table->lst.find(i.first)!=current_table->lst.end()){
@@ -2557,6 +2564,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         cout << current_table->lst[i.first]->t->base << endl;
         cout << "type correctly added to current table" << endl;
         /*check if initializer is matching with type*/
+        z++;
     }
 }
 void add_to_local_table(Local_Symbol_Table* current_table,Specifier_Qualifier_List* ds,Declarator* d){

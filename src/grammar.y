@@ -427,7 +427,11 @@ init_declarator_list
 
 init_declarator
 	: declarator {$$=$1;}
-	| declarator '=' initializer {cout<<"init_declartor started"<<endl;$1->ini=$3;$$=$1;cout<<"init_declarator done"<<endl;}
+	| declarator '=' initializer {cout<<"init_declartor started"<<endl;$1->ini=$3;$$=$1;
+	cout<<"init_declarator done"<<endl;
+	$1->tempname=get_new_temp();
+		global_code.push_back(get_code4($3->type->place,"","",$1->tempname));
+	}
 	;
 
 storage_class_specifier
@@ -992,6 +996,28 @@ int main(int argc, char *argv[]){
         cout << "parsing successful" << endl;
     }
 	  print_full_symbol_table();
+      string tacOutputFile = "output_tac.txt";
+    ofstream tacFile(tacOutputFile);
+    
+    if (!tacFile.is_open()) {
+        cerr << "Error: Could not open file " << tacOutputFile << " for writing." << endl;
+    } else {
+        tacFile << "====================== FINAL SYMBOL TABLE ======================\n\n";
+        for(auto i:final_symtab){
+            tacFile << "Temp: " << i.first << "\n";
+            tacFile << "  Name: " << i.second->name << "\n";
+            tacFile << "  Type: " << i.second->type << "\n";
+            tacFile << "  Scope: " << i.second->level_name << "\n";
+            tacFile << "  Level: " << i.second->level << "\n\n";
+        }
+        
+        tacFile << "====================== THREE ADDRESS CODE ======================\n\n";
+        for(int i=0; i<global_code.size(); i++){
+            tacFile << setw(4) << right << i << ": " << global_code[i] << "\n";
+        }
+        tacFile.close();
+        cout << "Three address code written to '" << tacOutputFile << "'" << endl;
+    }
 
 	cout << "FINAL SYMTAB: " << endl;
 	for(auto i:final_symtab){

@@ -1,21 +1,20 @@
-int main(){
-    int i=2;
-    
-            i=i+3;
-           
-    
-            i=i+4;
-       
-     
-    label1: i=i+5;
-     
-      
-            i=i+6;
-     goto label1;
-  
 
-            i=i+7;
-   
+int z=1;
+int add(int a, int b){
+    int i=2;
+    int j=4;
+    int z=8;
+    {
+        int k=5;
+        int l=6;
+        int m=7;
+        while(l){
+            int o;
+        }
+    }
+    {
+        int u=15;
         
-    
+    }
 }
+

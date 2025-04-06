@@ -2,31 +2,50 @@ Original Symbol Table:
 -------------------------------------------------------------------------------
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
+| }                                    | SEPERATOR                            |
+| o                                    | IDENTIFIER                           |
+| while                                | WHILE                                |
 | 7                                    | INTEGER                              |
-| goto                                 | GOTO                                 |
-| label1                               | IDENTIFIER                           |
-| (                                    | SEPERATOR                            |
+| m                                    | IDENTIFIER                           |
+| l                                    | IDENTIFIER                           |
+| k                                    | IDENTIFIER                           |
+| 8                                    | INTEGER                              |
+| 2                                    | INTEGER                              |
+| 4                                    | INTEGER                              |
+| int                                  | INT                                  |
+| a                                    | IDENTIFIER                           |
+| j                                    | IDENTIFIER                           |
+| 1                                    | INTEGER                              |
 | 6                                    | INTEGER                              |
 | )                                    | SEPERATOR                            |
 | {                                    | SEPERATOR                            |
-| }                                    | SEPERATOR                            |
-| 3                                    | INTEGER                              |
-| 2                                    | INTEGER                              |
-| :                                    | SEPERATOR                            |
-| +                                    | PLUS                                 |
-| 5                                    | INTEGER                              |
-| main                                 | IDENTIFIER                           |
-| i                                    | IDENTIFIER                           |
-| =                                    | ASSIGN                               |
+| b                                    | IDENTIFIER                           |
 | ;                                    | SEPERATOR                            |
-| int                                  | INT                                  |
-| 4                                    | INTEGER                              |
+| z                                    | IDENTIFIER                           |
+| add                                  | IDENTIFIER                           |
+| 15                                   | INTEGER                              |
+| (                                    | SEPERATOR                            |
+| u                                    | IDENTIFIER                           |
+| ,                                    | SEPERATOR                            |
+| 5                                    | INTEGER                              |
+| =                                    | ASSIGN                               |
+| i                                    | IDENTIFIER                           |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
 int
-main
+z
+=
+1
+;
+int
+add
 (
+int
+a
+,
+int
+b
 )
 {
 int
@@ -34,40 +53,48 @@ i
 =
 2
 ;
-i
+int
+j
 =
-i
-+
-3
-;
-i
-=
-i
-+
 4
 ;
-label1
-:
-i
+int
+z
 =
-i
-+
+8
+;
+{
+int
+k
+=
 5
 ;
-i
+int
+l
 =
-i
-+
 6
 ;
-goto
-label1
-;
-i
+int
+m
 =
-i
-+
 7
 ;
+while
+(
+l
+)
+{
+int
+o
+;
+}
+}
+{
+int
+u
+=
+15
+;
+}
 }
 

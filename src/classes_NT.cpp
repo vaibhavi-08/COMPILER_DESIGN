@@ -34,15 +34,21 @@ Symbol_Info::Symbol_Info(string name,string type, string level_name,int level,st
     cout << "tempname accesed" << endl;
 }
 void add_to_local_class_struct_union_info(){
+    cout << "entered add to local class struct union info" << endl;
     if(!current_class_struct_union_info.empty()){
+        cout << "entered the if part" << endl;
         auto z=current_class_struct_union_info.top();
-        if(current_table=nullptr){
+        cout << "accessed top of the stack" << endl;
+        if(current_table==nullptr){
             gst->class_struct_union_info[z.first]=z.second;
+            cout <<"added to gst class struct union info" << endl;
         }
         else{
             current_table->class_struct_union_info[z.first]=z.second;
+            cout << "added to local table class struct union info" << endl;
         }
         current_class_struct_union_info.pop();
+        cout << "popped" << endl;
     }
     else{
         cout << "error class not entered in stack in line: " << line_num << endl;
@@ -399,8 +405,8 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
     if(!ds) {
         cerr << "CRITICAL: ds is nullptr!" << endl;
     }    
-    assert(ds != nullptr && "DS pointer is null!");
-    assert(ds->ts.size() < 1e6 && "Vector size corrupted");
+    // assert(ds != nullptr && "DS pointer is null!");
+    // assert(ds->ts.size() < 1e6 && "Vector size corrupted");
     vector<Type_Specifier*> z=ds->ts;
     cout << "After modification, ts size: " << ds->ts.size() 
           << ", capacity: " << ds->ts.capacity() << std::endl;
@@ -1317,6 +1323,7 @@ Argument_Expression_List :: Argument_Expression_List(){
 Type* check_for_assign(Type* t1, Type* t2,string op) {
     cout << t1->base << " " << t2->base << endl;
     cout<< t1->isbasic<<" " <<t2->isbasic<<endl;
+    cout << t1->ptr_level << " " << t2->ptr_level << endl;
     cout << "base checked" << endl;
     if(op=="="){
         bool isconst=false;
@@ -1327,6 +1334,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
             cout<<"completed inside pointer"<<endl;
         }
         else isconst=t1->isconst;
+        cout << isconst << endl;
         if(t1->isfunction){
             cout << "functions cannot be assigned a value" << endl;
             exit(1);
@@ -1411,8 +1419,11 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
             }
         }
         else if(t1->ptr_level>0||t2->ptr_level>0){
+            cout << "reached correct block" << endl;
             if(t1->isbasic||t2->isbasic){
+                cout << "reached is basic block" << endl;
                 if(is_equal(t1,t2)){
+                    cout << "problem in isequal function" << endl;
                     return t2;
                 }
                 else{
@@ -1559,16 +1570,35 @@ void check_typecast_compatibility(Type* t1,Type* t2){
     check_for_assign(t1,t2,"=");
 }
 bool is_equal(Type* t1,Type* t2){
+    cout << "reached is equal function" << endl;
     bool check=true;
+    cout << "hello" << endl;
+    cout << t1->prms.size() << endl;
+    cout << "hello2" << endl;
+    if(t1->prms.empty()&&!t2->prms.empty())check=false;
+    else if(t2->prms.empty()&&!t1->prms.empty())check=false;
+    else if(!t1->prms.empty()&&!t2->prms.empty()){
+
+    
     if(t1->prms.size()==t2->prms.size()){
+        cout << "checking params" << endl;
         int n=t1->prms.size();
         for(int i=0;i<n;i++){
-            if(!is_equal(t1->prms[i],t2->prms[i])){
+            bool check3=true;
+            check3=is_equal(t1->prms[i],t2->prms[i]);
+            if(!check3){
                 check=false;
                 break;
             }
         }
     }
+    else check=false;
+}
+cout << "reached here correctly" << endl; 
+bool check2=true;
+if(t1->func_ret_type!=nullptr&&t2->func_ret_type==nullptr)check2=false;
+else if(t1->func_ret_type==nullptr&&t2->func_ret_type!=nullptr)check2=false;
+else if(t1->func_ret_type!=nullptr&&t2->func_ret_type!=nullptr)check2=is_equal(t1->func_ret_type,t2->func_ret_type);
     return (
         check&&
         t1->isfunction==t2->isfunction &&
@@ -1577,7 +1607,7 @@ bool is_equal(Type* t1,Type* t2){
         t1->isauto==t2->isauto &&
         t1->isnull==t2->isnull &&
         t1->isenum==t2->isenum &&
-        is_equal(t1->func_ret_type,t2->func_ret_type)&&
+        check2&&
         t1->base==t2->base&&
         t1->objtype==t2->objtype&&
         t1->obj_class==t2->obj_class&&
@@ -1938,6 +1968,8 @@ Type* check_for_arithmatic_op(Type* s1, Type* s2){
     //Type* t=new Type();
     cout << s1->base << " " << s2->base << endl;
     cout << s1->isbasic << " " << s2->isbasic << endl;
+    cout << s1->ptr_level << " " << s2->ptr_level << endl;
+    cout << s1->array_dim << " " << s2->array_dim << endl;
 //     if(s1->isobj || s2->isobj){
 //         if((s1->base=="INT" && s2->objtype=="enum") || (s1->objtype=="enum" && s2->base=="INT") || (s1->base=="INT" && s2->objtype=="enum")){
 //             t->base="INT";
@@ -2431,7 +2463,7 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
     bool check=false;
     while(x!=nullptr){
         auto y=(x->lst).find(var_name);
-        if(y!=nullptr){
+        if(y!=x->lst.end()){
             if((y->second)->type==var_type){
                 check=true;
                 break;
@@ -2439,6 +2471,12 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
         }
         else{
             x=x->parent;
+        }
+    }
+    if(gst->gst.find(var_name)!=gst->gst.end()){
+        auto y=gst->gst.find(var_name);
+        if((y->second)->type==var_type){
+            check=true;
         }
     }
     if(!check){
@@ -2717,56 +2755,55 @@ Struct_or_Union_Specifier::Struct_or_Union_Specifier(const string& sou,const str
     this->strdec_list = sdl;   
 }
 
-Type_Specifier::Type_Specifier(const string& str, Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type) 
-    : string_type(str),
-    struct_union_type(struct_union_type),
-    class_type(class_type),
-    enum_type(enum_type){
+Type_Specifier::Type_Specifier(string str, Struct_or_Union_Specifier* struct_union_type,Class_Specifier* class_type,Enum_Specifier* enum_type) 
+    {
+    this->string_type=str;
+    this->struct_union_type=struct_union_type;
+    this->class_type=class_type;
+    this->enum_type=enum_type;
     if(str==""){
         cout << "str is null" << endl;
         if(struct_union_type) {
-            assert(struct_union_type->str_or_union.size() < 1000);
-            const string& sou = struct_union_type->str_or_union;
-            const string& name = struct_union_type->name;
+            string sou = struct_union_type->str_or_union;
+            string name = struct_union_type->name;
             Struct_Declaration_List* sdl = struct_union_type->strdec_list;
             if (!sou.empty()) {
                 if (sdl) { 
                     if (name.empty()) {
-                        string_type = sou + " anonymous";
+                        this->string_type = sou + " anonymous";
                     } 
                     else {
-                        string_type = sou;
+                        this->string_type = sou;
                     }
                 } 
                 else {
                     if (!name.empty()) {
-                        string_type = sou + " " + name;
+                        this->string_type = sou + " " + name;
                     }
                 }
             }
         }
         else if (class_type) { 
-            assert(class_type->class_name.size() < 1000);
             if (class_type->cb == nullptr) {
-                string_type = "class " + class_type->class_name;
+                this->string_type = "class " + class_type->class_name;
             }
             else {
                 if (class_type->class_name.empty()) {
-                    string_type = "class anonymous";
+                    this->string_type = "class anonymous";
                 } 
                 else {
-                    string_type = "class";
+                    this->string_type = "class";
                 }
             }
         }
         else if (enum_type) {
             if (enum_type->enuml == nullptr) {
-                string_type = "enum " + enum_type->id;
+                this->string_type = "enum " + enum_type->id;
             } else {
                 if (enum_type->id.empty()) {
-                    string_type = "enum anonymous"; 
+                    this->string_type = "enum anonymous"; 
                 } else {
-                    string_type = "enum";  
+                    this->string_type = "enum";  
                 }
             }
         }
@@ -2774,6 +2811,8 @@ Type_Specifier::Type_Specifier(const string& str, Struct_or_Union_Specifier* str
             cout<<"Not struct_or_union,enum or class"<<"in line :"<< line_num<<endl;
             exit(1);
         }
+        cout << this->string_type << endl;
+        cout << "hello this is type specifier constructor" << endl;
     }
     
 }

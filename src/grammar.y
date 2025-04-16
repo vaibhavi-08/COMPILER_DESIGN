@@ -920,6 +920,7 @@ function_definition /*(function_definition <- node ) */
 		current_param_vector.pop_back();
 	}
 	cout << "current params list cleared" << endl;
+	func_ret_type==nullptr;
 	lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */

@@ -1,0 +1,99 @@
+Original Symbol Table:
+-------------------------------------------------------------------------------
+| Lexeme                                | Token                                 |
+-------------------------------------------------------------------------------
+| ++                                   | INC_OP                               |
+| 2                                    | INTEGER                              |
+| %                                    | MOD                                  |
+| 7                                    | INTEGER                              |
+| number                               | IDENTIFIER                           |
+| 10                                   | INTEGER                              |
+| 0                                    | INTEGER                              |
+| 9                                    | INTEGER                              |
+| ==                                   | EQ_OP                                |
+| a                                    | IDENTIFIER                           |
+| int                                  | INT                                  |
+| else                                 | ELSE                                 |
+| y                                    | IDENTIFIER                           |
+| }                                    | SEPERATOR                            |
+| func                                 | IDENTIFIER                           |
+| +                                    | PLUS                                 |
+| if                                   | IF                                   |
+| x                                    | IDENTIFIER                           |
+| (                                    | SEPERATOR                            |
+| return                               | RETURN                               |
+| ,                                    | SEPERATOR                            |
+| )                                    | SEPERATOR                            |
+| {                                    | SEPERATOR                            |
+| sum                                  | IDENTIFIER                           |
+| main                                 | IDENTIFIER                           |
+| =                                    | ASSIGN                               |
+| b                                    | IDENTIFIER                           |
+| ;                                    | SEPERATOR                            |
+-------------------------------------------------------------------------------
+
+seperated tokens: 
+int
+func
+(
+int
+x
+,
+int
+y
+)
+{
+int
+sum
+=
+x
++
+y
+;
+return
+x
++
+y
+;
+}
+int
+main
+(
+)
+{
+int
+a
+=
+9
+;
+int
+b
+=
+10
+;
+int
+number
+=
+7
+;
+if
+(
+number
+%
+2
+==
+0
+)
+{
+a
+++
+;
+}
+else
+{
+b
+++
+;
+}
+}
+

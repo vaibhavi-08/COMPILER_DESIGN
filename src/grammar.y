@@ -865,9 +865,20 @@ srb
 
 
 jump_statement
-	: GOTO IDENTIFIER ';' {$$=new Type();}
-	| CONTINUE ';' {$$=new Type();}
-	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;}
+	: GOTO IDENTIFIER ';' {$$=new Type();
+ 		goto_label.push_back(global_code.size());
+ 		if(identifier_found(labelgoto, $2)){
+ 		global_code.push_back(get_while_code(labelmap[$2]));
+ 		}
+ 		else{
+ 		global_code.push_back(get_if_false_code());}
+ 		}
+ 	| CONTINUE ';' {$$=new Type();
+ 		continue_label.push_back(global_code.size());
+ 		global_code.push_back(get_if_false_code());}
+ 	| BREAK ';' {$$=new Type();cout<<"found break"<<endl;
+ 		break_label.push_back(global_code.size());
+ 		global_code.push_back(get_if_false_code());}
 	| RETURN ';' {Type* type=new Type();type->isvoid=true;check_for_assign(func_ret_type,type,"=");global_code.push_back(gen_return(""));}
 	| RETURN initializer ';' {check_for_assign(func_ret_type,$2->type,"=");global_code.push_back(gen_return($2->type->place));}
 
@@ -889,6 +900,8 @@ function_declaration
 		$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));
 		$2->tempname=get_new_temp();
 		global_code.push_back(get_label($2->tempname));
+		cout<<"@@@"<<endl;
+		cout<<get_label($2->tempname)<<endl;
 		for(auto i:current_param_vector){
 			string nn=get_new_temp();
 			i.second->place=nn;

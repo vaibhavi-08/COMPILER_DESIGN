@@ -3256,12 +3256,13 @@ yyreduce:
 		current_param_vector.pop_back();
 	}
 	cout << "current params list cleared" << endl;
+	func_ret_type==nullptr;
 	lvl_name.pop();}
-#line 3261 "src/grammar.tab.c"
+#line 3262 "src/grammar.tab.c"
     break;
 
 
-#line 3265 "src/grammar.tab.c"
+#line 3266 "src/grammar.tab.c"
 
       default: break;
     }
@@ -3454,7 +3455,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 928 "src/grammar.y"
+#line 929 "src/grammar.y"
 
 #include <stdio.h>
 #include <bits/stdc++.h>
@@ -3563,7 +3564,7 @@ int main(int argc, char *argv[]){
     if (!tacFile.is_open()) {
         cerr << "Error: Could not open file " << tacOutputFile << " for writing." << endl;
     } else {
-        tacFile << "====================== FINAL SYMBOL TABLE ======================\n\n";
+        /*tacFile << "====================== FINAL SYMBOL TABLE ======================\n\n";
         for(auto i:final_symtab){
             tacFile << "Temp: " << i.first << "\n";
             tacFile << "  Name: " << i.second->name << "\n";
@@ -3572,7 +3573,7 @@ int main(int argc, char *argv[]){
             tacFile << "  Level: " << i.second->level << "\n\n";
         }
         
-        tacFile << "====================== THREE ADDRESS CODE ======================\n\n";
+        tacFile << "====================== THREE ADDRESS CODE ======================\n\n";*/
         for(int i=0; i<global_code.size(); i++){
             tacFile << setw(4) << right << i << ": " << global_code[i] << "\n";
         }

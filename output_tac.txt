@@ -1,55 +1,3 @@
-====================== FINAL SYMBOL TABLE ======================
-
-Temp: t7
-  Name: main
-  Type: INT
-  Scope: main:
-  Level: 0
-
-Temp: t13
-  Name: number
-  Type: INT
-  Scope: main:
-  Level: 1
-
-Temp: t11
-  Name: b
-  Type: INT
-  Scope: main:
-  Level: 1
-
-Temp: t9
-  Name: a
-  Type: INT
-  Scope: main:
-  Level: 1
-
-Temp: t1
-  Name: func
-  Type: INT
-  Scope: func:
-  Level: 0
-
-Temp: t5
-  Name: sum
-  Type: INT
-  Scope: func:
-  Level: 1
-
-Temp: t3
-  Name: y
-  Type: 
-  Scope: 
-  Level: 0
-
-Temp: t2
-  Name: x
-  Type: 
-  Scope: 
-  Level: 0
-
-====================== THREE ADDRESS CODE ======================
-
    0: t1 : 
    1: arg t2
    2: arg t3
@@ -79,7 +27,7 @@ Temp: t2
   26: t16=0
   27: t17=t15==t16
   28: if t17 goto 30
-  29: goto 34
+  29: goto 3
   30: t18=t9++
   31: t9=t18
   32: if t9 goto 34

@@ -1034,7 +1034,7 @@ int main(int argc, char *argv[]){
     if (!tacFile.is_open()) {
         cerr << "Error: Could not open file " << tacOutputFile << " for writing." << endl;
     } else {
-        tacFile << "====================== FINAL SYMBOL TABLE ======================\n\n";
+        /*tacFile << "====================== FINAL SYMBOL TABLE ======================\n\n";
         for(auto i:final_symtab){
             tacFile << "Temp: " << i.first << "\n";
             tacFile << "  Name: " << i.second->name << "\n";
@@ -1043,7 +1043,7 @@ int main(int argc, char *argv[]){
             tacFile << "  Level: " << i.second->level << "\n\n";
         }
         
-        tacFile << "====================== THREE ADDRESS CODE ======================\n\n";
+        tacFile << "====================== THREE ADDRESS CODE ======================\n\n";*/
         for(int i=0; i<global_code.size(); i++){
             tacFile << setw(4) << right << i << ": " << global_code[i] << "\n";
         }

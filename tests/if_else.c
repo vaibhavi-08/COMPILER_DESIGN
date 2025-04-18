@@ -12,8 +12,6 @@ int main() {
    if (number % 2 == 0) {
        a++;
    } else if(a){
-       if(a){
         b++;
-       }
    }
 }

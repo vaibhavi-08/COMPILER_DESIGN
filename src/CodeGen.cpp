@@ -5,68 +5,122 @@
 #include <set>
 #include <map>
 #include <sstream>
-#include <unordered_map>
 #include <regex>
 
 using namespace std;
 
-// Structure to represent a Three Address Code instruction
-struct ThreeAddressCode {
+// Class for Three Address Code instruction
+class ThreeAddressCode {
+private:
     int lineNumber;
     string instruction;
+
+public:
+    ThreeAddressCode(int line = 0, const string& instr = "") : lineNumber(line), instruction(instr) {}
+
+    int getLineNumber() const { return lineNumber; }
+    string getInstruction() const { return instruction; }
+    
+    bool isConditional() const {
+        return instruction.find("if") != string::npos;
+    }
+    
+    bool isGoto() const {
+        return instruction.find("goto") != string::npos && !isConditional();
+    }
+    
+    int getGotoTarget() const {
+        regex gotoPattern("goto (\\d+)");
+        smatch match;
+        if (regex_search(instruction, match, gotoPattern) && match.size() > 1) {
+            return stoi(match[1]);
+        }
+        return -1;
+    }
+    
+    // Get instruction without the goto part
+    string getInstructionWithoutGoto() const {
+        if (isConditional()) {
+            size_t gotoPos = instruction.find("goto");
+            if (gotoPos != string::npos) {
+                return instruction.substr(0, gotoPos);
+            }
+        }
+        return instruction;
+    }
 };
 
-// Structure to represent a basic block
-struct BasicBlock {
+// Class for Basic Block
+class BasicBlock {
+private:
     int id;
     int startLine;
     int endLine;
     vector<ThreeAddressCode> instructions;
-    vector<int> successors;
-};
+    vector<BasicBlock*> successors;
 
-struct RegisterDescriptor {
-    string name;        // Register name (eax, ebx, etc.)
-    bool isFree;        // Whether register is free
-    vector<string> variables;  // Variables currently held in this register
-};
-
-// Address Descriptor: Keeps track of the location of each variable
-struct AddressDescriptor {
-    string name;        // Variable name
-    bool inMemory;      // Whether variable is in memory
-    string registerName; // Register holding the variable (if any)
-    int memoryOffset;   // Memory offset for the variable
-};
-
-// Function to identify if an instruction is a jump/branch instruction
-bool isJumpInstruction(const string& instruction) {
-    return (instruction.find("goto") != string::npos || 
-            instruction.find("if") != string::npos);
-}
-
-// Function to extract target line of a goto instruction
-int extractGotoTarget(const string& instruction) {
-    regex gotoPattern("goto (\\d+)");
-    smatch match;
-    if (regex_search(instruction, match, gotoPattern) && match.size() > 1) {
-        return stoi(match[1]);
+public:
+    BasicBlock(int blockId = 0) : id(blockId), startLine(0), endLine(0) {}
+    
+    void setId(int blockId) { id = blockId; }
+    int getId() const { return id; }
+    
+    void setStartLine(int line) { startLine = line; }
+    int getStartLine() const { return startLine; }
+    
+    void setEndLine(int line) { endLine = line; }
+    int getEndLine() const { return endLine; }
+    
+    void addInstruction(const ThreeAddressCode& tac) {
+        instructions.push_back(tac);
     }
-    return -1;
-}
-
-// Function to extract target line of an if condition
-int extractIfTarget(const string& instruction) {
-    regex ifPattern("if .+ goto (\\d+)");
-    smatch match;
-    if (regex_search(instruction, match, ifPattern) && match.size() > 1) {
-        return stoi(match[1]);
+    
+    const vector<ThreeAddressCode>& getInstructions() const {
+        return instructions;
     }
-    return -1;
-}
+    
+    vector<BasicBlock*>& getSuccessors() {
+        return successors;
+    }
+    
+    const vector<BasicBlock*>& getSuccessors() const {
+        return successors;
+    }
+    
+    void addSuccessor(BasicBlock* block) {
+        // Avoid adding duplicate successors
+        for (BasicBlock* succ : successors) {
+            if (succ == block) return;
+        }
+        successors.push_back(block);
+    }
+    
+    // Check if the block has meaningful instructions
+    bool isEmpty() const {
+        return instructions.empty();
+    }
+    
+    // Check if block only contains goto statements
+    bool onlyContainsGoto() const {
+        for (const ThreeAddressCode& tac : instructions) {
+            if (!tac.isGoto()) {
+                return false;
+            }
+        }
+        return !instructions.empty();
+    }
+    
+    // Get the last instruction of the block
+    const ThreeAddressCode& getLastInstruction() const {
+        if (instructions.empty()) {
+            static ThreeAddressCode emptyTac;
+            return emptyTac;
+        }
+        return instructions.back();
+    }
+};
 
 // Function to read 3AC code from file or string
-// Updated function to read 3AC code from file or string
 vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile = false) {
     vector<ThreeAddressCode> code;
     istringstream iss;
@@ -85,15 +139,13 @@ vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile = false) {
     istream& stream = isFile ? static_cast<istream&>(file) : static_cast<istream&>(iss);
     string line;
     
-    // Read 3AC instructions directly, without looking for a header
+    // Read 3AC instructions directly
     regex linePattern("\\s*(\\d+):\\s*(.+)");
     smatch match;
     
     while (getline(stream, line)) {
         if (regex_search(line, match, linePattern) && match.size() > 2) {
-            ThreeAddressCode tac;
-            tac.lineNumber = stoi(match[1]);
-            tac.instruction = match[2];
+            ThreeAddressCode tac(stoi(match[1]), match[2]);
             code.push_back(tac);
         }
     }
@@ -105,11 +157,17 @@ vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile = false) {
     return code;
 }
 
-// Function to identify leaders in the 3AC code
+// Function to identify leaders in the 3AC code based on specific conditions
 set<int> identifyLeaders(const vector<ThreeAddressCode>& code) {
     set<int> leaders;
+    map<int, int> lineToIndex; // Map from line number to index in code vector
     
-    // Rule 1: First statement is a leader
+    // Create mapping from line numbers to indices
+    for (size_t i = 0; i < code.size(); i++) {
+        lineToIndex[code[i].getLineNumber()] = i;
+    }
+    
+    // Condition 1: First line can be a leader
     if (!code.empty()) {
         leaders.insert(0);
     }
@@ -117,30 +175,16 @@ set<int> identifyLeaders(const vector<ThreeAddressCode>& code) {
     for (size_t i = 0; i < code.size(); i++) {
         const ThreeAddressCode& tac = code[i];
         
-        // Rule 2: Extract goto targets and mark them as leaders
-        if (tac.instruction.find("goto") != string::npos) {
-            int target = -1;
-            
-            // Check if it's a conditional jump (if)
-            if (tac.instruction.find("if") != string::npos) {
-                target = extractIfTarget(tac.instruction);
-            } else {
-                target = extractGotoTarget(tac.instruction);
-            }
-            
-            if (target != -1) {
-                // Find the index corresponding to the target line number
-                for (size_t j = 0; j < code.size(); j++) {
-                    if (code[j].lineNumber == target) {
-                        leaders.insert(j);
-                        break;
-                    }
-                }
-            }
-            
-            // Rule 3: Statement following a jump is a leader
-            if (i + 1 < code.size()) {
-                leaders.insert(i + 1);
+        // Condition 2: Any conditional statement is a leader
+        if (tac.isConditional()) {
+            leaders.insert(i);
+        }
+        
+        // Condition 3: Any target of a goto is a leader
+        if (tac.isConditional() || tac.isGoto()) {
+            int targetLine = tac.getGotoTarget();
+            if (targetLine != -1 && lineToIndex.find(targetLine) != lineToIndex.end()) {
+                leaders.insert(lineToIndex[targetLine]);
             }
         }
     }
@@ -149,18 +193,18 @@ set<int> identifyLeaders(const vector<ThreeAddressCode>& code) {
 }
 
 // Function to create basic blocks from leaders
-vector<BasicBlock> createBasicBlocks(const vector<ThreeAddressCode>& code, const set<int>& leaders) {
-    vector<BasicBlock> blocks;
+vector<BasicBlock*> createBasicBlocks(const vector<ThreeAddressCode>& code, const set<int>& leaders) {
+    vector<BasicBlock*> blocks;
     vector<int> leadersList(leaders.begin(), leaders.end());
     sort(leadersList.begin(), leadersList.end());
     
+    int blockId = 0;
     for (size_t i = 0; i < leadersList.size(); i++) {
-        BasicBlock block;
-        block.id = i;
+        BasicBlock* block = new BasicBlock(blockId++);
         int startIdx = leadersList[i];
-        block.startLine = code[startIdx].lineNumber;
+        block->setStartLine(code[startIdx].getLineNumber());
         
-        // Determine end index of this block
+        // Determine end index of this block (exclusive)
         int endIdx;
         if (i < leadersList.size() - 1) {
             endIdx = leadersList[i + 1] - 1;
@@ -168,11 +212,11 @@ vector<BasicBlock> createBasicBlocks(const vector<ThreeAddressCode>& code, const
             endIdx = code.size() - 1;
         }
         
-        block.endLine = code[endIdx].lineNumber;
+        block->setEndLine(code[endIdx].getLineNumber());
         
         // Add instructions to the block
         for (int j = startIdx; j <= endIdx; j++) {
-            block.instructions.push_back(code[j]);
+            block->addInstruction(code[j]);
         }
         
         blocks.push_back(block);
@@ -182,78 +226,160 @@ vector<BasicBlock> createBasicBlocks(const vector<ThreeAddressCode>& code, const
 }
 
 // Function to determine control flow between basic blocks
-void determineControlFlow(vector<BasicBlock>& blocks, const vector<ThreeAddressCode>& code) {
-    map<int, int> lineToBlockMap;
+void determineControlFlow(vector<BasicBlock*>& blocks, const vector<ThreeAddressCode>& code) {
+    map<int, BasicBlock*> lineToBlockMap;
     
-    // Create mapping from line numbers to block IDs
-    for (const BasicBlock& block : blocks) {
-        for (const ThreeAddressCode& tac : block.instructions) {
-            lineToBlockMap[tac.lineNumber] = block.id;
+    // Create mapping from line numbers to block pointers
+    for (BasicBlock* block : blocks) {
+        for (const ThreeAddressCode& tac : block->getInstructions()) {
+            lineToBlockMap[tac.getLineNumber()] = block;
         }
     }
     
+    // Create a special "End of Code" block
+    BasicBlock* eocBlock = new BasicBlock(blocks.size());
+    eocBlock->setStartLine(-1);  // Special marker for EOC
+    eocBlock->setEndLine(-1);    // Special marker for EOC
+    blocks.push_back(eocBlock);  // Add to blocks list
+    
     // Determine successors for each block
-    for (BasicBlock& block : blocks) {
-        const ThreeAddressCode& lastInstr = block.instructions.back();
+    for (BasicBlock* block : blocks) {
+        if (block == eocBlock) continue;  // Skip processing for EOC block
         
-        // If last instruction is a conditional jump
-        if (lastInstr.instruction.find("if") != string::npos) {
-            int target = extractIfTarget(lastInstr.instruction);
+        const vector<ThreeAddressCode>& instructions = block->getInstructions();
+        
+        // Find conditional and goto statements in the block
+        for (size_t i = 0; i < instructions.size(); i++) {
+            const ThreeAddressCode& instr = instructions[i];
             
-            // Add target block as successor
-            for (const BasicBlock& targetBlock : blocks) {
-                if (targetBlock.startLine == target) {
-                    block.successors.push_back(targetBlock.id);
+            // For conditional statements, add the target block as successor
+            if (instr.isConditional()) {
+                int targetLine = instr.getGotoTarget();
+                if (targetLine != -1) {
+                    auto it = lineToBlockMap.find(targetLine);
+                    if (it != lineToBlockMap.end()) {
+                        block->addSuccessor(it->second);
+                    } else {
+                        // Target line doesn't exist in code, point to EOC
+                        block->addSuccessor(eocBlock);
+                    }
+                }
+                
+                // If this conditional is followed by a goto, also add that target
+                if (i + 1 < instructions.size() && instructions[i + 1].isGoto()) {
+                    int elseTargetLine = instructions[i + 1].getGotoTarget();
+                    if (elseTargetLine != -1) {
+                        auto it = lineToBlockMap.find(elseTargetLine);
+                        if (it != lineToBlockMap.end()) {
+                            block->addSuccessor(it->second);
+                        } else {
+                            // Target line doesn't exist in code, point to EOC
+                            block->addSuccessor(eocBlock);
+                        }
+                    }
+                }
+            }
+            // For unconditional goto (not following a conditional), add the target
+            else if (instr.isGoto() && (i == 0 || !instructions[i - 1].isConditional())) {
+                int targetLine = instr.getGotoTarget();
+                if (targetLine != -1) {
+                    auto it = lineToBlockMap.find(targetLine);
+                    if (it != lineToBlockMap.end()) {
+                        block->addSuccessor(it->second);
+                    } else {
+                        // Target line doesn't exist in code, point to EOC
+                        block->addSuccessor(eocBlock);
+                    }
+                }
+            }
+        }
+        
+        // If block doesn't end with a jump/conditional, fall through to next block
+        const ThreeAddressCode& lastInstr = block->getLastInstruction();
+        if (!lastInstr.isConditional() && !lastInstr.isGoto()) {
+            int currentBlockIdx = -1;
+            for (size_t i = 0; i < blocks.size() - 1; i++) {  // -1 to skip EOC block
+                if (blocks[i] == block) {
+                    currentBlockIdx = i;
                     break;
                 }
             }
             
-            // Add fallthrough block as successor if it exists
-            int currentBlockIdx = block.id;
-            if (currentBlockIdx + 1 < (int)blocks.size()) {
-                block.successors.push_back(currentBlockIdx + 1);
-            }
-        }
-        // If last instruction is an unconditional jump
-        else if (lastInstr.instruction.find("goto") != string::npos) {
-            int target = extractGotoTarget(lastInstr.instruction);
-            
-            // Add target block as successor
-            for (const BasicBlock& targetBlock : blocks) {
-                if (targetBlock.startLine == target) {
-                    block.successors.push_back(targetBlock.id);
-                    break;
-                }
-            }
-        }
-        // If last instruction is not a jump, fall through to next block
-        else {
-            int currentBlockIdx = block.id;
-            if (currentBlockIdx + 1 < (int)blocks.size()) {
-                block.successors.push_back(currentBlockIdx + 1);
+            if (currentBlockIdx != -1 && currentBlockIdx + 1 < (int)blocks.size() - 1) {
+                block->addSuccessor(blocks[currentBlockIdx + 1]);
+            } else {
+                // If this is the last normal block, point to EOC
+                block->addSuccessor(eocBlock);
             }
         }
     }
 }
 
+// Function to filter blocks that only contain goto statements
+vector<BasicBlock*> filterGotoOnlyBlocks(vector<BasicBlock*>& blocks) {
+    vector<BasicBlock*> filteredBlocks;
+    map<int, int> oldToNewIdMap;
+    
+    int newId = 0;
+    for (size_t i = 0; i < blocks.size(); i++) {
+        BasicBlock* block = blocks[i];
+        if (!block->onlyContainsGoto()) {
+            oldToNewIdMap[block->getId()] = newId;
+            block->setId(newId++);
+            filteredBlocks.push_back(block);
+        } else {
+            // For blocks that only contain goto, we need to redirect successors
+            for (BasicBlock* otherBlock : blocks) {
+                vector<BasicBlock*>& successors = otherBlock->getSuccessors();
+                for (size_t j = 0; j < successors.size(); j++) {
+                    if (successors[j] == block && !block->getSuccessors().empty()) {
+                        // Replace with the target of the goto block
+                        successors[j] = block->getSuccessors()[0];
+                    }
+                }
+            }
+            delete block;
+        }
+    }
+    
+    return filteredBlocks;
+}
+
 // Function to print basic blocks and their control flow
-void printBasicBlocks(const vector<BasicBlock>& blocks) {
+void printBasicBlocks(const vector<BasicBlock*>& blocks) {
     cout << "======== BASIC BLOCKS ========" << endl;
     
-    for (const BasicBlock& block : blocks) {
-        cout << "Block B" << block.id << " (Lines " << block.startLine << "-" << block.endLine << "):" << endl;
+    for (const BasicBlock* block : blocks) {
+        // Skip printing the EOC block itself, but still reference it in successors
+        if (block->getStartLine() == -1 && block->getEndLine() == -1) {
+            continue;
+        }
         
-        for (const ThreeAddressCode& tac : block.instructions) {
-            cout << "  " << tac.lineNumber << ": " << tac.instruction << endl;
+        cout << "Block B" << block->getId() << " (Lines " << block->getStartLine() << "-" << block->getEndLine() << "):" << endl;
+        
+        for (const ThreeAddressCode& tac : block->getInstructions()) {
+            // Skip printing pure goto statements
+            if (!tac.isGoto()) {
+                if (tac.isConditional()) {
+                    // For conditional statements, only print the condition part
+                    cout << "  " << tac.getLineNumber() << ": " << tac.getInstructionWithoutGoto() << endl;
+                } else {
+                    cout << "  " << tac.getLineNumber() << ": " << tac.getInstruction() << endl;
+                }
+            }
         }
         
         cout << "Successors: ";
-        if (block.successors.empty()) {
+        if (block->getSuccessors().empty()) {
             cout << "None (Exit Block)";
         } else {
-            for (size_t i = 0; i < block.successors.size(); i++) {
-                cout << "B" << block.successors[i];
-                if (i < block.successors.size() - 1) {
+            for (size_t i = 0; i < block->getSuccessors().size(); i++) {
+                if (block->getSuccessors()[i]->getStartLine() == -1) {
+                    cout << "EOC";  // End of Code marker
+                } else {
+                    cout << "B" << block->getSuccessors()[i]->getId();
+                }
+                if (i < block->getSuccessors().size() - 1) {
                     cout << ", ";
                 }
             }
@@ -262,21 +388,12 @@ void printBasicBlocks(const vector<BasicBlock>& blocks) {
     }
 }
 
-// Function to initialize register descriptor
-unordered_map<string, RegisterDescriptor> initRegisterDescriptor() {
-    unordered_map<string, RegisterDescriptor> regDesc;
-    
-    // General purpose registers in x86
-    vector<string> regNames = {"eax", "ebx", "ecx", "edx", "esi", "edi"};
-    
-    for (const string& name : regNames) {
-        RegisterDescriptor reg;
-        reg.name = name;
-        reg.isFree = true;
-        regDesc[name] = reg;
+// Clean up allocated memory
+void cleanupBlocks(vector<BasicBlock*>& blocks) {
+    for (BasicBlock* block : blocks) {
+        delete block;
     }
-    
-    return regDesc;
+    blocks.clear();
 }
 
 // Main function to generate code from 3AC
@@ -293,155 +410,68 @@ void generateCode(const string& input, bool isFile = false) {
     set<int> leaders = identifyLeaders(code);
     
     // Create basic blocks
-    vector<BasicBlock> blocks = createBasicBlocks(code, leaders);
+    vector<BasicBlock*> blocks = createBasicBlocks(code, leaders);
     
     // Determine control flow
     determineControlFlow(blocks, code);
     
+    // Filter out blocks that only contain goto statements
+    vector<BasicBlock*> filteredBlocks = filterGotoOnlyBlocks(blocks);
+    
     // Print basic blocks
-    printBasicBlocks(blocks);
+    printBasicBlocks(filteredBlocks);
     
-    // Code generation would continue here...
-    // For example, you might generate assembly code for each basic block
+    // Clean up allocated memory
+    cleanupBlocks(filteredBlocks);
 }
 
-// Function to initialize address descriptor from the 3AC code
-unordered_map<string, AddressDescriptor> initAddressDescriptor(const vector<ThreeAddressCode>& code) {
-    unordered_map<string, AddressDescriptor> addrDesc;
-    set<string> variables;
-    
-    // Extract all variable names from the 3AC code
-    for (const ThreeAddressCode& tac : code) {
-        string instr = tac.instruction;
-        
-        // Skip labels and control statements
-        if (instr.find(":") != string::npos) continue;
-        if (instr.find("goto") != string::npos && instr.find("if") == string::npos) continue;
-        
-        // Extract all temp variables (t1, t2, etc.) using regex
-        regex varPattern("t[0-9]+");
-        sregex_iterator it(instr.begin(), instr.end(), varPattern);
-        sregex_iterator end;
-        
-        while (it != end) {
-            string var = it->str();
-            variables.insert(var);
-            ++it;
-        }
-    }
-    
-    // Initialize address descriptor for each variable
-    int offset = 0;
-    for (const string& var : variables) {
-        AddressDescriptor addr;
-        addr.name = var;
-        addr.inMemory = true;       // Start with all variables in memory
-        addr.registerName = "";     // No register initially
-        addr.memoryOffset = offset; // Assign a memory offset
-        addrDesc[var] = addr;
-        offset += 4;  // Assuming 4-byte variables (integers)
-    }
-    
-    return addrDesc;
-}
-
-// Function to print register and address descriptor tables to a file
-void printDescriptorTables(const unordered_map<string, RegisterDescriptor>& regDesc, 
-    const unordered_map<string, AddressDescriptor>& addrDesc,
-    const string& outputFile) {
-ofstream outFile(outputFile);
-if (!outFile.is_open()) {
-cerr << "Error: Unable to open output file: " << outputFile << endl;
-return;
-}
-
-// Print Register Descriptor Table
-outFile << "====================== REGISTER DESCRIPTOR TABLE ======================\n";
-outFile << "Register\tFree?\tVariables\n";
-outFile << "----------------------------------------------------------------\n";
-
-for (const auto& entry : regDesc) {
-const RegisterDescriptor& reg = entry.second;
-outFile << reg.name << "\t\t" << (reg.isFree ? "Yes" : "No") << "\t";
-
-if (!reg.variables.empty()) {
-for (size_t i = 0; i < reg.variables.size(); i++) {
-outFile << reg.variables[i];
-if (i < reg.variables.size() - 1) {
-outFile << ", ";
-}
-}
-} else {
-outFile << "None";
-}
-outFile << "\n";
-}
-
-// Print Address Descriptor Table
-outFile << "\n====================== ADDRESS DESCRIPTOR TABLE ======================\n";
-outFile << "Variable\tIn Memory?\tRegister\tMemory Offset\n";
-outFile << "----------------------------------------------------------------\n";
-
-for (const auto& entry : addrDesc) {
-const AddressDescriptor& addr = entry.second;
-outFile << addr.name << "\t\t" << (addr.inMemory ? "Yes" : "No") << "\t\t";
-
-if (!addr.registerName.empty()) {
-outFile << addr.registerName;
-} else {
-outFile << "None";
-}
-
-outFile << "\t\t" << addr.memoryOffset << "\n";
-}
-
-outFile.close();
-cout << "Descriptor tables written to " << outputFile << endl;
-}
-
-
-// Add this function to your main to generate and print the tables
-void generateDescriptorTables(const vector<ThreeAddressCode>& code, const string& outputFile) {
-    // Initialize register and address descriptors
-    unordered_map<string, RegisterDescriptor> regDesc = initRegisterDescriptor();
-    unordered_map<string, AddressDescriptor> addrDesc = initAddressDescriptor(code);
-    
-    // Print descriptor tables
-    printDescriptorTables(regDesc, addrDesc, outputFile);
-}
-
-// Update main function to include descriptor table generation
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        cerr << "Usage: " << argv[0] << " <input_file> [output_file]" << endl;
-        return 1;
+        // For testing with hardcoded input
+        string tacCode = R"(0: t1 : 
+   1: arg t2
+   2: arg t3
+   3: t4=t2+t3
+   4: if t4 goto 6
+   5: goto 6
+   6: t5=t4
+   7: t6=t2+t3
+   8: if t6 goto 10
+   9: goto 10
+  10: return t6
+  11: t7 : 
+  12: t8=9
+  13: if t8 goto 15
+  14: goto 15
+  15: t9=t8
+  16: t10=10
+  17: if t10 goto 19
+  18: goto 19
+  19: t11=t10
+  20: t12=7
+  21: if t12 goto 23
+  22: goto 23
+  23: t13=t12
+  24: t14=2
+  25: t15=t13%t14
+  26: t16=0
+  27: t17=t15==t16
+  28: if t17 goto 30
+  29: goto 34
+  30: t18=t9++
+  31: t9=t18
+  32: if t9 goto 34
+  33: goto 34
+  34: t19=t11++
+  35: t11=t19
+  36: if t11 goto 38
+  37: goto 38)";
+        
+        generateCode(tacCode, false);
+    } else {
+        string inputFile = argv[1];
+        generateCode(inputFile, true);
     }
-    
-    string inputFile = argv[1];
-    string outputFile = (argc > 2) ? argv[2] : "descriptor_tables.txt";
-    
-    // Read 3AC code
-    vector<ThreeAddressCode> code = read3ACCode(inputFile, true);
-    
-    if (code.empty()) {
-        cerr << "No valid 3AC code found!" << endl;
-        return 1;
-    }
-    
-    // Identify leaders
-    set<int> leaders = identifyLeaders(code);
-    
-    // Create basic blocks
-    vector<BasicBlock> blocks = createBasicBlocks(code, leaders);
-    
-    // Determine control flow
-    determineControlFlow(blocks, code);
-    
-    // Print basic blocks
-    printBasicBlocks(blocks);
-    
-    // Generate and print descriptor tables
-    generateDescriptorTables(code, outputFile);
     
     return 0;
 }

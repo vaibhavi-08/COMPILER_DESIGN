@@ -2,24 +2,27 @@ Original Symbol Table:
 -------------------------------------------------------------------------------
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
+| else                                 | ELSE                                 |
 | }                                    | SEPERATOR                            |
-| *                                    | MUL                                  |
-| square                               | IDENTIFIER                           |
-| return                               | RETURN                               |
+| ++                                   | INC_OP                               |
+| 2                                    | INTEGER                              |
+| %                                    | MOD                                  |
+| if                                   | IF                                   |
+| int                                  | INT                                  |
 | (                                    | SEPERATOR                            |
 | )                                    | SEPERATOR                            |
 | {                                    | SEPERATOR                            |
-| 0                                    | INTEGER                              |
-| 1                                    | INTEGER                              |
-| +                                    | PLUS                                 |
-| ;                                    | SEPERATOR                            |
+| ==                                   | EQ_OP                                |
+| a                                    | IDENTIFIER                           |
 | main                                 | IDENTIFIER                           |
-| for                                  | FOR                                  |
-| 5                                    | INTEGER                              |
-| i                                    | IDENTIFIER                           |
 | =                                    | ASSIGN                               |
-| int                                  | INT                                  |
-| <=                                   | LE_OP                                |
+| 0                                    | INTEGER                              |
+| 9                                    | INTEGER                              |
+| b                                    | IDENTIFIER                           |
+| ;                                    | SEPERATOR                            |
+| 10                                   | INTEGER                              |
+| number                               | IDENTIFIER                           |
+| 7                                    | INTEGER                              |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
@@ -29,35 +32,42 @@ main
 )
 {
 int
-i
+a
+=
+9
 ;
-for
+int
+b
+=
+10
+;
+int
+number
+=
+7
+;
+if
 (
-i
-=
-1
-;
-i
-<=
-5
-;
-i
-=
-i
-+
-1
+number
+%
+2
+==
+0
 )
 {
-int
-square
-=
-i
-*
-i
+a
+++
 ;
 }
-return
-0
+else
+if
+(
+a
+)
+{
+b
+++
 ;
+}
 }
 

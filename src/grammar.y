@@ -198,23 +198,23 @@ Node* root;
 primary_expression
 	: IDENTIFIER {Type* t=get_type_id($1);
 	cout << t->base << endl;cout << "get type id in primary exp done" << endl;Symbol_Info* x=get_symbol_info_id($1);
-	if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;}t->place=x->tempname;$$=t;}
-	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;} 
-	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;}
-	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
-	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
-	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
+	if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;temp_and_type[nn]=t;}t->place=x->tempname;$$=t;}
+	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;temp_and_type[nn]=t;} 
+	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;temp_and_type[nn]=t;}
+	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;temp_and_type[nn]=t;}
+	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;temp_and_type[nn]=t;}
+	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;temp_and_type[nn]=t;}
 	| '(' expression ')' {$$=$2;backpatch($$->truelist,global_code.size());backpatch($$->falselist,global_code.size());$$->truelist=vector<int>();$$->falselist=vector<int>();}
-	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4("nullptr","","",nn));$$=t;}
+	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4("nullptr","","",nn));$$=t;temp_and_type[nn]=t;}
 	;
 postfix_expression
 	: primary_expression {$$=$1;}
 	| postfix_expression '[' expression ']' {Type* type=check_if_array_or_pointer($1);$$=type;string nn=get_new_temp();
-	backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());global_code.push_back(get_code_array($1->place,$3->place,nn));$$->place=nn;}
+	backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());global_code.push_back(get_code_array($1->place,$3->place,nn));$$->place=nn;temp_and_type[nn]=type;}
 	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>(),false);
 		string nn=get_new_temp();
 		global_code.push_back(get_code_func(nn,$1->place));
-		$$=t;}
+		$$=t;temp_and_type[nn]=t;}
 	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);cout << "hello ##  vargs: " << $1->isvarargs << endl; check_argument_with_params($1->prms,$3->vec_exp,$1->isvarargs);
 		for(auto i:$3->prm_temps){
 			global_code.push_back(get_param_code(i));
@@ -222,7 +222,7 @@ postfix_expression
 		string nn=get_new_temp();
 		global_code.push_back(get_code_func(nn,$1->place));
 		cout << "got argument list here" << endl;t->place=nn;
-		$$=t;}
+		$$=t;temp_and_type[nn]=t;}
 	| postfix_expression '.' IDENTIFIER {check_if_obj($1);Type* type=check_if_id_in_obj($1,$3);
 		string nn1=get_new_temp();
 		string nn2=get_new_temp();
@@ -237,8 +237,8 @@ postfix_expression
 		global_code.push_back(get_code4($1->place, nn1, "->",nn2));
 		$$=type;
 		$$->place=nn2;}
-	| postfix_expression INC_OP  {check_inc_dec_op($1);Type* xx=$1;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
-	| postfix_expression DEC_OP {check_inc_dec_op($1);Type* xx=$1;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","--",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
+	| postfix_expression INC_OP  {check_inc_dec_op($1);Type* xx=$1;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;$$->truelist=vector<int>();$$->falselist=vector<int>();temp_and_type[nn]=$$;}
+	| postfix_expression DEC_OP {check_inc_dec_op($1);Type* xx=$1;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","--",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;$$->truelist=vector<int>();$$->falselist=vector<int>();temp_and_type[nn]=$$;}
 	;
 
 argument_expression_list
@@ -251,11 +251,20 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression {$$=$1;}
-	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);Type* xx=$2;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"++",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
-	| DEC_OP unary_expression  {check_inc_dec_op($2);Type* xx=$2;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
-	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,$1,nn));$$->place=nn;}
-	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"SIZEOF",nn));$$->place=nn;}/* void , functiions */
-	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",get_string_type($3->type),"SIZEOF ",nn));$$->place=nn;}
+	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);Type* xx=$2;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"++",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;$$->truelist=vector<int>();$$->falselist=vector<int>();
+		temp_and_type[nn]=$$;}
+	| DEC_OP unary_expression  {check_inc_dec_op($2);Type* xx=$2;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));
+		global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;$$->truelist=vector<int>();$$->falselist=vector<int>();
+		temp_and_type[nn]=$$;}
+	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;string nn=get_new_temp();
+		global_code.push_back(get_code4("",$2->place,$1,nn));$$->place=nn;
+		temp_and_type[nn]=$$;}
+	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;string nn=get_new_temp();
+		global_code.push_back(get_code4("",$2->place,"SIZEOF",nn));$$->place=nn;
+		temp_and_type[nn]=$$;}/* void , functiions */
+	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;
+		string nn=get_new_temp();global_code.push_back(get_code4("",get_string_type($3->type),"SIZEOF ",nn));$$->place=nn;
+		temp_and_type[nn]=$$;}
 	;
 
 unary_operator
@@ -274,72 +283,84 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression {$$=$1;}
-	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3,"*");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3,"*");string nn=get_new_temp();
+		type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;
+		temp_and_type[nn]=$$;}
 	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3,"/");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"/",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;
+		temp_and_type[nn]=$$;}
 	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3,"%");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"%",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;
+		temp_and_type[nn]=$$;}
 	;
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
 	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3,"+");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;
+		temp_and_type[nn]=$$;}
 	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3,"-");string nn=get_new_temp();
-		type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;
+		temp_and_type[nn]=$$;}
 	;
 
 shift_expression
 	: additive_expression {$$=$1;}
 	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"<<",nn);
-		merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+		merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;
+		temp_and_type[nn]=$$;}
 	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,">>",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
-		global_code.push_back(cod);type->place=nn;$$=type;}
+		global_code.push_back(cod);type->place=nn;$$=type;
+		temp_and_type[nn]=$$;}
 	;
 
 relational_expression
 	: shift_expression {$$=$1;}
 	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3,"<");Type* type=new Type();type->isbasic=true;type->base="INT";
-		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);/*merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);*/global_code.push_back(cod);$$=type;}
+		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);/*merge_code(type->code,$1->code,$3->code);
+		type->code.push_back(cod);*/global_code.push_back(cod);$$=type;temp_and_type[nn]=$$;}
 	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3,">");Type* type=new Type();type->isbasic=true;type->base="INT";
 		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">",nn);merge_code(type->code,$1->code,$3->code);
-		type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		type->code.push_back(cod);global_code.push_back(cod);$$=type;temp_and_type[nn]=$$;}
 	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3,"<=");Type* type=new Type();type->isbasic=true;type->base="INT";
 		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<=",nn);merge_code(type->code,$1->code,$3->code);
-		type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		type->code.push_back(cod);global_code.push_back(cod);$$=type;temp_and_type[nn]=$$;}
 	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3,">=");Type* type=new Type();type->isbasic=true;
 		type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">=",nn);
-		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;temp_and_type[nn]=$$;}
 	;
 
 equality_expression
 	: relational_expression {$$=$1;}
 	| equality_expression EQ_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;
 		string cod=get_code4($1->place,$3->place,"==",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);
-		global_code.push_back(cod);;$$=type;}
+		global_code.push_back(cod);;$$=type;temp_and_type[nn]=$$;}
 	| equality_expression NE_OP relational_expression {Type* type=check_for_eq_op($1,$3);string nn=get_new_temp();type->place=nn;
-		string cod=get_code4($1->place,$3->place,"!=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
+		string cod=get_code4($1->place,$3->place,"!=",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);
+		global_code.push_back(cod);$$=type;temp_and_type[nn]=$$;}
 	;
 
 and_expression
 	: equality_expression {$$=$1;}
 	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,"&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
-		global_code.push_back(cod);type->place=nn;$$=type;}
+		global_code.push_back(cod);type->place=nn;$$=type;temp_and_type[nn]=$$;}
 	;
 
 exclusive_or_expression
 	: and_expression {$$=$1;}
 	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
-		string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+		string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
+		global_code.push_back(cod);type->place=nn;$$=type;temp_and_type[nn]=$$;}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$=$1;}
 	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
-		string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;}
+		string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
+		global_code.push_back(cod);type->place=nn;$$=type;temp_and_type[nn]=$$;}
 	;
 
 logical_and_expression
@@ -352,14 +373,14 @@ logical_and_expression
 		$4->truelist.push_back(global_code.size());$4->falselist.push_back(global_code.size()+1);
 		global_code.push_back(get_if_true_code($4->place));global_code.push_back(get_if_false_code());
 		global_code.push_back(cod);type->place=nn;
-		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$4->falselist);type->truelist=$4->truelist;$$=type;}
+		backpatch(type->truelist,$3);type->falselist=merge(type->falselist,$4->falselist);type->truelist=$4->truelist;$$=type;temp_and_type[nn]=$$;}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
 	| logical_or_expression OR_OP m logical_and_expression { cout << "logical or done" << endl;check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
 		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
-		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$4->truelist);type->falselist=$4->falselist;$$=type;}
+		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$4->truelist);type->falselist=$4->falselist;$$=type;temp_and_type[nn]=$$;}
 	;
 
 conditional_expression
@@ -936,7 +957,12 @@ function_declaration
 		Symbol_Info* si=new Symbol_Info($2->id,t,get_level_name(),current_level-lvl_name.size()+1,sc,"-",type);
 		func_ret_type=type->func_ret_type ; 
 		current_func_name=$2->id;
-		$2->tempname=get_new_temp();
+		if(current_level==0&&current_func_name=="main"){
+			$2->tempname="main";
+		}
+		else{
+			$2->tempname=get_new_temp();
+		}
 		si->tempname=$2->tempname;
 		current_func_si=si;
 		global_code.push_back(get_label($2->tempname));
@@ -1074,21 +1100,61 @@ int main(int argc, char *argv[]){
     }
 	  print_full_symbol_table();
       string tacOutputFile = "output_tac.txt";
+	  string final_symtabFile="final_symtab.txt";
     ofstream tacFile(tacOutputFile);
+	ofstream fsFile(final_symtabFile);
     
     if (!tacFile.is_open()) {
         cerr << "Error: Could not open file " << tacOutputFile << " for writing." << endl;
     } else {
-        /*tacFile << "====================== FINAL SYMBOL TABLE ======================\n\n";
+        fsFile << "====================== FINAL SYMBOL TABLE ======================\n\n";
         for(auto i:final_symtab){
-            tacFile << "Temp: " << i.first << "\n";
-            tacFile << "  Name: " << i.second->name << "\n";
-            tacFile << "  Type: " << i.second->type << "\n";
-            tacFile << "  Scope: " << i.second->level_name << "\n";
-            tacFile << "  Level: " << i.second->level << "\n\n";
+            fsFile << "Temp: " << i.first << "\n";
+            fsFile << "  Name: " << i.second->name << "\n";
+            fsFile << "  Type: " << i.second->type << "\n";
+            fsFile << "  Scope: " << i.second->level_name << "\n";
+            fsFile << "  Level: " << i.second->level << "\n\n";
         }
-        
-        tacFile << "====================== THREE ADDRESS CODE ======================\n\n";*/
+        fsFile << "====================== FINAL TEMP SYMBOL TABLE ======================\n\n";
+        for (auto i : temp_and_type) {
+		fsFile << "Temp: " << i.first << "\n";
+
+		Type* t = i.second;
+		t->size=getBasicTypeSize(t);
+		if (!t) {
+			fsFile << "  Type: nullptr\n";
+			continue;
+		}
+
+		fsFile << "  Type Info:\n";
+		fsFile << "    size: " << t->size << "\n";
+		fsFile << "    base: " << t->base << "\n";
+		fsFile << "    ptr_level: " << t->ptr_level << "\n";
+		fsFile << "    array_dim: " << t->array_dim << "\n";
+		fsFile << "    isbasic: " << t->isbasic << "\n";
+		fsFile << "    isobj: " << t->isobj << "\n";
+		fsFile << "    isfunction: " << t->isfunction << "\n";
+		fsFile << "    isconst: " << t->isconst << "\n";
+		fsFile << "    isvolatile: " << t->isvolatile << "\n";
+		fsFile << "    isstatic: " << t->isstatic << "\n";
+		fsFile << "    isauto: " << t->isauto << "\n";
+		fsFile << "    isextern: " << t->isextern << "\n";
+		fsFile << "    isregister: " << t->isregister << "\n";
+		fsFile << "    isigned: " << t->isigned << "\n";
+		fsFile << "    isunsigned: " << t->isunsigned << "\n";
+		fsFile << "    isnull: " << t->isnull << "\n";
+		fsFile << "    isenum: " << t->isenum << "\n";
+		fsFile << "    isvarargs: " << t->isvarargs << "\n";
+		fsFile << "    func_ptr_lev: " << t->func_ptr_lev << "\n";
+		
+		// Optional: print func_ret_type if available
+		if (t->isfunction && t->func_ret_type) {
+			fsFile << "    func_ret_type.base: " << t->func_ret_type->base << "\n";
+		}
+
+	}
+
+        /*tacFile << "====================== THREE ADDRESS CODE ======================\n\n";*/
         for(int i=0; i<global_code.size(); i++){
             tacFile << setw(4) << right << i << ": " << global_code[i] << "\n";
         }

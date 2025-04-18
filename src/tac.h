@@ -4,6 +4,7 @@
 #include <classes_NT.h>
 using namespace std;
 extern unordered_map<string,Symbol_Info*> final_symtab;
+extern unordered_map<string,Type*> temp_and_type;
 extern int tempcount;
 extern vector<string> global_code;
 extern vector<int> break_label;

@@ -118,6 +118,7 @@ void add_params_to_map(Parameter_List* pl);
 Type* check_for_eq_op(Type* s1, Type* s2);
 bool is_equal(Type* t1,Type* t2);
 void check_int_comp(Type* type);
+int getBasicTypeSize(Type* t);
 void check_typecast_compatibility(Type* t1,Type* t2);
 Type* check_if_function(Type* t);
 vector<Type*> get_func_params(Abstract_Declarator* ad);
@@ -178,6 +179,7 @@ class Type {
     int array_dim;
     int ptr_level;
     int func_ptr_lev;
+    int size;
     vector<int> truelist;
     vector<int> falselist;
     vector<int> nextlist;

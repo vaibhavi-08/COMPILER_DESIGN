@@ -1206,6 +1206,7 @@ Type :: Type(){
     this-> func_ptr_lev = 0;
     this->code=vector<string>();
     this->place="";
+    this->size=-1;
 }
 Type* check_if_id_in_obj(Type* t,string id){
     stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
@@ -1826,6 +1827,7 @@ Symbol_Info* get_symbol_info_id(string id){
         Symbol_Info* si=new Symbol_Info(id,"","",0,"","",y);
         si->tempname=y->place;
         final_symtab[si->tempname]=si;
+        temp_and_type[si->tempname]=si->t;
         return si;
     }
     if(current_func_name==id){
@@ -1939,6 +1941,7 @@ Type::Type(const Type& other) {
     isnull = other.isnull;
     isenum = other.isenum;
     isvarargs=other.isvarargs;
+    size=other.size;
     func_ret_type = other.func_ret_type ? new Type(*other.func_ret_type) : nullptr;
 
     prms.clear();
@@ -2544,6 +2547,25 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
 
 
 }
+int getBasicTypeSize(Type* t) {
+    if (!t || !t->isbasic || t->ptr_level != 0 || t->array_dim != 0||t->isfunction||t->func_ptr_lev!=0) {
+        return -1;
+    }
+
+    string base = t->base;
+
+    if (base == "CHAR") return 1;
+    if (base == "SHORT") return 2;
+    if (base == "INT") return 4;
+    if (base == "LONG") return 8;
+    if (base == "LONG LONG") return 8;
+    if (base == "FLOAT") return 4;
+    if (base == "DOUBLE") return 8;
+
+    // Unknown basic type
+    return -1;
+}
+
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
 
     for(auto i:symbol->name_type_list){
@@ -2561,6 +2583,7 @@ void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
         x->tempname=i.second.second->place;
         if(x->tempname!=""){
             final_symtab[x->tempname]=x;
+            temp_and_type[x->tempname]=x->t;
         }
         if(gst->gst.find(i.first)!=gst->gst.end()){
             cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
@@ -2576,6 +2599,7 @@ void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
     Symbol_Info* x=new Symbol_Info(symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,"-",symbol->t);
     x->tempname=symbol->decl->tempname;
     final_symtab[x->tempname]=x;
+    temp_and_type[x->tempname]=x->t;
     if(gst->gst.find(symbol->name)!=gst->gst.end()){
         cout << "error :" << "redeclaration of function " << symbol->name <<"in line :"<< line_num<< endl;
         exit(1);
@@ -2662,6 +2686,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         x->tempname=i.second.second->place;
         if(x->tempname!=""){
             final_symtab[x->tempname]=x;
+            temp_and_type[x->tempname]=x->t;
         }
         cout << x->t->base << endl;
         cout << "type correctly added to symbol info" << endl;

@@ -2,6 +2,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 unordered_map<string,Symbol_Info*> final_symtab;
+unordered_map<string,Type*> temp_and_type;
 int tempcount=0;
 vector<string> global_code;
 vector<int> break_label;

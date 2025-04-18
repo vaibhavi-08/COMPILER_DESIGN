@@ -2,58 +2,161 @@ Original Symbol Table:
 -------------------------------------------------------------------------------
 | Lexeme                                | Token                                 |
 -------------------------------------------------------------------------------
-| ++                                   | INC_OP                               |
-| 2                                    | INTEGER                              |
-| %                                    | MOD                                  |
-| 7                                    | INTEGER                              |
-| number                               | IDENTIFIER                           |
-| 10                                   | INTEGER                              |
-| 0                                    | INTEGER                              |
-| 9                                    | INTEGER                              |
-| ==                                   | EQ_OP                                |
-| a                                    | IDENTIFIER                           |
-| int                                  | INT                                  |
-| else                                 | ELSE                                 |
-| y                                    | IDENTIFIER                           |
-| }                                    | SEPERATOR                            |
-| func                                 | IDENTIFIER                           |
-| +                                    | PLUS                                 |
-| if                                   | IF                                   |
-| x                                    | IDENTIFIER                           |
-| (                                    | SEPERATOR                            |
-| return                               | RETURN                               |
-| ,                                    | SEPERATOR                            |
-| )                                    | SEPERATOR                            |
-| {                                    | SEPERATOR                            |
-| sum                                  | IDENTIFIER                           |
-| main                                 | IDENTIFIER                           |
-| =                                    | ASSIGN                               |
+| goto                                 | GOTO                                 |
+| jump                                 | IDENTIFIER                           |
+| 1000                                 | INTEGER                              |
+| --                                   | DEC_OP                               |
 | b                                    | IDENTIFIER                           |
+| float                                | FLOAT                                |
+| struct                               | STRUCT                               |
+| %                                    | MOD                                  |
+| a                                    | IDENTIFIER                           |
+| lcl                                  | IDENTIFIER                           |
+| "%d\n"                               | STRING LITERAL                       |
+| bar                                  | IDENTIFIER                           |
+| i                                    | IDENTIFIER                           |
+| int                                  | INT                                  |
+| void                                 | VOID                                 |
+| "Final = %d"                         | STRING LITERAL                       |
+| glb                                  | IDENTIFIER                           |
 | ;                                    | SEPERATOR                            |
+| if                                   | IF                                   |
+| "1\n"                                | STRING LITERAL                       |
+| }                                    | SEPERATOR                            |
+| 20                                   | INTEGER                              |
+| glb1                                 | IDENTIFIER                           |
+| return                               | RETURN                               |
+| =                                    | ASSIGN                               |
+| glb2                                 | IDENTIFIER                           |
+| 10                                   | INTEGER                              |
+| foo                                  | IDENTIFIER                           |
+| {                                    | SEPERATOR                            |
+| +                                    | PLUS                                 |
+| char                                 | CHAR                                 |
+| break                                | BREAK                                |
+| else                                 | ELSE                                 |
+| ...                                  | ELLIPSIS                             |
+| 5                                    | INTEGER                              |
+| case                                 | CASE                                 |
+| printf                               | IDENTIFIER                           |
+| 0                                    | INTEGER                              |
+| (                                    | SEPERATOR                            |
+| .                                    | SEPERATOR                            |
+| while                                | WHILE                                |
+| x                                    | IDENTIFIER                           |
+| switch                               | SWITCH                               |
+| *                                    | MUL                                  |
+| 1                                    | INTEGER                              |
+| default                              | DEFAULT                              |
+| ,                                    | SEPERATOR                            |
+| ==                                   | EQ_OP                                |
+| static                               | STATIC                               |
+| 100                                  | INTEGER                              |
+| main                                 | IDENTIFIER                           |
+| )                                    | SEPERATOR                            |
+| [                                    | SEPERATOR                            |
+| next                                 | IDENTIFIER                           |
+| ++                                   | INC_OP                               |
+| ]                                    | SEPERATOR                            |
+| ret                                  | IDENTIFIER                           |
+| c                                    | IDENTIFIER                           |
+| "2\n"                                | STRING LITERAL                       |
+| newS                                 | IDENTIFIER                           |
+| 3                                    | INTEGER                              |
+| for                                  | FOR                                  |
+| <                                    | LESSTHAN                             |
+| 2                                    | INTEGER                              |
+| +=                                   | ADD_ASSIGN                           |
+| !=                                   | NE_OP                                |
+| -                                    | MINUS                                |
+| :                                    | SEPERATOR                            |
 -------------------------------------------------------------------------------
 
 seperated tokens: 
 int
-func
-(
+glb
+;
 int
+glb1
+=
+10
+;
+void
+printf
+(
+char
+*
 x
 ,
-int
-y
+...
 )
+;
+static
+int
+glb2
+;
+struct
+foo
 {
 int
-sum
-=
-x
-+
-y
+a
 ;
+int
+b
+;
+struct
+foo
+*
+next
+;
+}
+;
+static
+int
+bar
+(
+int
+a
+,
+float
+b
+)
+{
+static
+int
+lcl
+=
+10
+;
+while
+(
+b
+)
+{
+b
+--
+;
+}
+if
+(
+a
+==
+0
+)
 return
-x
+0
+;
+bar
+(
+--
+a
+,
+a
 +
-y
+b
++
+lcl
+)
 ;
 }
 int
@@ -64,36 +167,164 @@ main
 int
 a
 =
-9
+100
+,
+b
+[
+20
+]
+,
+ret
 ;
+int
+*
+c
+=
+b
++
+ret
+;
+struct
+foo
+newS
+[
+5
+]
+;
+int
+i
+;
+for
+(
+i
+=
+0
+;
+i
+<
+a
+;
+i
+++
+)
+{
 int
 b
 =
-10
+0
 ;
-int
-number
-=
-7
+b
++=
+i
 ;
 if
 (
-number
+b
+%
+2
+!=
+b
+%
+3
+)
+{
+printf
+(
+"%d\n"
+,
+a
++
+b
+)
+;
+}
+else
+if
+(
+b
 %
 2
 ==
 0
 )
 {
-a
-++
-;
-}
-else
-{
+switch
+(
 b
-++
+)
+{
+case
+-
+100
+:
+{
+printf
+(
+"1\n"
+)
+;
+break
 ;
 }
+case
+1000
+:
+printf
+(
+"2\n"
+)
+;
+default
+:
+printf
+(
+"2\n"
+)
+;
+}
+}
+ret
+=
+i
+;
+}
+jump
+:
+printf
+(
+"Final = %d"
+,
+newS
+[
+3
+]
+.
+b
++
+ret
+)
+;
+if
+(
+*
+(
+b
++
+2
+)
+==
+0
+)
+goto
+jump
+;
+bar
+(
+1
+,
+*
+b
+)
+;
 }
 

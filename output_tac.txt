@@ -1,3 +1,55 @@
+====================== FINAL SYMBOL TABLE ======================
+
+Temp: t7
+  Name: main
+  Type: INT
+  Scope: main:
+  Level: 0
+
+Temp: t13
+  Name: number
+  Type: INT
+  Scope: main:
+  Level: 1
+
+Temp: t11
+  Name: b
+  Type: INT
+  Scope: main:
+  Level: 1
+
+Temp: t9
+  Name: a
+  Type: INT
+  Scope: main:
+  Level: 1
+
+Temp: t1
+  Name: func
+  Type: INT
+  Scope: func:
+  Level: 0
+
+Temp: t5
+  Name: sum
+  Type: INT
+  Scope: func:
+  Level: 1
+
+Temp: t3
+  Name: y
+  Type: 
+  Scope: 
+  Level: 0
+
+Temp: t2
+  Name: x
+  Type: 
+  Scope: 
+  Level: 0
+
+====================== THREE ADDRESS CODE ======================
+
    0: t1 : 
    1: arg t2
    2: arg t3
@@ -27,12 +79,147 @@
   26: t16=0
   27: t17=t15==t16
   28: if t17 goto 30
-  29: goto 3
+  29: goto 34
   30: t18=t9++
   31: t9=t18
   32: if t9 goto 34
   33: goto 34
-  34: t19=t11++
-  35: t11=t19
-  36: if t11 goto 38
-  37: goto 38
+  34: param t4
+  35: param t14
+  36: t15=call t3
+  37: if t15 goto 39
+  38: goto 39
+  39: t16 : 
+  40: t17=100
+  41: if t17 goto 43
+  42: goto 43
+  43: t18=t17
+  44: t19=20
+  45: if t19 goto 47
+  46: goto 47
+  47: t22=t20+t21
+  48: if t22 goto 50
+  49: goto 50
+  50: t23=t22
+  51: t24=5
+  52: if t24 goto 54
+  53: goto 54
+  54: t26=0
+  55: if t26 goto 57
+  56: goto 57
+  57: t25=t26
+  58: t27=t25<t18
+  59: if t27 goto 66
+  60: goto 136
+  61: t28=t25++
+  62: t25=t28
+  63: if t25 goto 65
+  64: goto 65
+  65: goto 58
+  66: t29=0
+  67: if t29 goto 69
+  68: goto 69
+  69: t30=t29
+  70: if t25 goto 72
+  71: goto 72
+  72: t30=t30+t25
+  73: t31=2
+  74: t32=t30%t31
+  75: t33=3
+  76: t34=t30%t33
+  77: t35=t32!=t34
+  78: if t35 goto 80
+  79: goto 91
+  80: t37="%d\n"
+  81: if t37 goto 83
+  82: goto 83
+  83: t38=t18+t30
+  84: if t38 goto 86
+  85: goto 86
+  86: param t37
+  87: param t38
+  88: t39=call t36
+  89: if t39 goto 91
+  90: goto 91
+  91: t40=2
+  92: t41=t30%t40
+  93: t42=0
+  94: t43=t41==t42
+  95: if t43 goto 97
+  96: goto 132
+  97: if t30 goto 99
+  98: goto 99
+  99: t44=100
+ 100: t45=-t44
+ 101: if t45 goto 103
+ 102: goto 103
+ 103: if t45 == t30 goto 105
+ 104: goto 113
+ 105: t46="1\n"
+ 106: if t46 goto 108
+ 107: goto 108
+ 108: param t46
+ 109: t47=call t36
+ 110: if t47 goto 112
+ 111: goto 112
+ 112: goto 132
+ 113: t48=1000
+ 114: if t48 goto 116
+ 115: goto 116
+ 116: if t48 == t30 goto 118
+ 117: goto 125
+ 118: t49="2\n"
+ 119: if t49 goto 121
+ 120: goto 121
+ 121: param t49
+ 122: t50=call t36
+ 123: if t50 goto 125
+ 124: goto 125
+ 125: t51="2\n"
+ 126: if t51 goto 128
+ 127: goto 128
+ 128: param t51
+ 129: t52=call t36
+ 130: if t52 goto 132
+ 131: goto 132
+ 132: if t25 goto 134
+ 133: goto 134
+ 134: t21=t25
+ 135: goto 61
+ 136: t53="Final = %d"
+ 137: if t53 goto 139
+ 138: goto 139
+ 139: t55=3
+ 140: if t55 goto 142
+ 141: goto 142
+ 142: t56=t54[t55]
+ 143: t58=t56.t57
+ 144: t59=t58+t21
+ 145: if t59 goto 147
+ 146: goto 147
+ 147: param t53
+ 148: param t59
+ 149: t60=call t36
+ 150: if t60 goto 152
+ 151: goto 152
+ 152: t61=2
+ 153: t62=t20+t61
+ 154: if t62 goto 156
+ 155: goto 156
+ 156: t63=*t62
+ 157: t64=0
+ 158: t65=t63==t64
+ 159: if t65 goto 161
+ 160: goto 162
+ 161: goto 136
+ 162: t66=1
+ 163: if t66 goto 165
+ 164: goto 165
+ 165: t67=*t20
+ 166: if t67 goto 168
+ 167: goto 168
+ 168: param t66
+ 169: param t67
+ 170: t68=call t3
+ 171: if t68 goto 173
+ 172: goto 173

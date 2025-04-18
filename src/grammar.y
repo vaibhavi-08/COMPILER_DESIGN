@@ -204,23 +204,18 @@ primary_expression
 	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
 	| CONST_FLOAT {Type* t=new Type();t->isbasic=true;t->base="FLOAT";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
 	| CONST_EXP {Type* t=get_type_exp($1);string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;}
-	| '(' expression ')' {Type* t=$2;string nn=get_new_temp();t->place=nn;t->truelist=$2->truelist;t->falselist=$2->falselist;$$=t;}
+	| '(' expression ')' {$$=$2;backpatch($$->truelist,global_code.size());backpatch($$->falselist,global_code.size());$$->truelist=vector<int>();$$->falselist=vector<int>();}
 	| NULL_TOKEN {Type* t=new Type();t->isnull=true;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4("nullptr","","",nn));$$=t;}
 	;
-
-class_name
-    : IDENTIFIER /* pass */ { cout<<"IDENTIFIER will be passed to CN"<<endl;$$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) );cout<<"identifier passed to class_name"<<endl; }
-    ;
-
 postfix_expression
 	: primary_expression {$$=$1;}
 	| postfix_expression '[' expression ']' {Type* type=check_if_array_or_pointer($1);$$=type;string nn=get_new_temp();
 	backpatch($3->truelist,global_code.size());backpatch($3->falselist,global_code.size());global_code.push_back(get_code_array($1->place,$3->place,nn));$$->place=nn;}
-	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>());
+	| postfix_expression '(' ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,vector<Type*>(),false);
 		string nn=get_new_temp();
 		global_code.push_back(get_code_func(nn,$1->place));
 		$$=t;}
-	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);check_argument_with_params($1->prms,$3->vec_exp);
+	| postfix_expression '(' argument_expression_list ')' {Type* t=check_if_function($1);cout << "hello ##  vargs: " << $1->isvarargs << endl; check_argument_with_params($1->prms,$3->vec_exp,$1->isvarargs);
 		for(auto i:$3->prm_temps){
 			global_code.push_back(get_param_code(i));
 		}
@@ -242,8 +237,8 @@ postfix_expression
 		global_code.push_back(get_code4($1->place, nn1, "->",nn2));
 		$$=type;
 		$$->place=nn2;}
-	| postfix_expression INC_OP  {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;}
-	| postfix_expression DEC_OP {check_inc_dec_op($1);$$=$1;string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","--",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;}
+	| postfix_expression INC_OP  {check_inc_dec_op($1);Type* xx=$1;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","++",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
+	| postfix_expression DEC_OP {check_inc_dec_op($1);Type* xx=$1;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4($1->place,"","--",nn));global_code.push_back(get_code4("",nn,"",$1->place));$$->place=$1->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
 	;
 
 argument_expression_list
@@ -256,9 +251,9 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression {$$=$1;}
-	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"++",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;}
-	| DEC_OP unary_expression  {check_inc_dec_op($2);$$=$2;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;}
-	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,$1,nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;}
+	| INC_OP unary_expression /*array function and constant struct union bool class void */ {check_inc_dec_op($2);Type* xx=$2;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"++",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
+	| DEC_OP unary_expression  {check_inc_dec_op($2);Type* xx=$2;$$=new Type(*xx);string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"--",nn));global_code.push_back(get_code4("",nn,"",$2->place));$$->place=$2->place;$$->truelist=vector<int>();$$->falselist=vector<int>();}
+	| unary_operator cast_expression {Type* type=get_type_unary_expression($1,$2);$$=type;cout<<"got &"<<endl;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,$1,nn));$$->place=nn;}
 	| SIZEOF unary_expression {check_for_sizeof($2); Type* t=new Type(); t->isbasic=true; t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",$2->place,"SIZEOF",nn));$$->place=nn;}/* void , functiions */
 	| SIZEOF '(' type_name ')' {check_for_sizeof($3->type);Type* t=new Type();t->isbasic=true;t->base="INT";$$=t;string nn=get_new_temp();global_code.push_back(get_code4("",get_string_type($3->type),"SIZEOF ",nn));$$->place=nn;}
 	;
@@ -279,19 +274,19 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression {$$=$1;}
-	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);
+	| multiplicative_expression '*' cast_expression {Type* type=check_for_arithmatic_op($1,$3,"*");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"*",nn);
 		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"/",nn);
+	| multiplicative_expression '/' cast_expression {Type* type=check_for_arithmatic_op($1,$3,"/");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"/",nn);
 		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"%",nn);
+	| multiplicative_expression '%' cast_expression	{Type* type=check_for_arithmatic_op($1,$3,"%");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"%",nn);
 		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
 additive_expression
 	: multiplicative_expression {$$=$1;}
-	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);
+	| additive_expression '+' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3,"+");string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"+",nn);
 		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3);string nn=get_new_temp();
+	| additive_expression '-' multiplicative_expression {Type* type=check_for_arithmatic_op($1,$3,"-");string nn=get_new_temp();
 		type->place=nn;string cod=get_code4($1->place,$3->place,"-",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
 
@@ -306,15 +301,15 @@ shift_expression
 
 relational_expression
 	: shift_expression {$$=$1;}
-	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
-		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
+	| relational_expression '<' shift_expression {check_for_arithmatic_op($1,$3,"<");Type* type=new Type();type->isbasic=true;type->base="INT";
+		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<",nn);/*merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);*/global_code.push_back(cod);$$=type;}
+	| relational_expression '>' shift_expression {check_for_arithmatic_op($1,$3,">");Type* type=new Type();type->isbasic=true;type->base="INT";
 		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">",nn);merge_code(type->code,$1->code,$3->code);
 		type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;type->base="INT";
+	| relational_expression LE_OP shift_expression {check_for_arithmatic_op($1,$3,"<=");Type* type=new Type();type->isbasic=true;type->base="INT";
 		string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,"<=",nn);merge_code(type->code,$1->code,$3->code);
 		type->code.push_back(cod);global_code.push_back(cod);$$=type;}
-	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3);Type* type=new Type();type->isbasic=true;
+	| relational_expression GE_OP shift_expression {check_for_arithmatic_op($1,$3,">=");Type* type=new Type();type->isbasic=true;
 		type->base="INT";string nn=get_new_temp();type->place=nn;string cod=get_code4($1->place,$3->place,">=",nn);
 		merge_code(type->code,$1->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);$$=type;}
 	;
@@ -374,7 +369,41 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression  {$$=$1; }
-	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);string cod=get_code4($3->place,"","",$1->place);
+	| unary_expression assignment_operator assignment_expression  {Type* t=check_for_assign($1,$3,$2);merge_code(t->code,$1->code,$3->code);
+		string cod;
+		if($2=="="){
+			cod=get_code4($3->place,"","",$1->place);
+		}
+		else if($2=="*="){
+			cod=get_code4($1->place,$3->place,"*",$1->place);
+		}
+		else if($2=="/="){
+			cod=get_code4($1->place,$3->place,"/",$1->place);
+		}
+		else if($2=="%="){
+			cod=get_code4($1->place,$3->place,"%",$1->place);
+		}
+		else if($2=="+="){
+			cod=get_code4($1->place,$3->place,"+",$1->place);
+		}
+		else if($2=="-="){
+			cod=get_code4($1->place,$3->place,"-",$1->place);
+		}
+		else if($2=="<<="){
+			cod=get_code4($1->place,$3->place,"<<",$1->place);
+		}
+		else if($2==">>="){
+			cod=get_code4($1->place,$3->place,">>",$1->place);
+		}
+		else if($2=="&="){
+			cod=get_code4($1->place,$3->place,"&",$1->place);
+		}
+		else if($2=="^="){
+			cod=get_code4($1->place,$3->place,"^",$1->place);
+		}
+		else{
+			cod=get_code4($1->place,$3->place,"|",$1->place);
+		}
 		backpatch($3->truelist,global_code.size());
 		backpatch($3->falselist,global_code.size());
 		global_code.push_back(cod);$$=t;
@@ -485,10 +514,10 @@ struct_or_union_specifier
 	;
 
 struct_id 
-	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));cout<<"got struct identifier"<<endl;}
+	: IDENTIFIER {lvl_name.push("struct " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));ccsui_type.push("struct");cout<<"got struct identifier"<<endl;}
 	;
 union_id
-	: IDENTIFIER {cout<<"identifier in uid started"<<endl;lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));cout<<"Passed IDENTIFIER to uid"<<endl;}
+	: IDENTIFIER {cout<<"identifier in uid started"<<endl;lvl_name.push("union " + std::string($1));$$=$1;current_class_struct_union_info.push(std::make_pair($1,nullptr));ccsui_type.push("union");cout<<"Passed IDENTIFIER to uid"<<endl;}
 	;
 struct
 	: STRUCT /*just pass */ {$$="struct";cout <<"finally reached to struct"<<endl;}
@@ -555,8 +584,9 @@ class_body
     : '{' class_member_declaration_list '}' {$$=$2; current_level--;current_table=current_table->parent;lvl_name.pop();while(!access_spec_stk.empty())access_spec_stk.pop();add_to_local_class_struct_union_info();}/*come to parent table from current table. pass above*/ 
     | '{' '}' {lvl_name.pop();add_to_local_class_struct_union_info();}/* pass empty class member declaration list object */
     ;
+
 class_name
-    : IDENTIFIER /* pass */ { $$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) ); }
+    : IDENTIFIER /* pass */ { $$ = $1; string s="class "; s+=$1;lvl_name.push(s);current_class_struct_union_info.push(std::make_pair($1, nullptr) );ccsui_type.push("class"); }
     ;
 class_member_declaration_list
     : class_member_declaration {Class_Member_Declaration_List* x=new Class_Member_Declaration_List();x->cd.push_back($1);current_level++;current_table=next_table();if(!current_class_struct_union_info.empty()){current_class_struct_union_info.top().second=current_table;}else{cout << "classname not pushed" << endl;}}  /* make obj class_member_declaration_list . add class_member_declaration. */
@@ -686,8 +716,8 @@ initializer
 	: assignment_expression  {Initializer* x=new Initializer($1,"",nullptr,"",nullptr);x->type=$1;$$=x;backpatch($1->truelist,global_code.size());backpatch($1->falselist,global_code.size());}
 	| '{' initializer_list '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
 	| '{' initializer_list ',' '}' {$$=new Initializer(new Type(),"",$2,"",nullptr);} 
-	| NEW class_name '(' argument_expression_list ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,$4->vec_exp);Type* z=new Type();z->isobj=true;z->objtype="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,$4);$$=gg;} 
-	| NEW class_name '(' ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,vector<Type*>());Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,nullptr);$$=gg;}
+	| NEW class_name '(' argument_expression_list ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,$4->vec_exp,false);Type* z=new Type();z->isobj=true;z->objtype="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,$4);$$=gg;} 
+	| NEW class_name '(' ')' {Type* t=get_type_id($2);check_if_constructor(t);check_argument_with_params(t->prms,vector<Type*>(),false);Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=$2;Initializer* gg=new Initializer(z,"",nullptr,$2,nullptr);$$=gg;}
 	;
 
 initializer_list
@@ -720,7 +750,7 @@ labeled_statement
 	
 		fill_eqeq_exp1($3-2,$2->place);
 		backpatch1($3-2,$3);
-		backpatch1($3-1, global_code.size()+1);
+		backpatch1($3-1, global_code.size());
 		}
 	| DEFAULT ':' statement {cout<<"finally reached to default"<<endl;$$=$3;}
 	;
@@ -839,9 +869,11 @@ iteration_statement
 	| FOR '(' expression smc expression smc expression fcrb statement { $$=$9;
 		backpatch($5->truelist,$8->pos);
 		backpatch($8->nextlist,$4);
+		backpatch($7->truelist,$8->pos-1);
+		backpatch($7->falselist,$8->pos-1);
 		global_code.push_back(get_while_code($6));
 		backpatch($5->falselist,global_code.size());
-		$$=$7;$$->nextlist=$5->falselist;
+		$$=$9;$$->nextlist=$5->falselist;
 		backpatch(break_label, global_code.size());
 		backpatch(continue_label, $4);
 		}
@@ -897,8 +929,16 @@ function_declaration
 		string t=create_type($1,$2,type);
 		cout << "create type for func decl done successfully"<<endl;
 		$2->check_for_func();cout << "check for func done successfully in func decl" << endl;
-		$$=x;func_ret_type=type->func_ret_type ; lvl_name.push(get_name($2));
+		$$=x;
+		lvl_name.push(get_name($2));
+		string sc="global";
+		if(current_level>0)sc="local";
+		Symbol_Info* si=new Symbol_Info($2->id,t,get_level_name(),current_level-lvl_name.size()+1,sc,"-",type);
+		func_ret_type=type->func_ret_type ; 
+		current_func_name=$2->id;
 		$2->tempname=get_new_temp();
+		si->tempname=$2->tempname;
+		current_func_si=si;
 		global_code.push_back(get_label($2->tempname));
 		cout<<"@@@"<<endl;
 		cout<<get_label($2->tempname)<<endl;
@@ -921,6 +961,8 @@ function_definition /*(function_definition <- node ) */
 	}
 	cout << "current params list cleared" << endl;
 	func_ret_type==nullptr;
+	current_func_name="";
+	current_func_si=nullptr;
 	lvl_name.pop();}/*same as above */
 	/*| declarator declaration_list compound_statement {$$=create_func_def(nullptr,$1,$2,$3);lvl_name.pop();} *//*same as above*/ 
 	/*| declarator compound_statement {$$=create_func_def(nullptr,$1,nullptr,$2);lvl_name.pop();}*//* same as above */
@@ -976,6 +1018,9 @@ int main(int argc, char *argv[]){
     lvl_name.pop();
 	}
 	current_table=nullptr;
+	func_ret_type=nullptr;
+	current_func_name="";
+	current_func_si=nullptr;
 	current_level=0;
     int abc=yyparse();
 	if (!error.empty()) {

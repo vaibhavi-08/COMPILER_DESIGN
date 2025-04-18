@@ -9,11 +9,14 @@ std::stack<std::string> lvl_name; // Definition
 Local_Symbol_Table* current_table = nullptr; // Definition
 stack<string> access_spec_stk;
 vector<pair<string,Type*>> current_param_vector;
+string current_func_name;
+Symbol_Info* current_func_si;
 Type* func_ret_type;
 int current_level = 0;
 int line_num=1;
 set<string> labelset;
 stack<pair<string,Local_Symbol_Table*>> current_class_struct_union_info;
+stack<string> ccsui_type;
 Symbol_Info::Symbol_Info(string name,string type, string level_name,int level,string scope,string access,Type* t){
     cout << "symbol info constructor called" << endl;
     this->name=name;
@@ -48,6 +51,7 @@ void add_to_local_class_struct_union_info(){
             cout << "added to local table class struct union info" << endl;
         }
         current_class_struct_union_info.pop();
+        ccsui_type.pop();
         cout << "popped" << endl;
     }
     else{
@@ -208,6 +212,13 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
                     exit(1);
                 }
                 t->isfunction=true;
+                if(d->dd!=nullptr&&d->dd->pl!=nullptr){
+                    if(d->dd->pl->ellipses==true){
+                        t->isvarargs=true;
+                        cout << "i have finally set varargs for " << d->id << " true and i am happy" << endl;
+                        
+                    }
+                }
                 t->prms=get_func_params(d);
                 Type* g=new Type();
                 g->isvoid=true;
@@ -324,23 +335,31 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
         }
         else if(dtype=="function"){
             cout << "this is  function" << endl;
-            if(ds->scs.empty()&&ds->tq.empty()){
+            //if(ds->scs.empty()&&ds->tq.empty()){
+                cout << "i am in create type for function :" << d->id << endl;
                 t->isfunction=true;
                 Type* g=new Type();
                 create_type(ds,nullptr,g);
                 cout << "create type for int done" << endl;
                 t->func_ret_type=g;
+                if(d->dd!=nullptr&&d->dd->pl!=nullptr){
+                    if(d->dd->pl->ellipses==true){
+                        t->isvarargs=true;
+                        cout << "i have finally set varargs for " << d->id << " true and i am happy" << endl;
+                        
+                    }
+                }
                 if(g->isobj==false&&g->objtype!=""){
                     cout << "invalid return type for func" << endl;
                     exit(1);
                 }
                 t->prms=get_func_params(d);
                 cout << "function params extracted successfully" << endl;
-            }
-            else{
-                cout << "function cannot be declared with other keywords" << endl;
-                exit(1);
-            }
+            //}
+            // else{
+            //     cout << "function cannot be declared with other keywords" << endl;
+            //     exit(1);
+            // }
         }
         else if(dtype=="function pointer"){
             t->prms=get_func_params(d);
@@ -625,7 +644,7 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
             }
         }
         else if (dtype=="function"){
-            if(ds->tq.empty()){
+            //if(ds->tq.empty()){
                 t->isfunction=true;
                 Type* g=new Type();
                 create_type(ds,nullptr,g);
@@ -636,11 +655,11 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
                     exit(1);
                 }
                 t->prms=get_func_params(d);
-            }
-            else{
-                cout << "function cannot be declared with other keywords" << endl;
-                exit(1);
-            }
+            // }
+            // else{
+            //     cout << "function cannot be declared with other keywords" << endl;
+            //     exit(1);
+            // }
         }
         else if(dtype=="function pointer"){
             t->prms=get_func_params(d);
@@ -895,7 +914,7 @@ Type* Type_Name::create_type_tn(Specifier_Qualifier_List* ds,Abstract_Declarator
             }
         }
         else if (dtype=="function"){
-            if(ds->tq.empty()){
+            //if(ds->tq.empty()){
                 t->isfunction=true;
                 Type* g=new Type();
                 create_type(ds,nullptr,g);
@@ -905,11 +924,11 @@ Type* Type_Name::create_type_tn(Specifier_Qualifier_List* ds,Abstract_Declarator
                     exit(1);
                 }
                 t->prms=get_func_params(ad);
-            }
-            else{
-                cout << "function cannot be declared with other keywords" << endl;
-                exit(1);
-            }
+            // }
+            // else{
+            //     cout << "function cannot be declared with other keywords" << endl;
+            //     exit(1);
+            // }
         }
         else if(dtype=="function pointer"){
             t->prms=get_func_params(ad);
@@ -1069,12 +1088,16 @@ vector<Type*> get_const_params(Parameter_List* p){
     return ans;
 }
 
-void check_argument_with_params(vector<Type*> prms,vector<Type*> args){
-    if(args.size()!=prms.size()){
+void check_argument_with_params(vector<Type*> prms,vector<Type*> args,bool isva){
+    if(args.size()!=prms.size()&&isva==false){
         cout << "number of args !=number of prms" << endl;
         exit(1);
     }
-    int n=args.size();
+    else if(isva==true&&args.size()<prms.size()){
+        cout << "number of args >=number of prms for variable argument functions" << endl;
+        exit(1);
+    }
+    int n=prms.size();
     for(int i=0;i<n;i++){
         check_for_assign(prms[i],args[i],"=");
     }
@@ -1172,6 +1195,7 @@ Type :: Type(){
     this-> isunsigned=false;
     this-> isnull=false;
     this-> isenum=false;
+    this->isvarargs=false;
     this-> func_ret_type = nullptr;
     this-> el=nullptr;
     this-> base = "";
@@ -1561,7 +1585,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
 
     }
     else{
-        check_for_assign(t1,check_for_arithmatic_op(t1,t2),"=");
+        check_for_assign(t1,check_for_arithmatic_op(t1,t2,"*"),"=");
         return t1;
     }
 }
@@ -1804,6 +1828,9 @@ Symbol_Info* get_symbol_info_id(string id){
         final_symtab[si->tempname]=si;
         return si;
     }
+    if(current_func_name==id){
+        return current_func_si;
+    }
     //parameters not handled
     cout << "identifier not found " << id  << endl;
     exit(1);
@@ -1890,6 +1917,9 @@ Type* get_type_id(string id) {
         Type* y=current_params_list[id];
         return y;
     }
+    if(current_func_name==id){
+        return current_func_si->t;
+    }
     cout << "identifier not found " << id  << endl;
     exit(1);
 }
@@ -1908,7 +1938,7 @@ Type::Type(const Type& other) {
     isunsigned = other.isunsigned;
     isnull = other.isnull;
     isenum = other.isenum;
-
+    isvarargs=other.isvarargs;
     func_ret_type = other.func_ret_type ? new Type(*other.func_ret_type) : nullptr;
 
     prms.clear();
@@ -1964,74 +1994,12 @@ vector<pair<string,Type*>> get_params(Parameter_List* p){
     
     return ans;
 }
-Type* check_for_arithmatic_op(Type* s1, Type* s2){
+Type* check_for_arithmatic_op(Type* s1, Type* s2,string op){
     //Type* t=new Type();
     cout << s1->base << " " << s2->base << endl;
     cout << s1->isbasic << " " << s2->isbasic << endl;
     cout << s1->ptr_level << " " << s2->ptr_level << endl;
     cout << s1->array_dim << " " << s2->array_dim << endl;
-//     if(s1->isobj || s2->isobj){
-//         if((s1->base=="INT" && s2->objtype=="enum") || (s1->objtype=="enum" && s2->base=="INT") || (s1->base=="INT" && s2->objtype=="enum")){
-//             t->base="INT";
-//         }
-//         else{
-//             cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<<"pls pls check again"<< endl;
-//             exit(1);
-//         }
-//     }
-//     if(s1->isbasic || s2->isbasic==false){
-//         cout << "error:  not valid for arithmatic operation" <<"in line :"<< line_num<<"pls pls check"<< endl;
-//         exit(1);
-//     }
-//     if(s1->base=="CHAR" && s2->base=="CHAR"){
-//         t->base="CHAR";
-//     }
-//     else if(s1->base=="SHORT" && s2->base=="SHORT" || (s1->base=="SHORT" && s2->base=="CHAR") || (s1->base=="CHAR" && s2->base=="SHORT")){
-//         t->base="SHORT";
-//     }
-//     else if((s1->base=="INT" && s2->base=="INT") || (s1->base=="SHORT" && s2->base=="INT") || (s1->base=="INT" && s2->base=="SHORT") || (s1->base=="CHAR" && s2->base=="INT") || (s1->base=="INT" && s2->base=="CHAR")){
-//         t->base="INT";
-//     }
-//     else if((s1->base=="FLOAT" || s2->base=="FLOAT") || 
-//    (s1->base == "INT" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "INT") || 
-//     (s1->base == "SHORT" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "SHORT") || 
-//     (s1->base == "CHAR" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "CHAR") || 
-//     (s1->base == "LONG" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "LONG") ||
-//     (s1->base == "LONG LONG" && s2->base == "FLOAT") || (s1->base == "FLOAT" && s2->base == "LONG LONG")) {
-
-//     t->base = "FLOAT";
-//     }
-//     else if ((s1->base == "DOUBLE" || s2->base == "DOUBLE") || 
-//     (s1->base == "INT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "INT") || 
-//     (s1->base == "SHORT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "SHORT") || 
-//     (s1->base == "FLOAT" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "FLOAT") || 
-//     (s1->base == "CHAR" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "CHAR") ||
-//     (s1->base == "LONG" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "LONG") ||
-//     (s1->base == "LONG LONG" && s2->base == "DOUBLE") || (s1->base == "DOUBLE" && s2->base == "LONG LONG")) {
-
-//     t->base = "DOUBLE";
-//     }
-//     else if ((s1->base == "LONG" && s2->base == "LONG") &&
-//     (s1->base == "LONG" && s2->base == "INT") || (s1->base == "INT" && s2->base == "LONG") || 
-//     (s1->base == "LONG" && s2->base == "CHAR") || (s1->base == "CHAR" && s2->base == "LONG")  || 
-//     (s1->base == "LONG" && s2->base == "SHORT") || (s1->base == "SHORT" && s2->base == "LONG")) {
-
-//     t->base = "LONG";
-//     }
-//     else if ((s1->base == "LONG LONG" && s2->base == "LONG LONG") &&
-//     (s1->base == "LONG LONG" && s2->base == "INT") || (s1->base == "INT" && s2->base == "LONG LONG") || 
-//     (s1->base == "LONG LONG" && s2->base == "CHAR") || (s1->base == "CHAR" && s2->base == "LONG LONG")  || 
-//     (s1->base == "LONG LONG" && s2->base == "SHORT") || (s1->base == "SHORT" && s2->base == "LONG LONG") ||
-//     (s1->base == "LONG LONG" && s2->base == "LONG") || (s1->base == "LONG" && s2->base == "LONG LONG")) {
-
-//     t->base = "LONG LONG";
-//     }
-    
-//     else {
-//     cout << "error:  not valid for arithmetic operation " <<"in line :"<< line_num<<"pls check"<< endl;
-//     exit(1);
-//     }
-//     return t;
     Type* t=new Type();
     if(s1->ptr_level==0&&s2->ptr_level==0&&s1->array_dim==0&&s2->array_dim==0&&s1->func_ptr_lev==0&&s2->func_ptr_lev==0&&!s1->isfunction&&!s2->isfunction){
         cout << "dash dash" << endl;
@@ -2087,6 +2055,52 @@ Type* check_for_arithmatic_op(Type* s1, Type* s2){
             else if(s1->base=="DOUBLE"){t->base=="DOUBLE";}
             else {
                 cout << "this is not possible" << endl;
+            }
+        }
+        else{
+            cout << "arithmatic operations not allowed between these types" << endl;
+            exit(1);
+        }
+    }
+    else if(op=="+"&&s1->func_ptr_lev==0&&s2->func_ptr_lev==0&&!s1->isfunction&&!s2->isfunction){
+        if(s1->array_dim>=0&&s2->array_dim==0&&s2->ptr_level==0&&s2->isbasic){
+            if(s2->base=="INT"||s2->base=="SHORT"||s2->base=="LONG"||s2->base=="CHAR"||s2->base=="LONG LONG"){
+                Type* zz=new Type(*s1);
+                return zz;
+            }
+            else {
+                cout << "arithmatic operations not allowed between these types" << endl;
+                exit(1);
+            }
+        }
+        else if(s2->array_dim>=0&&s1->array_dim==0&&s1->ptr_level==0&&s1->isbasic){
+            if(s1->base=="INT"||s1->base=="SHORT"||s1->base=="LONG"||s1->base=="CHAR"||s1->base=="LONG LONG"){
+                Type* zz=new Type(*s2);
+                return zz;
+            }
+            else {
+                cout << "arithmatic operations not allowed between these types" << endl;
+                exit(1);
+            }
+        }
+        else if(s1->ptr_level>=0&&s2->array_dim==0&&s2->ptr_level==0&&s2->isbasic){
+            if(s2->base=="INT"||s2->base=="SHORT"||s2->base=="LONG"||s2->base=="CHAR"||s2->base=="LONG LONG"){
+                Type* zz=new Type(*s1);
+                return zz;
+            }
+            else {
+                cout << "arithmatic operations not allowed between these types" << endl;
+                exit(1);
+            }
+        }
+        else if(s2->ptr_level>=0&&s1->array_dim==0&&s1->ptr_level==0&&s1->isbasic){
+            if(s1->base=="INT"||s1->base=="SHORT"||s1->base=="LONG"||s1->base=="CHAR"||s1->base=="LONG LONG"){
+                Type* zz=new Type(*s2);
+                return zz;
+            }
+            else {
+                cout << "arithmatic operations not allowed between these types" << endl;
+                exit(1);
             }
         }
         else{
@@ -2168,8 +2182,8 @@ Type* check_for_eq_op(Type* s1, Type* s2) {
         }
     } else if (s1->func_ptr_lev > 0) {
         if (s1->func_ptr_lev == s2->func_ptr_lev) {
-            check_argument_with_params({s1->prms}, {s2->prms});
-            check_argument_with_params(s1->prms, s2->prms);
+            check_argument_with_params({s1->prms}, {s2->prms},false);
+            check_argument_with_params(s1->prms, s2->prms,false);
             t->base = "INT";
         } else {
             cout << "error:  not valid for comparison" <<"in line :"<< line_num<< endl;
@@ -2215,6 +2229,7 @@ Type* get_type_unary_expression(string t1, Type* t2) {
 
     if (t1 == "*") {
         if(t->ptr_level>0)t->ptr_level--;
+        else if(t->array_dim>0)t->array_dim--;
         else{
             cout << "dereferencing can be done only on pointers" << endl;
             exit(1);
@@ -2460,30 +2475,74 @@ Parameter_Declaration::Parameter_Declaration(Declaration_Specifiers* ds, Declara
     : ds(ds), dec(d) {  
 }
 void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,const string& var_type){
-    Local_Symbol_Table* x=current_table;
+    // Local_Symbol_Table* x=current_table;
+    // bool check=false;
+    // while(x!=nullptr){
+    //     auto y=(x->lst).find(var_name);
+    //     if(y!=x->lst.end()){
+    //         if((y->second)->type==var_type){
+    //             check=true;
+    //             break;
+    //         }
+    //     }
+    //     else{
+    //         x=x->parent;
+    //     }
+    // }
+    // if(gst->gst.find(var_name)!=gst->gst.end()){
+    //     auto y=gst->gst.find(var_name);
+    //     if((y->second)->type==var_type){
+    //         check=true;
+    //     }
+    // }
+    // if(!check){
+    //     cout << "error: " << var_type << " " << var_name << " not declared!" <<"in line :"<< line_num<< endl;
+    //     exit(1);
+    // }
     bool check=false;
-    while(x!=nullptr){
-        auto y=(x->lst).find(var_name);
-        if(y!=x->lst.end()){
-            if((y->second)->type==var_type){
-                check=true;
-                break;
+    int ccl=current_level;
+    stack<pair<string,Local_Symbol_Table*>> copy=current_class_struct_union_info;
+    stack<string> copyz=ccsui_type;
+    Local_Symbol_Table* x=current_table;
+    while(ccl>0){
+        if(ccl>copy.size()){
+            auto y=(x->lst).find(var_name);
+            if(y!=x->lst.end()){
+                if((y->second)->type==var_type){
+                    check=true;
+                    break;
+                }
+            }
+            else{
+                x=x->parent;
+                ccl--;
             }
         }
         else{
-            x=x->parent;
+            if(copy.top().first==var_name&&copyz.top()==var_type){
+                check=true;
+                break;
+            }
+            else{
+                x=x->parent;
+                ccl--;
+            }
         }
     }
-    if(gst->gst.find(var_name)!=gst->gst.end()){
-        auto y=gst->gst.find(var_name);
-        if((y->second)->type==var_type){
-            check=true;
+    if(ccl==0){
+        if(gst->gst.find(var_name)!=gst->gst.end()){
+            auto y=gst->gst.find(var_name);
+            if((y->second)->type==var_type){
+                check=true;
+            }
         }
     }
     if(!check){
         cout << "error: " << var_type << " " << var_name << " not declared!" <<"in line :"<< line_num<< endl;
         exit(1);
     }
+
+
 }
 void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
 

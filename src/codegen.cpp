@@ -1,0 +1,55 @@
+#include<bits/stdc++.h>
+#include <basic_block+cfg.h>
+
+int main(int argc, char* argv[]) {
+    BasicBlock* mainblock;
+    if (argc < 2) {
+        // For testing with hardcoded input
+        string tacCode = R"(0: t1 : 
+   1: arg t2
+   2: arg t3
+   3: t4=t2+t3
+   4: if t4 goto 6
+   5: goto 6
+   6: t5=t4
+   7: t6=t2+t3
+   8: if t6 goto 10
+   9: goto 10
+  10: return t6
+  11: t7 : 
+  12: t8=9
+  13: if t8 goto 15
+  14: goto 15
+  15: t9=t8
+  16: t10=10
+  17: if t10 goto 19
+  18: goto 19
+  19: t11=t10
+  20: t12=7
+  21: if t12 goto 23
+  22: goto 23
+  23: t13=t12
+  24: t14=2
+  25: t15=t13%t14
+  26: t16=0
+  27: t17=t15==t16
+  28: if t17 goto 30
+  29: goto 34
+  30: t18=t9++
+  31: t9=t18
+  32: if t9 goto 34
+  33: goto 34
+  34: t19=t11++
+  35: t11=t19
+  36: if t11 goto 38
+  37: goto 38)";
+        
+        mainblock=generateCode(tacCode, false);
+    } else {
+        string inputFile = argv[1];
+        mainblock=generateCode(inputFile, true);
+    }
+    if(mainblock)cout << "mainblock id: " << mainblock->id << endl;
+    
+    return 0;
+}

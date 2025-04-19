@@ -6,122 +6,122 @@
 #include <map>
 #include <sstream>
 #include <regex>
-
+#include <basic_block+cfg.h>
 using namespace std;
 
 // Class for Three Address Code instruction
-class ThreeAddressCode {
-private:
-    int lineNumber;
-    string instruction;
+// class ThreeAddressCode {
+// private:
+//     int lineNumber;
+//     string instruction;
 
-public:
-    ThreeAddressCode(int line = 0, const string& instr = "") : lineNumber(line), instruction(instr) {}
+// public:
+//     ThreeAddressCode(int line = 0, const string& instr = "") : lineNumber(line), instruction(instr) {}
 
-    int getLineNumber() const { return lineNumber; }
-    string getInstruction() const { return instruction; }
+//     int getLineNumber() const { return lineNumber; }
+//     string getInstruction() const { return instruction; }
     
-    bool isConditional() const {
-        return instruction.find("if") != string::npos;
-    }
+//     bool isConditional() const {
+//         return instruction.find("if") != string::npos;
+//     }
     
-    bool isGoto() const {
-        return instruction.find("goto") != string::npos && !isConditional();
-    }
+//     bool isGoto() const {
+//         return instruction.find("goto") != string::npos && !isConditional();
+//     }
     
-    int getGotoTarget() const {
-        regex gotoPattern("goto (\\d+)");
-        smatch match;
-        if (regex_search(instruction, match, gotoPattern) && match.size() > 1) {
-            return stoi(match[1]);
-        }
-        return -1;
-    }
+//     int getGotoTarget() const {
+//         regex gotoPattern("goto (\\d+)");
+//         smatch match;
+//         if (regex_search(instruction, match, gotoPattern) && match.size() > 1) {
+//             return stoi(match[1]);
+//         }
+//         return -1;
+//     }
     
-    // Get instruction without the goto part
-    string getInstructionWithoutGoto() const {
-        if (isConditional()) {
-            size_t gotoPos = instruction.find("goto");
-            if (gotoPos != string::npos) {
-                return instruction.substr(0, gotoPos);
-            }
-        }
-        return instruction;
-    }
-};
+//     // Get instruction without the goto part
+//     string getInstructionWithoutGoto() const {
+//         if (isConditional()) {
+//             size_t gotoPos = instruction.find("goto");
+//             if (gotoPos != string::npos) {
+//                 return instruction.substr(0, gotoPos);
+//             }
+//         }
+//         return instruction;
+//     }
+// };
 
-// Class for Basic Block
-class BasicBlock {
-private:
-    int id;
-    int startLine;
-    int endLine;
-    vector<ThreeAddressCode> instructions;
-    vector<BasicBlock*> successors;
+// // Class for Basic Block
+// class BasicBlock {
+// private:
+//     int id;
+//     int startLine;
+//     int endLine;
+//     vector<ThreeAddressCode> instructions;
+//     vector<BasicBlock*> successors;
 
-public:
-    BasicBlock(int blockId = 0) : id(blockId), startLine(0), endLine(0) {}
+// public:
+//     BasicBlock(int blockId = 0) : id(blockId), startLine(0), endLine(0) {}
     
-    void setId(int blockId) { id = blockId; }
-    int getId() const { return id; }
+//     void setId(int blockId) { id = blockId; }
+//     int getId() const { return id; }
     
-    void setStartLine(int line) { startLine = line; }
-    int getStartLine() const { return startLine; }
+//     void setStartLine(int line) { startLine = line; }
+//     int getStartLine() const { return startLine; }
     
-    void setEndLine(int line) { endLine = line; }
-    int getEndLine() const { return endLine; }
+//     void setEndLine(int line) { endLine = line; }
+//     int getEndLine() const { return endLine; }
     
-    void addInstruction(const ThreeAddressCode& tac) {
-        instructions.push_back(tac);
-    }
+//     void addInstruction(const ThreeAddressCode& tac) {
+//         instructions.push_back(tac);
+//     }
     
-    const vector<ThreeAddressCode>& getInstructions() const {
-        return instructions;
-    }
+//     const vector<ThreeAddressCode>& getInstructions() const {
+//         return instructions;
+//     }
     
-    vector<BasicBlock*>& getSuccessors() {
-        return successors;
-    }
+//     vector<BasicBlock*>& getSuccessors() {
+//         return successors;
+//     }
     
-    const vector<BasicBlock*>& getSuccessors() const {
-        return successors;
-    }
+//     const vector<BasicBlock*>& getSuccessors() const {
+//         return successors;
+//     }
     
-    void addSuccessor(BasicBlock* block) {
-        // Avoid adding duplicate successors
-        for (BasicBlock* succ : successors) {
-            if (succ == block) return;
-        }
-        successors.push_back(block);
-    }
+//     void addSuccessor(BasicBlock* block) {
+//         // Avoid adding duplicate successors
+//         for (BasicBlock* succ : successors) {
+//             if (succ == block) return;
+//         }
+//         successors.push_back(block);
+//     }
     
-    // Check if the block has meaningful instructions
-    bool isEmpty() const {
-        return instructions.empty();
-    }
+//     // Check if the block has meaningful instructions
+//     bool isEmpty() const {
+//         return instructions.empty();
+//     }
     
-    // Check if block only contains goto statements
-    bool onlyContainsGoto() const {
-        for (const ThreeAddressCode& tac : instructions) {
-            if (!tac.isGoto()) {
-                return false;
-            }
-        }
-        return !instructions.empty();
-    }
+//     // Check if block only contains goto statements
+//     bool onlyContainsGoto() const {
+//         for (const ThreeAddressCode& tac : instructions) {
+//             if (!tac.isGoto()) {
+//                 return false;
+//             }
+//         }
+//         return !instructions.empty();
+//     }
     
-    // Get the last instruction of the block
-    const ThreeAddressCode& getLastInstruction() const {
-        if (instructions.empty()) {
-            static ThreeAddressCode emptyTac;
-            return emptyTac;
-        }
-        return instructions.back();
-    }
-};
+//     // Get the last instruction of the block
+//     const ThreeAddressCode& getLastInstruction() const {
+//         if (instructions.empty()) {
+//             static ThreeAddressCode emptyTac;
+//             return emptyTac;
+//         }
+//         return instructions.back();
+//     }
+// };
 
 // Function to read 3AC code from file or string
-vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile = false) {
+vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile) {
     vector<ThreeAddressCode> code;
     istringstream iss;
     ifstream file;
@@ -317,6 +317,26 @@ void determineControlFlow(vector<BasicBlock*>& blocks, const vector<ThreeAddress
         }
     }
 }
+// Function to find the basic block that contains the main function
+BasicBlock* findMainBlock(const vector<BasicBlock*>& blocks) {
+    // Pattern to look for in the 3AC code that indicates the start of main
+    regex mainPattern("\\bmain\\b");
+    
+    for (BasicBlock* block : blocks) {
+        const vector<ThreeAddressCode>& instructions = block->getInstructions();
+        
+        for (const ThreeAddressCode& tac : instructions) {
+            const string& instruction = tac.getInstruction();
+            
+            // Check if the instruction contains "main"
+            if (regex_search(instruction, mainPattern)) {
+                return block;
+            }
+        }
+    }
+    
+    return blocks.empty() ? nullptr : blocks[0];
+}
 
 // Function to filter blocks that only contain goto statements
 vector<BasicBlock*> filterGotoOnlyBlocks(vector<BasicBlock*>& blocks) {
@@ -400,13 +420,13 @@ void cleanupBlocks(vector<BasicBlock*>& blocks) {
 }
 
 // Main function to generate code from 3AC
-void generateCode(const string& input, bool isFile = false) {
+BasicBlock* generateCode(const string& input, bool isFile) {
     // Read 3AC code
     vector<ThreeAddressCode> code = read3ACCode(input, isFile);
     
     if (code.empty()) {
         cerr << "No valid 3AC code found!" << endl;
-        return;
+        return nullptr;
     }
     
     // Identify leaders
@@ -420,61 +440,18 @@ void generateCode(const string& input, bool isFile = false) {
     
     // Filter out blocks that only contain goto statements
     vector<BasicBlock*> filteredBlocks = filterGotoOnlyBlocks(blocks);
+    // Find the main block
+    BasicBlock* mainBlock = findMainBlock(filteredBlocks);
     
+    if (mainBlock) {
+        cout << "======== MAIN FUNCTION BLOCK ========" << endl;
+        cout << "Found main function in Block B" << mainBlock->getId() << endl;
+        cout << "Main block lines: " << mainBlock->getStartLine() << "-" << mainBlock->getEndLine() << endl << endl;
+    } else {
+        cout << "No main function found in the code!" << endl;
+    }
     // Print basic blocks
     printBasicBlocks(filteredBlocks);
-    
-    // Clean up allocated memory
-    cleanupBlocks(filteredBlocks);
+    return mainBlock;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        // For testing with hardcoded input
-        string tacCode = R"(0: t1 : 
-   1: arg t2
-   2: arg t3
-   3: t4=t2+t3
-   4: if t4 goto 6
-   5: goto 6
-   6: t5=t4
-   7: t6=t2+t3
-   8: if t6 goto 10
-   9: goto 10
-  10: return t6
-  11: t7 : 
-  12: t8=9
-  13: if t8 goto 15
-  14: goto 15
-  15: t9=t8
-  16: t10=10
-  17: if t10 goto 19
-  18: goto 19
-  19: t11=t10
-  20: t12=7
-  21: if t12 goto 23
-  22: goto 23
-  23: t13=t12
-  24: t14=2
-  25: t15=t13%t14
-  26: t16=0
-  27: t17=t15==t16
-  28: if t17 goto 30
-  29: goto 34
-  30: t18=t9++
-  31: t9=t18
-  32: if t9 goto 34
-  33: goto 34
-  34: t19=t11++
-  35: t11=t19
-  36: if t11 goto 38
-  37: goto 38)";
-        
-        generateCode(tacCode, false);
-    } else {
-        string inputFile = argv[1];
-        generateCode(inputFile, true);
-    }
-    
-    return 0;
-}

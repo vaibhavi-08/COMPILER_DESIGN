@@ -152,6 +152,7 @@ struct Tq{
 
 class Type {
     public:
+    bool isreal_var;
     bool isconst;
     bool isvoid;
     bool isvolatile;

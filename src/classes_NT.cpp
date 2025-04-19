@@ -1206,6 +1206,7 @@ Type :: Type(){
     this-> func_ptr_lev = 0;
     this->code=vector<string>();
     this->place="";
+    this->isreal_var=false;
     this->size=-1;
 }
 Type* check_if_id_in_obj(Type* t,string id){
@@ -1826,6 +1827,7 @@ Symbol_Info* get_symbol_info_id(string id){
         Type* y=current_params_list[id];
         Symbol_Info* si=new Symbol_Info(id,"","",0,"","",y);
         si->tempname=y->place;
+        si->t->isreal_var=true;
         final_symtab[si->tempname]=si;
         temp_and_type[si->tempname]=si->t;
         return si;
@@ -1943,7 +1945,7 @@ Type::Type(const Type& other) {
     isvarargs=other.isvarargs;
     size=other.size;
     func_ret_type = other.func_ret_type ? new Type(*other.func_ret_type) : nullptr;
-
+    isreal_var=false;
     prms.clear();
     for (Type* t : other.prms) {
         prms.push_back(t ? new Type(*t) : nullptr);
@@ -2582,8 +2584,10 @@ void add_to_gst(Declaration* symbol,Global_Symbol_Table* gst){
         cout << "this constructor is called successfully" << endl;
         x->tempname=i.second.second->place;
         if(x->tempname!=""){
+            x->t->isreal_var=true;
             final_symtab[x->tempname]=x;
             temp_and_type[x->tempname]=x->t;
+
         }
         if(gst->gst.find(i.first)!=gst->gst.end()){
             cout << "error :" << "redeclaration of " << i.first <<"in line :"<< line_num<< endl;
@@ -2598,6 +2602,7 @@ void add_to_gst(Function_Definition* symbol,Global_Symbol_Table* gst){
     assert(gst!=nullptr);
     Symbol_Info* x=new Symbol_Info(symbol->name,symbol->type,symbol->level_name,symbol->level,symbol->scope,"-",symbol->t);
     x->tempname=symbol->decl->tempname;
+    x->t->isreal_var=true;
     final_symtab[x->tempname]=x;
     temp_and_type[x->tempname]=x->t;
     if(gst->gst.find(symbol->name)!=gst->gst.end()){
@@ -2685,6 +2690,7 @@ void add_to_local_table(Local_Symbol_Table* current_table,Declaration* d){
         Symbol_Info* x=new Symbol_Info(i.first,i.second.first,d->level_name,current_level-lvl_name.size()+1,d->scope,"-",i.second.second);
         x->tempname=i.second.second->place;
         if(x->tempname!=""){
+            x->t->isreal_var=true;
             final_symtab[x->tempname]=x;
             temp_and_type[x->tempname]=x->t;
         }

@@ -8,7 +8,7 @@ int main() {
    // Check if the number is even or odd using if-else
    if (number % 2 == 0) {
        a++;
-   } else if(a){
+   } else {
         b++;
    }
 }

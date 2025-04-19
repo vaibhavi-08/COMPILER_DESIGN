@@ -198,7 +198,7 @@ Node* root;
 primary_expression
 	: IDENTIFIER {Type* t=get_type_id($1);
 	cout << t->base << endl;cout << "get type id in primary exp done" << endl;Symbol_Info* x=get_symbol_info_id($1);
-	if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;temp_and_type[nn]=t;}t->place=x->tempname;$$=t;}
+	if(x->tempname.empty()){string nn=get_new_temp();x->tempname=nn;final_symtab[nn]=x;temp_and_type[nn]=t;}t->place=x->tempname;$$=t;$$->isreal_var=true;}
 	| CONSTANT {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;temp_and_type[nn]=t;} 
 	| STRING_LITERAL {Type* t=new Type(); t->isbasic=true;t->base="CHAR";t->ptr_level=1;t->ptrtql.emplace_back(false,false);string nn=get_new_temp();global_code.push_back(get_code4($1,"","",nn));t->place=nn;$$=t;temp_and_type[nn]=t;}
 	| CONST_CHAR {Type* t=new Type(); t->isbasic=true;t->base="CHAR";$$=t;string nn=get_new_temp();t->place=nn;global_code.push_back(get_code4($1,"","",nn));$$=t;temp_and_type[nn]=t;}
@@ -1127,6 +1127,7 @@ int main(int argc, char *argv[]){
 		}
 
 		fsFile << "  Type Info:\n";
+		fsFile << "    is real var? " << t->isreal_var << "\n"; 
 		fsFile << "    size: " << t->size << "\n";
 		fsFile << "    base: " << t->base << "\n";
 		fsFile << "    ptr_level: " << t->ptr_level << "\n";

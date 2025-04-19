@@ -1,403 +1,412 @@
 #include <iostream>
-#include <vector>
-#include <string>
 #include <map>
-#include <set>
-#include <algorithm>
+#include <string>
+#include <vector>
 
 using namespace std;
 
-// Class for Register Descriptor Table (RDT)
+// Register Descriptor Table - Maps each register to the temporaries it contains
 class RegisterDescriptorTable {
-private:
-    // Maps register name to the set of variables/temporaries it contains
-    map<string, set<string>> registerMap;
+    private:
+        // Maps each register to a set of temporaries it currently holds
+        map<string, vector<string>> registerToTemps;
+        // List of available registers
+        vector<string> availableRegisters;
     
-    // Lists of available registers by category
-    vector<string> gprRegisters;      // General-Purpose Registers
-    vector<string> sprRegisters;      // Special-Purpose Registers
-    vector<string> fpuRegisters;      // x87 FPU Registers
-    vector<string> mmxRegisters;      // MMX Registers
-    vector<string> xmmRegisters;      // XMM Registers (SSE)
-    vector<string> ymmRegisters;      // YMM Registers (AVX)
-    vector<string> zmmRegisters;      // ZMM Registers (AVX-512)
-
-    // Initialize all register categories with their respective registers in constructor
-
-public:
-    // Constructor to initialize all registers
-    RegisterDescriptorTable() {
-        // Initialize General-Purpose Registers (GPR)
-        gprRegisters = {
-            "RAX", "RBX", "RCX", "RDX", "RSI", "RDI", "RBP", "RSP",  // Original 8
-            "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"      // Extended 8
-        };
-        
-        // Initialize Special-Purpose Registers (SPR)
-        sprRegisters = {
-            "RIP", "RFLAGS", "CS", "DS", "ES", "FS", "GS", "SS"
-        };
-        
-        // Initialize x87 FPU Registers
-        fpuRegisters = {
-            "ST0", "ST1", "ST2", "ST3", "ST4", "ST5", "ST6", "ST7"
-        };
-        
-        // Initialize MMX Registers
-        mmxRegisters = {
-            "MM0", "MM1", "MM2", "MM3", "MM4", "MM5", "MM6", "MM7"
-        };
-        
-        // Initialize XMM Registers (SSE)
-        xmmRegisters.clear();
-        for (int i = 0; i <= 31; i++) {
-            xmmRegisters.push_back("XMM" + to_string(i));
-        }
-        
-        // Initialize YMM Registers (AVX)
-        ymmRegisters.clear();
-        for (int i = 0; i <= 31; i++) {
-            ymmRegisters.push_back("YMM" + to_string(i));
-        }
-        
-        // Initialize ZMM Registers (AVX-512)
-        zmmRegisters.clear();
-        for (int i = 0; i <= 31; i++) {
-            zmmRegisters.push_back("ZMM" + to_string(i));
-        }
-        
-        // Initialize all registers as empty (not holding any variable)
-        // Add GPRs to registerMap
-        for (const string& reg : gprRegisters) {
-            registerMap[reg] = set<string>();
-        }
-        
-        // Add SPRs to registerMap
-        for (const string& reg : sprRegisters) {
-            registerMap[reg] = set<string>();
-        }
-        
-        // Add FPU registers to registerMap
-        for (const string& reg : fpuRegisters) {
-            registerMap[reg] = set<string>();
-        }
-        
-        // Add MMX registers to registerMap
-        for (const string& reg : mmxRegisters) {
-            registerMap[reg] = set<string>();
-        }
-        
-        // Add XMM registers to registerMap
-        for (const string& reg : xmmRegisters) {
-            registerMap[reg] = set<string>();
-        }
-        
-        // Add YMM registers to registerMap
-        for (const string& reg : ymmRegisters) {
-            registerMap[reg] = set<string>();
-        }
-        
-        // Add ZMM registers to registerMap
-        for (const string& reg : zmmRegisters) {
-            registerMap[reg] = set<string>();
-        }
-    }
-    
-    // Get all available GPR registers
-    const vector<string>& getGPRRegisters() const {
-        return gprRegisters;
-    }
-    
-    // Get all available SPR registers
-    const vector<string>& getSPRRegisters() const {
-        return sprRegisters;
-    }
-    
-    // Get all available FPU registers
-    const vector<string>& getFPURegisters() const {
-        return fpuRegisters;
-    }
-    
-    // Get all available MMX registers
-    const vector<string>& getMMXRegisters() const {
-        return mmxRegisters;
-    }
-    
-    // Get all available XMM registers
-    const vector<string>& getXMMRegisters() const {
-        return xmmRegisters;
-    }
-    
-    // Get all available YMM registers
-    const vector<string>& getYMMRegisters() const {
-        return ymmRegisters;
-    }
-    
-    // Get all available ZMM registers
-    const vector<string>& getZMMRegisters() const {
-        return zmmRegisters;
-    }
-    
-    // Add a variable/temporary to a register
-    void addVariableToRegister(const string& reg, const string& var) {
-        if (registerMap.find(reg) != registerMap.end()) {
-            registerMap[reg].insert(var);
-        } else {
-            cout << "Warning: Register " << reg << " not found in RDT." << endl;
-        }
-    }
-    
-    // Remove a variable/temporary from a register
-    void removeVariableFromRegister(const string& reg, const string& var) {
-        if (registerMap.find(reg) != registerMap.end()) {
-            registerMap[reg].erase(var);
-        }
-    }
-    
-    // Remove a variable/temporary from all registers
-    void removeVariableFromAllRegisters(const string& var) {
-        for (auto& entry : registerMap) {
-            entry.second.erase(var);
-        }
-    }
-    
-    // Check if a register contains a specific variable/temporary
-    bool registerContainsVariable(const string& reg, const string& var) const {
-        auto it = registerMap.find(reg);
-        if (it != registerMap.end()) {
-            return it->second.find(var) != it->second.end();
-        }
-        return false;
-    }
-    
-    // Get all variables/temporaries in a register
-    set<string> getVariablesInRegister(const string& reg) const {
-        auto it = registerMap.find(reg);
-        if (it != registerMap.end()) {
-            return it->second;
-        }
-        return set<string>();
-    }
-    
-    // Get a free register from a specific category
-    string getFreeRegisterFromCategory(const vector<string>& regCategory) const {
-        for (const string& reg : regCategory) {
-            if (registerMap.at(reg).empty()) {
-                return reg;
+    public:
+        RegisterDescriptorTable() {
+            // Initialize available x86-64 registers
+            availableRegisters = {"rax", "rbx", "rcx", "rdx", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"};
+            
+            // Initialize empty descriptor for each register
+            for (const auto& reg : availableRegisters) {
+                registerToTemps[reg] = {};
             }
         }
-        return ""; // No free register available
-    }
     
-    // Get a free GPR register
-    string getFreeGPR() const {
-        return getFreeRegisterFromCategory(gprRegisters);
-    }
-    
-    // Get a free XMM register
-    string getFreeXMM() const {
-        return getFreeRegisterFromCategory(xmmRegisters);
-    }
-    
-    // Get register containing a specific variable (returns empty string if not found)
-    string getRegisterForVariable(const string& var) const {
-        for (const auto& entry : registerMap) {
-            if (entry.second.find(var) != entry.second.end()) {
-                return entry.first;
-            }
+        // Add a temporary to a register's descriptor
+        void addTemp(const string& reg, const string& temp) {
+            registerToTemps[reg].push_back(temp);
         }
-        return ""; // Variable not in any register
-    }
     
-    // Print the Register Descriptor Table for a specific category of registers
-    void printRegisterCategory(const string& categoryName, const vector<string>& registers) const {
-        cout << "--- " << categoryName << " ---" << endl;
-        cout << "Register | Variables/Temporaries" << endl;
-        cout << "--------------------------------------" << endl;
-        
-        for (const string& reg : registers) {
-            cout << reg << "\t| ";
-            const set<string>& vars = registerMap.at(reg);
-            if (vars.empty()) {
-                cout << "(empty)";
-            } else {
-                bool first = true;
-                for (const string& var : vars) {
-                    if (!first) cout << ", ";
-                    cout << var;
-                    first = false;
+        // Remove a temporary from all registers
+        void removeTemp(const string& temp) {
+            for (auto& [reg, temps] : registerToTemps) {
+                auto it = find(temps.begin(), temps.end(), temp);
+                if (it != temps.end()) {
+                    temps.erase(it);
                 }
             }
-            cout << endl;
         }
-        cout << endl;
-    }
     
-    // Print the entire Register Descriptor Table
-    void printTable() const {
-        cout << "======== REGISTER DESCRIPTOR TABLE ========" << endl;
-        
-        // Print General-Purpose Registers
-        printRegisterCategory("General-Purpose Registers", gprRegisters);
-        
-        // Print Special-Purpose Registers
-        printRegisterCategory("Special-Purpose Registers", sprRegisters);
-        
-        // Print FPU Registers
-        printRegisterCategory("x87 FPU Registers", fpuRegisters);
-        
-        // Print MMX Registers
-        printRegisterCategory("MMX Registers", mmxRegisters);
-        
-        // Print XMM Registers
-        printRegisterCategory("XMM Registers (SSE)", xmmRegisters);
-        
-        // Skip YMM and ZMM registers by default as they're quite numerous
-        cout << "(YMM and ZMM registers omitted for brevity)" << endl << endl;
-    }
-};
-
-// Class for Address Descriptor Table (ADT)
-class AddressDescriptorTable {
-private:
-    // For each variable/temporary, stores:
-    // - Set of registers it resides in
-    // - Boolean indicating if it's also in memory
-    struct LocationInfo {
-        set<string> registers;
-        bool inMemory;
-        
-        LocationInfo() : inMemory(true) {} // By default, assume variables start in memory
+        // Check if a temporary is in a register
+        bool isInRegister(const string& temp) const {
+            for (const auto& [reg, temps] : registerToTemps) {
+                if (find(temps.begin(), temps.end(), temp) != temps.end()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    
+        // Get the register holding a temporary (empty string if not found)
+        string getRegisterForTemp(const string& temp) const {
+            for (const auto& [reg, temps] : registerToTemps) {
+                if (find(temps.begin(), temps.end(), temp) != temps.end()) {
+                    return reg;
+                }
+            }
+            return "";
+        }
+    
+        // Get all temporaries in a register
+        const vector<string>& getTempsInRegister(const string& reg) const {
+            return registerToTemps.at(reg);
+        }
+    
+        // Get all available registers (those with no temporaries)
+        vector<string> getEmptyRegisters() const {
+            vector<string> emptyRegs;
+            for (const auto& [reg, temps] : registerToTemps) {
+                if (temps.empty()) {
+                    emptyRegs.push_back(reg);
+                }
+            }
+            return emptyRegs;
+        }
+    
+        // Clear all temporaries from a register
+        void clearRegister(const string& reg) {
+            registerToTemps[reg].clear();
+        }
     };
     
-    map<string, LocationInfo> variableMap;
+    // Address Descriptor Table - Maps each temporary to its storage locations
+    class AddressDescriptorTable {
+    private:
+        // Maps each temporary to its possible locations (memory, register)
+        map<string, struct {
+            bool inMemory;              // Is the temporary in memory?
+            string registerLocation;    // Which register contains the temporary (if any)
+        }> tempToLocations;
+    
+    public:
+        // Add or update a temporary's location information
+        void setLocation(const string& temp, bool inMem, const string& reg = "") {
+            tempToLocations[temp].inMemory = inMem;
+            if (!reg.empty()) {
+                tempToLocations[temp].registerLocation = reg;
+            }
+        }
+    
+        // Set the register location of a temporary
+        void setRegisterLocation(const string& temp, const string& reg) {
+            tempToLocations[temp].registerLocation = reg;
+        }
+    
+        // Mark a temporary as being in memory
+        void setInMemory(const string& temp, bool status = true) {
+            tempToLocations[temp].inMemory = status;
+        }
+    
+        // Check if a temporary is in memory
+        bool isInMemory(const string& temp) const {
+            auto it = tempToLocations.find(temp);
+            if (it != tempToLocations.end()) {
+                return it->second.inMemory;
+            }
+            return false;
+        }
+    
+        // Get the register location of a temporary (empty string if not in a register)
+        string getRegisterLocation(const string& temp) const {
+            auto it = tempToLocations.find(temp);
+            if (it != tempToLocations.end()) {
+                return it->second.registerLocation;
+            }
+            return "";
+        }
+    
+        // Clear the register location of a temporary
+        void clearRegisterLocation(const string& temp) {
+            auto it = tempToLocations.find(temp);
+            if (it != tempToLocations.end()) {
+                it->second.registerLocation = "";
+            }
+        }
+    };    
+
+// Enum for operand location
+enum class OperandLocation {
+    REGISTER,
+    MEMORY,
+    IMMEDIATE
+};
+
+// Struct to represent instruction information
+struct InstructionInfo {
+    string opcode;
+    string description;
+};
+
+// Class to store x86-64 instruction information and provide lookup functionality
+class X86InstructionSet {
+private:
+    // Map of instruction templates based on operation and operand locations
+    map<string, map<vector<OperandLocation>, InstructionInfo>> instructionMap;
 
 public:
-    // Add a variable to the table (initially in memory)
-    void addVariable(const string& var) {
-        if (variableMap.find(var) == variableMap.end()) {
-            variableMap[var] = LocationInfo();
-        }
-    }
-    
-    // Add a variable to a register
-    void addVariableToRegister(const string& var, const string& reg) {
-        addVariable(var); // Ensure variable exists in table
-        variableMap[var].registers.insert(reg);
-    }
-    
-    // Remove a variable from a register
-    void removeVariableFromRegister(const string& var, const string& reg) {
-        if (variableMap.find(var) != variableMap.end()) {
-            variableMap[var].registers.erase(reg);
-        }
-    }
-    
-    // Set whether a variable is in memory
-    void setVariableInMemory(const string& var, bool inMem) {
-        addVariable(var); // Ensure variable exists in table
-        variableMap[var].inMemory = inMem;
-    }
-    
-    // Check if a variable is in a specific register
-    bool isVariableInRegister(const string& var, const string& reg) const {
-        auto it = variableMap.find(var);
-        if (it != variableMap.end()) {
-            return it->second.registers.find(reg) != it->second.registers.end();
-        }
-        return false;
-    }
-    
-    // Check if a variable is in memory
-    bool isVariableInMemory(const string& var) const {
-        auto it = variableMap.find(var);
-        if (it != variableMap.end()) {
-            return it->second.inMemory;
-        }
-        return false;
-    }
-    
-    // Get all registers containing a variable
-    set<string> getRegistersForVariable(const string& var) const {
-        auto it = variableMap.find(var);
-        if (it != variableMap.end()) {
-            return it->second.registers;
-        }
-        return set<string>();
-    }
-    
-    // Print the Address Descriptor Table
-    void printTable() const {
-        cout << "======== ADDRESS DESCRIPTOR TABLE ========" << endl;
-        cout << "Variable | Location (Registers/Memory)" << endl;
-        cout << "--------------------------------------" << endl;
+    X86InstructionSet() {
+        // Initialize instruction map with operations and operand locations
         
-        for (const auto& entry : variableMap) {
-            cout << entry.first << "\t| ";
-            
-            // Print registers
-            if (entry.second.registers.empty()) {
-                cout << "(no registers)";
-            } else {
-                cout << "Registers: ";
-                bool first = true;
-                for (const string& reg : entry.second.registers) {
-                    if (!first) cout << ", ";
-                    cout << reg;
-                    first = false;
-                }
-            }
-            
-            // Print memory status
-            cout << ", Memory: " << (entry.second.inMemory ? "Yes" : "No");
-            cout << endl;
+        // Addition instructions
+        instructionMap["+"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"add", "Add register to register"};
+        instructionMap["+"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"add", "Add memory to register"};
+        instructionMap["+"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"add", "Add immediate to register"};
+        instructionMap["+"][{OperandLocation::MEMORY, OperandLocation::REGISTER}] = {"add", "Add register to memory"};
+        instructionMap["+"][{OperandLocation::MEMORY, OperandLocation::IMMEDIATE}] = {"add", "Add immediate to memory"};
+
+        // Subtraction instructions
+        instructionMap["-"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"sub", "Subtract register from register"};
+        instructionMap["-"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"sub", "Subtract memory from register"};
+        instructionMap["-"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"sub", "Subtract immediate from register"};
+        instructionMap["-"][{OperandLocation::MEMORY, OperandLocation::REGISTER}] = {"sub", "Subtract register from memory"};
+        instructionMap["-"][{OperandLocation::MEMORY, OperandLocation::IMMEDIATE}] = {"sub", "Subtract immediate from memory"};
+
+        // Multiplication instructions
+        instructionMap["*"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"imul", "Multiply register by register"};
+        instructionMap["*"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"imul", "Multiply register by memory"};
+        instructionMap["*"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"imul", "Multiply register by immediate"};
+        
+        // Division instructions (note: x86 division is special and uses specific registers)
+        instructionMap["/"][{OperandLocation::REGISTER}] = {"idiv", "Divide RAX by register"};
+        instructionMap["/"][{OperandLocation::MEMORY}] = {"idiv", "Divide RAX by memory"};
+        
+        // Modulo (uses same instruction as division but result is in RDX)
+        instructionMap["%"][{OperandLocation::REGISTER}] = {"idiv", "Divide RAX by register, remainder in RDX"};
+        instructionMap["%"][{OperandLocation::MEMORY}] = {"idiv", "Divide RAX by memory, remainder in RDX"};
+        
+        // Move instructions
+        instructionMap["="][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"mov", "Move register to register"};
+        instructionMap["="][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"mov", "Move memory to register"};
+        instructionMap["="][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"mov", "Move immediate to register"};
+        instructionMap["="][{OperandLocation::MEMORY, OperandLocation::REGISTER}] = {"mov", "Move register to memory"};
+        instructionMap["="][{OperandLocation::MEMORY, OperandLocation::IMMEDIATE}] = {"mov", "Move immediate to memory"};
+        
+        // Comparison instructions
+        instructionMap["=="][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"cmp", "Compare register with register"};
+        instructionMap["=="][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"cmp", "Compare register with memory"};
+        instructionMap["=="][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"cmp", "Compare register with immediate"};
+        instructionMap["=="][{OperandLocation::MEMORY, OperandLocation::REGISTER}] = {"cmp", "Compare memory with register"};
+        instructionMap["=="][{OperandLocation::MEMORY, OperandLocation::IMMEDIATE}] = {"cmp", "Compare memory with immediate"};
+        
+        // Inequality operators use the same base instruction (cmp)
+        instructionMap["!="] = instructionMap["=="];
+        instructionMap["<"] = instructionMap["=="];
+        instructionMap["<="] = instructionMap["=="];
+        instructionMap[">"] = instructionMap["=="];
+        instructionMap[">="] = instructionMap["=="];
+        
+        // Logical operations
+        instructionMap["&&"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"and", "Logical AND register with register"};
+        instructionMap["&&"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"and", "Logical AND register with memory"};
+        instructionMap["&&"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"and", "Logical AND register with immediate"};
+        
+        instructionMap["||"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"or", "Logical OR register with register"};
+        instructionMap["||"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"or", "Logical OR register with memory"};
+        instructionMap["||"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"or", "Logical OR register with immediate"};
+        
+        // Bitwise operations
+        instructionMap["&"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"and", "Bitwise AND register with register"};
+        instructionMap["&"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"and", "Bitwise AND register with memory"};
+        instructionMap["&"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"and", "Bitwise AND register with immediate"};
+        
+        instructionMap["|"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"or", "Bitwise OR register with register"};
+        instructionMap["|"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"or", "Bitwise OR register with memory"};
+        instructionMap["|"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"or", "Bitwise OR register with immediate"};
+        
+        instructionMap["^"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"xor", "Bitwise XOR register with register"};
+        instructionMap["^"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"xor", "Bitwise XOR register with memory"};
+        instructionMap["^"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"xor", "Bitwise XOR register with immediate"};
+        
+        // Not operations
+        instructionMap["!"][{OperandLocation::REGISTER}] = {"not", "Bitwise NOT register"};
+        instructionMap["!"][{OperandLocation::MEMORY}] = {"not", "Bitwise NOT memory"};
+        
+        // Shift operations
+        instructionMap["<<"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"shl", "Shift left register by register (CL)"};
+        instructionMap["<<"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"shl", "Shift left register by immediate"};
+        instructionMap["<<"][{OperandLocation::MEMORY, OperandLocation::REGISTER}] = {"shl", "Shift left memory by register (CL)"};
+        instructionMap["<<"][{OperandLocation::MEMORY, OperandLocation::IMMEDIATE}] = {"shl", "Shift left memory by immediate"};
+        
+        instructionMap[">>"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"shr", "Shift right register by register (CL)"};
+        instructionMap[">>"][{OperandLocation::REGISTER, OperandLocation::IMMEDIATE}] = {"shr", "Shift right register by immediate"};
+        instructionMap[">>"][{OperandLocation::MEMORY, OperandLocation::REGISTER}] = {"shr", "Shift right memory by register (CL)"};
+        instructionMap[">>"][{OperandLocation::MEMORY, OperandLocation::IMMEDIATE}] = {"shr", "Shift right memory by immediate"};
+        
+        // Jump instructions
+        instructionMap["jmp"][{}] = {"jmp", "Unconditional jump"};
+        instructionMap["je"][{}] = {"je", "Jump if equal"};
+        instructionMap["jne"][{}] = {"jne", "Jump if not equal"};
+        instructionMap["jl"][{}] = {"jl", "Jump if less"};
+        instructionMap["jle"][{}] = {"jle", "Jump if less or equal"};
+        instructionMap["jg"][{}] = {"jg", "Jump if greater"};
+        instructionMap["jge"][{}] = {"jge", "Jump if greater or equal"};
+    }
+    
+    // Get the opcode for a given operation and operand locations
+    string getOpcode(const string& operation, const vector<OperandLocation>& operandLocations) {
+        // Check if operation exists in our map
+        if (instructionMap.find(operation) == instructionMap.end()) {
+            return ""; // Operation not found
         }
-        cout << endl;
+        
+        // Check if operand location combination exists for this operation
+        if (instructionMap[operation].find(operandLocations) == instructionMap[operation].end()) {
+            return ""; // Operand location combination not found
+        }
+        
+        // Return the opcode
+        return instructionMap[operation][operandLocations].opcode;
+    }
+    
+    // Get the instruction info for a given operation and operand locations
+    InstructionInfo getInstructionInfo(const string& operation, const vector<OperandLocation>& operandLocations) {
+        // Check if operation exists in our map
+        if (instructionMap.find(operation) == instructionMap.end()) {
+            return {"", "Operation not supported"}; // Operation not found
+        }
+        
+        // Check if operand location combination exists for this operation
+        if (instructionMap[operation].find(operandLocations) == instructionMap[operation].end()) {
+            return {"", "Operand location combination not supported"}; // Operand location combination not found
+        }
+        
+        // Return the instruction info
+        return instructionMap[operation][operandLocations];
     }
 };
 
-// Function to demonstrate the use of both tables
-void demonstrateTables() {
-    // Create tables
-    RegisterDescriptorTable rdt;
-    AddressDescriptorTable adt;
+// Example usage function
+void selectInstruction(const string& operation, const vector<OperandLocation>& operandLocations) {
+    static X86InstructionSet instructionSet;
     
-    // Add some variables and register assignments
-    adt.addVariable("t1");
-    adt.addVariable("t2");
-    adt.addVariable("t3");
-    adt.addVariable("a");
-    adt.addVariable("b");
-    
-    // Assign some variables to registers
-    adt.addVariableToRegister("t1", "RAX");
-    adt.addVariableToRegister("t2", "RBX");
-    adt.addVariableToRegister("a", "RCX");
-    adt.addVariableToRegister("a", "RDX"); // a is in two registers
-    
-    // Update RDT to match
-    rdt.addVariableToRegister("RAX", "t1");
-    rdt.addVariableToRegister("RBX", "t2");
-    rdt.addVariableToRegister("RCX", "a");
-    rdt.addVariableToRegister("RDX", "a");
-    
-    // Mark t3 as not in memory (only in register)
-    adt.addVariableToRegister("t3", "RSI");
-    adt.setVariableInMemory("t3", false);
-    rdt.addVariableToRegister("RSI", "t3");
-    
-    // Add a floating point variable to an XMM register
-    adt.addVariable("f1");
-    adt.addVariableToRegister("f1", "XMM0");
-    rdt.addVariableToRegister("XMM0", "f1");
-    
-    // Print tables
-    rdt.printTable();
-    adt.printTable();
+    string opcode = instructionSet.getOpcode(operation, operandLocations);
+    if (opcode.empty()) {
+        cout << "No matching instruction found for operation: " << operation << endl;
+    } else {
+        cout << "Selected opcode: " << opcode << endl;
+        cout << "Description: " << instructionSet.getInstructionInfo(operation, operandLocations).description << endl;
+    }
 }
 
-// Main function to test the tables
+// Function to get a register for a temporary in the context of an instruction
+string getRegister(const string& instruction, const vector<string>& temporaries, 
+    RegisterDescriptorTable& regDesc, AddressDescriptorTable& addrDesc) {
+
+    // Parse the instruction to identify the operation and operands
+    string operation, result, operand1, operand2;
+
+    // Extract the operation and operands from the instruction
+    // Format examples: "14: t8=t6%t7", "19: t11=t2++", "20: t2=t11"
+    size_t colonPos = instruction.find(':');
+    if (colonPos != string::npos) {
+    string instrBody = instruction.substr(colonPos + 1);
+
+    // Handle assignment operations (t2=t11)
+    size_t equalPos = instrBody.find('=');
+    if (equalPos != string::npos) {
+    result = instrBody.substr(0, equalPos);
+    // Remove whitespace
+    result.erase(remove_if(result.begin(), result.end(), ::isspace), result.end());
+
+    string rightSide = instrBody.substr(equalPos + 1);
+
+    // Check for post-increment/decrement (t11=t2++)
+    if (rightSide.find("++") != string::npos) {
+    operand1 = rightSide.substr(0, rightSide.find("++"));
+    operation = "++";
+    } else if (rightSide.find("--") != string::npos) {
+    operand1 = rightSide.substr(0, rightSide.find("--"));
+    operation = "--";
+    } else {
+    // Check for binary operations (t8=t6%t7)
+    for (char op : {'+', '-', '*', '/', '%', '&', '|', '^'}) {
+        size_t opPos = rightSide.find(op);
+        if (opPos != string::npos) {
+            operand1 = rightSide.substr(0, opPos);
+            operand2 = rightSide.substr(opPos + 1);
+            operation = string(1, op);
+            break;
+        }
+    }
+    
+    // If no binary operation was found, it's a simple assignment
+    if (operation.empty()) {
+        operand1 = rightSide;
+        operation = "=";
+    }
+    }
+
+    // Remove whitespace from the operands
+    operand1.erase(remove_if(operand1.begin(), operand1.end(), ::isspace), operand1.end());
+    operand2.erase(remove_if(operand2.begin(), operand2.end(), ::isspace), operand2.end());
+    }
+    }
+
+    // Focus on the first temporary in the list passed to the function
+    if (temporaries.empty()) {
+    return "";
+    }
+
+    string temp = temporaries[0];
+
+    // Check if the temporary already has a register assigned
+    string reg = addrDesc.getRegisterLocation(temp);
+    if (!reg.empty()) {
+    return reg;
+    }
+
+    // If not, we need to allocate a register
+
+    // First, try to find an empty register
+    vector<string> emptyRegisters = regDesc.getEmptyRegisters();
+    if (!emptyRegisters.empty()) {
+    reg = emptyRegisters[0];
+    } else {
+    // No empty registers, we need to spill one
+    // For simplicity, use rax if no other priority
+    reg = "rax";
+
+    // Spill the register's current contents to memory
+    vector<string> tempsInReg = regDesc.getTempsInRegister(reg);
+    for (const auto& t : tempsInReg) {
+    addrDesc.setInMemory(t, true);
+    addrDesc.clearRegisterLocation(t);
+    }
+    regDesc.clearRegister(reg);
+    }
+
+    // Allocate the register to the temporary
+    regDesc.addTemp(reg, temp);
+    addrDesc.setRegisterLocation(temp, reg);
+
+    return reg;
+}
+
+// Example main to demonstrate usage
 int main() {
-    demonstrateTables();
+    // Example: t1 = t2 * t3 (both in registers)
+    cout << "Example 1: t1 = t2 * t3 (both operands in registers)" << endl;
+    selectInstruction("*", {OperandLocation::REGISTER, OperandLocation::REGISTER});
+    
+    // Example: t1 = t2 * 5 (immediate)
+    cout << "\nExample 2: t1 = t2 * 5 (second operand is immediate)" << endl;
+    selectInstruction("*", {OperandLocation::REGISTER, OperandLocation::IMMEDIATE});
+    
+    // Example: t1 = t2 + mem[t3] (memory operand)
+    cout << "\nExample 3: t1 = t2 + mem[t3] (second operand in memory)" << endl;
+    selectInstruction("+", {OperandLocation::REGISTER, OperandLocation::MEMORY});
+    
     return 0;
 }

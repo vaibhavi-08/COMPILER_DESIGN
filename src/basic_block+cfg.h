@@ -16,6 +16,8 @@ class ThreeAddressCode {
 private:
     int lineNumber;
     string instruction;
+    /*******************change 1: here add next use map of <string,bool> where we would store temps, where temps which are used afer this intruction
+     are set true and others set false **********************/
 
 public:
     ThreeAddressCode(int line = 0, const string& instr = "") : lineNumber(line), instruction(instr) {}

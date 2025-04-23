@@ -3,10 +3,6 @@
 int main() {
     int a=10;
     
-    switch(a){
-        case 10:
-            a=11;
-        default:
-            a=0;  
-    }
+    int c=110;
+    int x=c%a;
 }

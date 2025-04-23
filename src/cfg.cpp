@@ -549,6 +549,7 @@ void cleanupBlocks(vector<BasicBlock*>& blocks) {
 
 // DFS traversal to get blocks in reverse topological order
 void dfsTraversal(BasicBlock* block, vector<BasicBlock*>& processOrder) {
+    printf("Visiting block: %p\n", (void*)block); // Check validity
     if (!block || block->visited) {
         return;
     }
@@ -557,6 +558,7 @@ void dfsTraversal(BasicBlock* block, vector<BasicBlock*>& processOrder) {
     
     // Visit all successors first
     for (BasicBlock* succ : block->getSuccessors()) {
+        printf("Successor of %p is %p\n", (void*)block, (void*)succ);
         dfsTraversal(succ, processOrder);
     }
     
@@ -650,7 +652,103 @@ void computeNextUseForBlock(BasicBlock* block, unordered_map<string, bool>& acti
     }
 }
 
-// Main function to generate code from 3AC
+// New function to identify and remove redundant conditional/goto patterns
+vector<BasicBlock*> removeRedundantConditionals(vector<BasicBlock*>& blocks) {
+    vector<BasicBlock*> cleanedBlocks;
+    map<int, int> oldToNewIdMap;
+    
+    // First pass: identify blocks to remove
+    vector<bool> shouldRemove(blocks.size(), false);
+    
+    for (size_t i = 0; i < blocks.size(); i++) {
+        BasicBlock* block = blocks[i];
+        const vector<ThreeAddressCode>& instructions = block->getInstructions();
+        
+        // Check for pattern where conditional and unconditional goto point to same target
+        if (instructions.size() == 2 && 
+            instructions[0].isConditional() && 
+            instructions[1].isGoto()) {
+            
+            int condTarget = instructions[0].getGotoTarget();
+            int uncondTarget = instructions[1].getGotoTarget();
+            
+            // If both branches target the same line, mark this block for removal
+            if (condTarget == uncondTarget) {
+                shouldRemove[i] = true;
+            }
+        }
+        
+        // Check for single statement blocks that only contain an unconditional goto
+        if (instructions.size() == 1 && instructions[0].isGoto()) {
+            shouldRemove[i] = true;
+        }
+    }
+    
+    // Create a mapping from line numbers to blocks
+    map<int, BasicBlock*> lineToBlockMap;
+    for (BasicBlock* block : blocks) {
+        for (const ThreeAddressCode& tac : block->getInstructions()) {
+            lineToBlockMap[tac.getLineNumber()] = block;
+        }
+    }
+    
+    // Second pass: find redirection targets for blocks to be removed
+    map<BasicBlock*, BasicBlock*> redirectMap;
+    for (size_t i = 0; i < blocks.size(); i++) {
+        if (shouldRemove[i]) {
+            BasicBlock* block = blocks[i];
+            const vector<ThreeAddressCode>& instructions = block->getInstructions();
+            
+            // Find the ultimate target block
+            int targetLine = -1;
+            if (instructions.size() == 1 && instructions[0].isGoto()) {
+                // For simple goto blocks
+                targetLine = instructions[0].getGotoTarget();
+            }
+            else if (instructions.size() == 2 && 
+                     instructions[0].isConditional() && 
+                     instructions[1].isGoto()) {
+                // For conditional + goto blocks with same target
+                targetLine = instructions[1].getGotoTarget();
+            }
+            
+            // Find the target block
+            if (targetLine != -1 && lineToBlockMap.find(targetLine) != lineToBlockMap.end()) {
+                redirectMap[block] = lineToBlockMap[targetLine];
+            }
+        }
+    }
+    
+    // Third pass: redirect successors
+    for (BasicBlock* block : blocks) {
+        vector<BasicBlock*>& successors = block->getSuccessors();
+        for (size_t j = 0; j < successors.size(); j++) {
+            // Keep following redirection chain until we reach a block that isn't being removed
+            BasicBlock* targetBlock = successors[j];
+            while (redirectMap.find(targetBlock) != redirectMap.end()) {
+                targetBlock = redirectMap[targetBlock];
+            }
+            successors[j] = targetBlock;
+        }
+    }
+    
+    // Final pass: rebuild the block list without removed blocks
+    int newId = 0;
+    for (size_t i = 0; i < blocks.size(); i++) {
+        if (!shouldRemove[i]) {
+            BasicBlock* block = blocks[i];
+            block->setId(newId++);
+            cleanedBlocks.push_back(block);
+        } else {
+            // Free memory for removed blocks
+            delete blocks[i];
+        }
+    }
+    
+    return cleanedBlocks;
+}
+
+// Update your generateCode function to use the new function
 BasicBlock* generateCode(const string& input, bool isFile) {
     // Read 3AC code
     vector<ThreeAddressCode> code = read3ACCode(input, isFile);
@@ -672,8 +770,11 @@ BasicBlock* generateCode(const string& input, bool isFile) {
     // Filter out blocks that only contain goto statements
     vector<BasicBlock*> filteredBlocks = filterGotoOnlyBlocks(blocks);
     
-    // Find the main block
-    BasicBlock* mainBlock = findMainBlock(filteredBlocks);
+    // NEW: Remove redundant conditionals
+    vector<BasicBlock*> cleanedBlocks = removeRedundantConditionals(filteredBlocks);
+    
+    // Find the main block (now in cleaned blocks)
+    BasicBlock* mainBlock = findMainBlock(cleanedBlocks);
     
     if (mainBlock) {
         cout << "======== MAIN FUNCTION BLOCK ========" << endl;
@@ -681,15 +782,17 @@ BasicBlock* generateCode(const string& input, bool isFile) {
         cout << "Main block lines: " << mainBlock->getStartLine() << "-" << mainBlock->getEndLine() << endl << endl;
         
         // Compute next use information
-        computeNextUseInfo(filteredBlocks, mainBlock);
+        computeNextUseInfo(cleanedBlocks, mainBlock);
     } else {
         cout << "No main function found in the code!" << endl;
     }
-    for(BasicBlock* i:filteredBlocks){
-        i->visited=false;
+    
+    for (BasicBlock* block : cleanedBlocks) {
+        block->visited = false;
     }
+    
     // Print basic blocks with next use info
-    printBasicBlocks(filteredBlocks);
+    printBasicBlocks(cleanedBlocks);
     
     return mainBlock;
 }

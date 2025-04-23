@@ -390,11 +390,11 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 auto z = allocator.getRegisters(tr, tac.getNextUseMap());
                 cout << "got z" << endl;
                 
-                //handle spilling above
-                asmcode.push_back("mov " + z["xx"].location + " , " + z[op1].location);
-                
                 if(opr != "/" && opr != "%") {
                     cout << " reached correct if" << endl;
+                    //handle spilling above
+                    asmcode.push_back("mov " + z["xx"].location + " , " + z[op1].location);
+                    
                     string opcode;
                     if(z[op2].isRegister)
                         opcode = selectInstruction(opr, {OperandLocation::REGISTER, OperandLocation::REGISTER});
@@ -403,13 +403,49 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     
                     asmcode.push_back(opcode + " " + z["xx"].location + " , " + z[op2].location);
                     cout << "finally pushed the code" << endl;
+                    
+                    asmcode.push_back("mov " + z[result].location + " , " + z["xx"].location);
                 }
                 else {
-                    //to be handled
-                    cout << "to be handled" << endl;
+                    // For division operations we need to:
+                    // 1. Ensure EAX is available for dividend
+                    // 2. Use CDQ to sign extend EAX to EDX
+                    // 3. Use the IDIV instruction with the divisor
+                    
+                    // Request specific registers for division
+                    vector<pair<string, bool>> divRegs;
+                    divRegs.emplace_back("eax", true);  // Need EAX specifically
+                    divRegs.emplace_back("edx", true);  // Need EDX for sign extension
+                    
+                    // Get register locations
+                    auto divZ = allocator.getRegisters(divRegs, tac.getNextUseMap());
+                    
+                    // Move dividend to EAX
+                    asmcode.push_back("mov eax, " + z[op1].location);
+                    
+                    // Sign extend EAX into EDX
+                    asmcode.push_back("cdq");
+                    
+                    // Determine if divisor is in register or memory
+                    string opcode;
+                    if(z[op2].isRegister) {
+                        opcode = selectInstruction(opr, {OperandLocation::REGISTER});
+                    } else {
+                        opcode = selectInstruction(opr, {OperandLocation::MEMORY});
+                    }
+                    
+                    // Perform division
+                    asmcode.push_back(opcode + " " + z[op2].location);
+                    
+                    // Copy result to destination
+                    if(opr == "/") {
+                        // Quotient is in EAX
+                        asmcode.push_back("mov " + z[result].location + ", eax");
+                    } else { // opr == "%"
+                        // Remainder is in EDX
+                        asmcode.push_back("mov " + z[result].location + ", edx");
+                    }
                 }
-                
-                asmcode.push_back("mov " + z[result].location + " , " + z["xx"].location);
             }
             // if unary expression (++ or --)
             else if (instr.find("++") != string::npos || instr.find("--") != string::npos) {
@@ -440,6 +476,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 // Generate assembly code for increment/decrement
                 asmcode.push_back(opcode + " " + z[var].location + " , 1");
             }
+            
             // Other unary expressions
             else {
                 cout << "to be handled##" << endl;

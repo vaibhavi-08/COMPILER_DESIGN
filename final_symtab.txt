@@ -1,5 +1,17 @@
 ====================== FINAL SYMBOL TABLE ======================
 
+Temp: t6
+  Name: x
+  Type: INT
+  Scope: main:
+  Level: 1
+
+Temp: t4
+  Name: c
+  Type: INT
+  Scope: main:
+  Level: 1
+
 Temp: main
   Name: main
   Type: INT
@@ -14,28 +26,6 @@ Temp: t2
 
 ====================== FINAL TEMP SYMBOL TABLE ======================
 
-Temp: t7
-  Type Info:
-    is real var? 0
-    size: 4
-    base: INT
-    ptr_level: 0
-    array_dim: 0
-    isbasic: 1
-    isobj: 0
-    isfunction: 0
-    isconst: 0
-    isvolatile: 0
-    isstatic: 0
-    isauto: 0
-    isextern: 0
-    isregister: 0
-    isigned: 0
-    isunsigned: 0
-    isnull: 0
-    isenum: 0
-    isvarargs: 0
-    func_ptr_lev: 0
 Temp: t5
   Type Info:
     is real var? 0
@@ -60,7 +50,7 @@ Temp: t5
     func_ptr_lev: 0
 Temp: t4
   Type Info:
-    is real var? 0
+    is real var? 1
     size: 4
     base: INT
     ptr_level: 0
@@ -149,7 +139,7 @@ Temp: t2
     func_ptr_lev: 0
 Temp: t6
   Type Info:
-    is real var? 0
+    is real var? 1
     size: 4
     base: INT
     ptr_level: 0

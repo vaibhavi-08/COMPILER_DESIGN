@@ -26,9 +26,11 @@ bool identifier_found(vector<string>list, string id){
 string get_code4(string op1,string op2,string oprnd,string result){
     string s;
     s=result;
-    s+="=";
+    s+=" = ";
     s+=op1;
+    s+=" ";
     s+=oprnd;
+    s+=" ";
     s+=op2;
     return s;
 }
@@ -64,17 +66,20 @@ void fill_eqeq_exp2(vector<int>list, string s){
 string get_code_array(string a1,string a2,string res){
     string s="";
     s+=res;
-    s+="=";
+    s+=" = ";
     s+=a1;
+    s+= " ";
     s+='[';
+    s+= " ";
     s+=a2;
+    s+= " ";
     s+=']';
     return s;
 }
 string get_code_func(string res,string a1){
     string s="";
     s+=res;
-    s+="=";
+    s+=" = ";
     s+="call ";
     s+=a1;
     return s;

@@ -37,4 +37,4 @@ public:
 };
 
 // Helper function to select an instruction
-void selectInstruction(const std::string& operation, const std::vector<OperandLocation>& operandLocations);
+std::string selectInstruction(const std::string& operation, const std::vector<OperandLocation>& operandLocations);

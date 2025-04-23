@@ -1,5 +1,5 @@
 // X86InstructionSet.cpp
-#include "X86InstructionSet.h"
+#include <selinst.h>
 
 using namespace std;
 
@@ -132,14 +132,16 @@ InstructionInfo X86InstructionSet::getInstructionInfo(const string& operation, c
 }
 
 // Helper function implementation
-void selectInstruction(const string& operation, const vector<OperandLocation>& operandLocations) {
+std::string selectInstruction(const string& operation, const vector<OperandLocation>& operandLocations) {
     static X86InstructionSet instructionSet;
     
     string opcode = instructionSet.getOpcode(operation, operandLocations);
     if (opcode.empty()) {
         cout << "No matching instruction found for operation: " << operation << endl;
+        exit(1);
     } else {
         cout << "Selected opcode: " << opcode << endl;
         cout << "Description: " << instructionSet.getInstructionInfo(operation, operandLocations).description << endl;
+        return opcode;
     }
 }

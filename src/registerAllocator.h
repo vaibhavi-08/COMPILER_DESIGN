@@ -6,7 +6,11 @@
 #include <unordered_set>
 #include <vector>
 #include <string>
-
+struct RegAllocResult {
+    std::string location;  // Register or memory location
+    bool isRegister;       // Whether location is a register
+    bool needsSpill;       // Whether register needs to be spilled
+};
 class RegisterAllocator {
 private:
     // Register Descriptor Table: maps register -> set of variables it contains
@@ -18,6 +22,7 @@ private:
         std::string memoryLocation;          // If in memory, where?
         std::unordered_set<std::string> registers; // Set of registers containing this variable
     };
+    int crbp;
     std::unordered_map<std::string, LocationInfo> addressDescriptor;
     
     // List of available registers
@@ -27,12 +32,6 @@ private:
     std::unordered_map<std::string, bool> nextUse;
 
 public:
-    // Structure to return register allocation result
-    struct RegAllocResult {
-        std::string location;  // Register or memory location
-        bool isRegister;       // Whether location is a register
-        bool needsSpill;       // Whether register needs to be spilled
-    };
     
     // Constructor
     RegisterAllocator(const std::vector<std::string>& availableRegisters);

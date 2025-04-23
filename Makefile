@@ -12,7 +12,7 @@ PARSER = $(SRC_DIR)/grammar.y
 LEX_OUTPUT = $(SRC_DIR)/lex.yy.c
 YACC_OUTPUT = $(SRC_DIR)/grammar.tab.c
 YACC_HEADER = $(SRC_DIR)/grammar.tab.h
-CPP_SRC = $(SRC_DIR)/classes_NT.cpp $(SRC_DIR)/tac.cpp $(SRC_DIR)/symtab_print.cpp
+CPP_SRC = $(SRC_DIR)/classes_NT.cpp $(SRC_DIR)/tac.cpp $(SRC_DIR)/symtab_print.cpp $(SRC_DIR)/cfg.cpp $(SRC_DIR)/registerAllocator.cpp $(SRC_DIR)/selinst.cpp $(SRC_DIR)/codegen.cpp 
 BIN = parser
 
 # Targets

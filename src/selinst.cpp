@@ -54,7 +54,15 @@ X86InstructionSet::X86InstructionSet() {
     instructionMap["<="] = instructionMap["=="];
     instructionMap[">"] = instructionMap["=="];
     instructionMap[">="] = instructionMap["=="];
-    
+
+    // Increment operations
+    instructionMap["++"][{OperandLocation::REGISTER}] = {"add", "Increment register by 1"};
+    instructionMap["++"][{OperandLocation::MEMORY}] = {"add", "Increment memory by 1"};
+
+    // Decrement operations
+    instructionMap["--"][{OperandLocation::REGISTER}] = {"sub", "Decrement register by 1"};
+    instructionMap["--"][{OperandLocation::MEMORY}] = {"sub", "Decrement memory by 1"};
+        
     // Logical operations
     instructionMap["&&"][{OperandLocation::REGISTER, OperandLocation::REGISTER}] = {"and", "Logical AND register with register"};
     instructionMap["&&"][{OperandLocation::REGISTER, OperandLocation::MEMORY}] = {"and", "Logical AND register with memory"};

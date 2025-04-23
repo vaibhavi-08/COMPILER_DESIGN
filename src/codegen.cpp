@@ -184,219 +184,289 @@ bool isAssignWithOp(const std::string& instruction) {
     return true;
 }
 vector<string> asmcode;
-void dfs(BasicBlock* curb,RegisterAllocator& allocator){
-    curb->visited=true;
+void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
+    curb->visited = true;
     cout << " dfs runned" << endl;
-    if(curb->getStartLine()==-1){
-    string s=".end :";
-    asmcode.push_back(s);
-    return;
+    
+    if(curb->getStartLine() == -1) {
+        string s = ".end :";
+        asmcode.push_back(s);
+        return;
     }
-    string stl=".B"+to_string(curb->id)+":";
+    
+    string stl = ".B" + to_string(curb->id) + ":";
     asmcode.push_back(stl);
+    
     // just an if statement
-    if(curb->instructions.size()==2&&curb->instructions[0].isConditional()&&curb->instructions[1].isGoto()){
+    if(curb->instructions.size() == 2 && curb->instructions[0].isConditional() && curb->instructions[1].isGoto()) {
         //get the condition
-        string op1="";//first operand
-        string op2="";//second operand
-        string opr="";//operator
-        parseCondition(curb->instructions[0].getInstruction(),op1,op2,opr);
-        //cout << "parse condition done" << endl;
-        if(temp_and_type[op1]->isreal_var){
+        string op1 = ""; //first operand
+        string op2 = ""; //second operand
+        string opr = ""; //operator
+        parseCondition(curb->instructions[0].getInstruction(), op1, op2, opr);
+        
+        if(temp_and_type[op1]->isreal_var) {
             allocator.addVariable(op1);
         }
-        if(!op2.empty()&&temp_and_type[op2]->isreal_var){
+        
+        if(!op2.empty() && temp_and_type[op2]->isreal_var) {
             allocator.addVariable(op2);
         }
-        //cout << "two ifs done" << endl;
-        if(op2.empty()&&opr.empty()){//if ti goto x case
-            vector<pair<string,bool>> tr;
-            //cout << "correct if reached" << endl;
-            tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
-            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap());
-            if(!z[op1].needsSpill){
-                asmcode.push_back("cmp "+z[op1].location+" , 0");
-                if(curb->successors.size()==1){
+        
+        if(op2.empty() && opr.empty()) { //if ti goto x case
+            vector<pair<string, bool>> tr;
+            tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
+            auto z = allocator.getRegisters(tr, curb->instructions[0].getNextUseMap());
+            
+            if(!z[op1].needsSpill) {
+                asmcode.push_back("cmp " + z[op1].location + " , 0");
+                
+                if(curb->successors.size() == 1) {
                     string jmpl;
-                    if(curb->successors[0]->getStartLine()!=-1)jmpl=".B"+to_string(curb->successors[0]->getId());
-                    else jmpl=".end";
-                    asmcode.push_back("jmp "+jmpl);
+                    if(curb->successors[0]->getStartLine() != -1) 
+                        jmpl = ".B" + to_string(curb->successors[0]->getId());
+                    else 
+                        jmpl = ".end";
+                    asmcode.push_back("jmp " + jmpl);
                 }
-                else if(curb->successors.size()==2){
+                else if(curb->successors.size() == 2) {
                     string jumpl;
-                    if(curb->successors[0]->getStartLine()!=-1)jumpl=".B"+to_string(curb->successors[0]->getId());
-                    else jumpl=".end";
+                    if(curb->successors[0]->getStartLine() != -1) 
+                        jumpl = ".B" + to_string(curb->successors[0]->getId());
+                    else 
+                        jumpl = ".end";
+                    
                     string jel;
-                    if(curb->successors[1]->getStartLine()!=-1)jel=".B"+to_string(curb->successors[1]->getId());
-                    else jel=".end";
-                    asmcode.push_back("je "+jel);
-                    asmcode.push_back("jmp "+jumpl);
+                    if(curb->successors[1]->getStartLine() != -1) 
+                        jel = ".B" + to_string(curb->successors[1]->getId());
+                    else 
+                        jel = ".end";
+                    
+                    asmcode.push_back("je " + jel);
+                    asmcode.push_back("jmp " + jumpl);
                 }
-                else{
+                else {
                     cout << "no more than 2 successors possible for B" << curb->getId() << endl;
                     exit(1);
                 }
             }
-            else{
+            else {
                 cout << "error " << op1 << " should not need spill" << endl;
                 exit(1);
             }
         }
-        else{
-            vector<pair<string,bool>> tr;
-            tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
-            tr.emplace_back(op2,!temp_and_type[op2]->isreal_var);
-            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap());
-            string op1l=z[op1].location;
-            if(!z[op1].isRegister&&!z[op2].isRegister){
-                vector<pair<string,bool>> ntr;
-                ntr.emplace_back(op1,true);
+        else {
+            vector<pair<string, bool>> tr;
+            tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
+            tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
+            auto z = allocator.getRegisters(tr, curb->instructions[0].getNextUseMap());
+            
+            string op1l = z[op1].location;
+            if(!z[op1].isRegister && !z[op2].isRegister) {
+                vector<pair<string, bool>> ntr;
+                ntr.emplace_back(op1, true);
                 //handle spilling
-                auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap());
-                asmcode.push_back("mov "+nz[op1].location+" , "+z[op1].location);
-                op1l=nz[op1].location;
+                auto nz = allocator.getRegisters(ntr, curb->instructions[0].getNextUseMap());
+                asmcode.push_back("mov " + nz[op1].location + " , " + z[op1].location);
+                op1l = nz[op1].location;
             }
-            asmcode.push_back("cmp "+op1l+" , "+z[op2].location);
+            
+            asmcode.push_back("cmp " + op1l + " , " + z[op2].location);
             asmcode.push_back("sete al");
-            vector<pair<string,bool>> ctr;
-            ctr.emplace_back("xx",true);
+            
+            vector<pair<string, bool>> ctr;
+            ctr.emplace_back("xx", true);
             //handle spilling
-            auto cz=allocator.getRegisters(ctr,curb->instructions[0].getNextUseMap());
-            asmcode.push_back("movzx "+cz["xx"].location+" , al");
-            asmcode.push_back("cmp "+cz["xx"].location+" , 0");
-            if(curb->successors.size()==1){
-                    string jmpl;
-                    if(curb->successors[0]->getStartLine()!=-1)jmpl=".B"+to_string(curb->successors[0]->getId());
-                    else jmpl=".end";
-                    asmcode.push_back("jmp "+jmpl);
+            auto cz = allocator.getRegisters(ctr, curb->instructions[0].getNextUseMap());
+            asmcode.push_back("movzx " + cz["xx"].location + " , al");
+            asmcode.push_back("cmp " + cz["xx"].location + " , 0");
+            
+            if(curb->successors.size() == 1) {
+                string jmpl;
+                if(curb->successors[0]->getStartLine() != -1) 
+                    jmpl = ".B" + to_string(curb->successors[0]->getId());
+                else 
+                    jmpl = ".end";
+                asmcode.push_back("jmp " + jmpl);
             }
-            else if(curb->successors.size()==2){
+            else if(curb->successors.size() == 2) {
                 string jumpl;
-                if(curb->successors[0]->getStartLine()!=-1)jumpl=".B"+to_string(curb->successors[0]->getId());
-                else jumpl=".end";
+                if(curb->successors[0]->getStartLine() != -1) 
+                    jumpl = ".B" + to_string(curb->successors[0]->getId());
+                else 
+                    jumpl = ".end";
+                
                 string jel;
-                if(curb->successors[1]->getStartLine()!=-1)jel=".B"+to_string(curb->successors[1]->getId());
-                else jel=".end";
-                asmcode.push_back("je "+jel);
-                asmcode.push_back("jmp "+jumpl);
+                if(curb->successors[1]->getStartLine() != -1) 
+                    jel = ".B" + to_string(curb->successors[1]->getId());
+                else 
+                    jel = ".end";
+                
+                asmcode.push_back("je " + jel);
+                asmcode.push_back("jmp " + jumpl);
             }
-            else{
+            else {
                 cout << "no more than 2 successors possible for B" << curb->getId() << endl;
                 exit(1);
             }
         }
     }
     //for spilling you need to study the space allocation thing for functions
-    else{
-        for(ThreeAddressCode tac :curb->instructions){
-            string instr=tac.getInstruction();
+    else {
+        for(ThreeAddressCode tac : curb->instructions) {
+            string instr = tac.getInstruction();
             cout << instr << endl;
+            
             //check if label
-            if(isLabelStatement(instr)){
-                string label=getLabel(instr);
-                asmcode.push_back(label+":");
+            if(isLabelStatement(instr)) {
+                string label = getLabel(instr);
+                asmcode.push_back(label + ":");
                 asmcode.push_back("push rbp");
                 asmcode.push_back("mov rbp , rsp");
             }
             //if it is an assignment statement simple
-            else if(isSimpleAssignment(instr)){
-                string op1="",op2="";
-                getOperandsAssignment(instr,op1,op2);
-                if(temp_and_type[op1]->isreal_var){
+            else if(isSimpleAssignment(instr)) {
+                string op1 = "", op2 = "";
+                getOperandsAssignment(instr, op1, op2);
+                
+                if(temp_and_type[op1]->isreal_var) {
                     allocator.addVariable(op1);
                 }
-                vector<pair<string,bool>> tr;
-                tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
-                if(!op2.empty()&&op2[0]=='t'){
-                    tr.emplace_back(op2,!temp_and_type[op2]->isreal_var);
-                    if(temp_and_type[op2]->isreal_var){
+                
+                vector<pair<string, bool>> tr;
+                tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
+                
+                if(!op2.empty() && op2[0] == 't') {
+                    tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
+                    if(temp_and_type[op2]->isreal_var) {
                         allocator.addVariable(op2);
                     }
                 }
                 
-                auto z=allocator.getRegisters(tr,tac.getNextUseMap());
+                auto z = allocator.getRegisters(tr, tac.getNextUseMap());
+                string op1l = z[op1].location;
                 
-                string op1l=z[op1].location;
-                
-                if(!z[op1].isRegister&&!z[op2].isRegister){
-                    vector<pair<string,bool>> ntr;
-                    ntr.emplace_back(op1,true);
+                if(!z[op1].isRegister && !z[op2].isRegister) {
+                    vector<pair<string, bool>> ntr;
+                    ntr.emplace_back(op1, true);
                     //handle spilling
-                    auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap());
-                    asmcode.push_back("mov "+nz[op1].location+" , "+z[op1].location);
-                    op1l=nz[op1].location;
+                    auto nz = allocator.getRegisters(ntr, curb->instructions[0].getNextUseMap());
+                    asmcode.push_back("mov " + nz[op1].location + " , " + z[op1].location);
+                    op1l = nz[op1].location;
                 }
                 
                 //handle spilling if register
-                if(!op2.empty()&&op2[0]=='t')asmcode.push_back("mov "+op1l+" , "+z[op2].location);
-                else asmcode.push_back("mov "+op1l+" , "+op2);
-                
+                if(!op2.empty() && op2[0] == 't')
+                    asmcode.push_back("mov " + op1l + " , " + z[op2].location);
+                else
+                    asmcode.push_back("mov " + op1l + " , " + op2);
             }
             // if it is a= b op c type
-            else if(isAssignWithOp(instr)){
-                string op1="",op2="",result="",opr="";
+            else if(isAssignWithOp(instr)) {
+                string op1 = "", op2 = "", result = "", opr = "";
                 //call that function
-                getOperandsCAssign(instr,result,op1,opr,op2);
+                getOperandsCAssign(instr, result, op1, opr, op2);
                 cout << result << " " << op1 << " " << opr << " " << op2 << endl;
-                if(temp_and_type[op1]->isreal_var){
+                
+                if(temp_and_type[op1]->isreal_var) {
                     allocator.addVariable(op1);
                 }
-                if(temp_and_type[op2]->isreal_var){
+                if(temp_and_type[op2]->isreal_var) {
                     allocator.addVariable(op2);
                 }
-                if(temp_and_type[result]->isreal_var){
+                if(temp_and_type[result]->isreal_var) {
                     allocator.addVariable(result);
                 }
+                
                 cout << "add variables done " << endl;
-                vector<pair<string,bool>> tr;
-                tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
-                tr.emplace_back(op2,!temp_and_type[op2]->isreal_var);
-                tr.emplace_back(result,!temp_and_type[result]->isreal_var);
-                tr.emplace_back("xx",true);
+                
+                vector<pair<string, bool>> tr;
+                tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
+                tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
+                tr.emplace_back(result, !temp_and_type[result]->isreal_var);
+                tr.emplace_back("xx", true);
+                
                 cout << "pushed vars" << endl;
-                auto z=allocator.getRegisters(tr,tac.getNextUseMap());
+                auto z = allocator.getRegisters(tr, tac.getNextUseMap());
                 cout << "got z" << endl;
+                
                 //handle spilling above
-                asmcode.push_back("mov "+z["xx"].location+" , "+z[op1].location);
-                if(opr!="/"&&opr!="%"){
+                asmcode.push_back("mov " + z["xx"].location + " , " + z[op1].location);
+                
+                if(opr != "/" && opr != "%") {
                     cout << " reached correct if" << endl;
                     string opcode;
-                    if(z[op2].isRegister)opcode=selectInstruction(opr,{OperandLocation::REGISTER,OperandLocation::REGISTER});
-                    else opcode=selectInstruction(opr,{OperandLocation::REGISTER,OperandLocation::MEMORY});
-                    asmcode.push_back(opcode+" "+z["xx"].location+" , "+z[op2].location);
+                    if(z[op2].isRegister)
+                        opcode = selectInstruction(opr, {OperandLocation::REGISTER, OperandLocation::REGISTER});
+                    else
+                        opcode = selectInstruction(opr, {OperandLocation::REGISTER, OperandLocation::MEMORY});
+                    
+                    asmcode.push_back(opcode + " " + z["xx"].location + " , " + z[op2].location);
                     cout << "finally pushed the code" << endl;
                 }
-                else{
+                else {
                     //to be handled
-                    cout <<"to be handled"<<endl;
+                    cout << "to be handled" << endl;
                 }
-                asmcode.push_back("mov "+z[result].location+" , "+z["xx"].location);
-            }
-            // if unary expression
-            else{
-                cout <<"to be handled##"<<endl;
-            }
                 
+                asmcode.push_back("mov " + z[result].location + " , " + z["xx"].location);
+            }
+            // if unary expression (++ or --)
+            else if (instr.find("++") != string::npos || instr.find("--") != string::npos) {
+                // Extract the variable being incremented/decremented
+                string var = instr.substr(0, instr.find(" "));
+                string op = (instr.find("++") != string::npos) ? "++" : "--";
+                
+                // Add variable if it's a real variable
+                if (temp_and_type[var]->isreal_var) {
+                    allocator.addVariable(var);
+                }
+                
+                // Prepare operands for register allocation
+                vector<pair<string, bool>> tr;
+                tr.emplace_back(var, !temp_and_type[var]->isreal_var);
+                
+                // Get register/memory locations
+                auto z = allocator.getRegisters(tr, tac.getNextUseMap());
+                
+                // Select instruction based on operand location
+                string opcode;
+                if (z[var].isRegister) {
+                    opcode = selectInstruction(op, {OperandLocation::REGISTER});
+                } else {
+                    opcode = selectInstruction(op, {OperandLocation::MEMORY});
+                }
+                
+                // Generate assembly code for increment/decrement
+                asmcode.push_back(opcode + " " + z[var].location + " , 1");
+            }
+            // Other unary expressions
+            else {
+                cout << "to be handled##" << endl;
+            }
         }
-        if(curb->successors.size()==1){
+        
+        if(curb->successors.size() == 1) {
             cout << "curb->successors" << endl;
             string jmpl;
-            if(curb->successors[0]->getStartLine()!=-1)jmpl=".B"+to_string(curb->successors[0]->getId());
-            else jmpl=".end";
-            asmcode.push_back("jmp "+jmpl);
+            if(curb->successors[0]->getStartLine() != -1)
+                jmpl = ".B" + to_string(curb->successors[0]->getId());
+            else
+                jmpl = ".end";
+            asmcode.push_back("jmp " + jmpl);
         }
-        else{
-            cout << "no more than 1 succ" <<endl;
+        else {
+            cout << "no more than 1 succ" << endl;
             exit(1);
         }
     }
-    for(auto i:curb->successors){
-        if(!i->visited){
+    
+    for(auto i : curb->successors) {
+        if(!i->visited) {
             cout << "here we are" << endl;
-            dfs(i,allocator);
+            dfs(i, allocator);
         }
     }
-
 }
 int main(int argc, char* argv[]) {
     string outputFileName="lexer_output";

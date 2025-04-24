@@ -307,10 +307,10 @@ additive_expression
 
 shift_expression
 	: additive_expression {$$=$1;}
-	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"<<",nn);
+	| shift_expression LEFT_OP additive_expression  {check_for_shift_op($1,$3);Type* type=new Type(*$1);string nn=get_new_temp();string cod=get_code4($1->place,$3->place,"<<",nn);
 		merge_code1(type->code,$3->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;$$=type;
 		temp_and_type[nn]=$$;}
-	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+	| shift_expression RIGHT_OP additive_expression {check_for_shift_op($1,$3);Type* type=new Type(*$1);string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,">>",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;$$=type;
 		temp_and_type[nn]=$$;}
@@ -344,21 +344,21 @@ equality_expression
 
 and_expression
 	: equality_expression {$$=$1;}
-	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+	| and_expression '&' equality_expression {check_for_shift_op($1,$3);Type* type=new Type(*$1);string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,"&",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;$$=type;temp_and_type[nn]=$$;}
 	;
 
 exclusive_or_expression
 	: and_expression {$$=$1;}
-	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+	| exclusive_or_expression '^' and_expression {check_for_shift_op($1,$3);Type* type=new Type(*$1);string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,"^",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;$$=type;temp_and_type[nn]=$$;}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$=$1;}
-	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=$1;string nn=get_new_temp();
+	| inclusive_or_expression '|' exclusive_or_expression {check_for_shift_op($1,$3);Type* type=new Type(*$1);string nn=get_new_temp();
 		string cod=get_code4($1->place,$3->place,"|",nn);merge_code1(type->code,$3->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;$$=type;temp_and_type[nn]=$$;}
 	;
@@ -368,7 +368,7 @@ logical_and_expression
 		type->truelist.push_back(global_code.size());type->falselist.push_back(global_code.size()+1);
 		cout << "####pushing if code ###" << endl;
 		global_code.push_back(get_if_true_code(type->place));global_code.push_back(get_if_false_code());$$=type;}
-	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();
+	| logical_and_expression AND_OP m inclusive_or_expression {check_for_shift_op($1,$4);Type* type=new Type(*$1);type->truelist=$1->truelist;type->falselist=$1->falselist;type->nextlist=$1->nextlist;string nn=get_new_temp();
 		string cod=get_code4($1->place,$4->place,"&&",nn);merge_code1(type->code,$4->code);type->code.push_back(cod);
 		$4->truelist.push_back(global_code.size());$4->falselist.push_back(global_code.size()+1);
 		global_code.push_back(get_if_true_code($4->place));global_code.push_back(get_if_false_code());
@@ -378,7 +378,7 @@ logical_and_expression
 
 logical_or_expression
 	: logical_and_expression {$$=$1;}
-	| logical_or_expression OR_OP m logical_and_expression { cout << "logical or done" << endl;check_for_shift_op($1,$4);Type* type=$1;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
+	| logical_or_expression OR_OP m logical_and_expression { cout << "logical or done" << endl;check_for_shift_op($1,$4);Type* type=new Type(*$1);type->truelist=$1->truelist;type->falselist=$1->falselist;type->nextlist=$1->nextlist;string nn=get_new_temp();string cod=get_code4($1->place,$4->place,"||",nn);merge_code1(type->code,$4->code);
 		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
 		backpatch(type->falselist,$3);type->truelist=merge(type->truelist,$4->truelist);type->falselist=$4->falselist;$$=type;temp_and_type[nn]=$$;}
 	;

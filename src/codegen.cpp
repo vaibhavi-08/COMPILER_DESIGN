@@ -200,28 +200,29 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
     // just an if statement
     if(curb->instructions.size() == 2 && curb->instructions[0].isConditional() && curb->instructions[1].isGoto()) {
         //get the condition
-        string op1 = ""; //first operand
-        string op2 = ""; //second operand
-        string opr = ""; //operator
-        parseCondition(curb->instructions[0].getInstruction(), op1, op2, opr);
-        
-        if(temp_and_type[op1]->isreal_var) {
+        cout << curb->instructions[0].getInstruction() << endl;
+        string op1="";//first operand
+        string op2="";//second operand
+        string opr="";//operator
+        parseCondition(curb->instructions[0].getInstruction(),op1,op2,opr);
+        //cout << "parse condition done" << endl;
+        if(temp_and_type[op1]->isreal_var){
             allocator.addVariable(op1);
         }
         
         if(!op2.empty() && temp_and_type[op2]->isreal_var) {
             allocator.addVariable(op2);
         }
-        
-        if(op2.empty() && opr.empty()) { //if ti goto x case
-            vector<pair<string, bool>> tr;
-            tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
-            auto z = allocator.getRegisters(tr, curb->instructions[0].getNextUseMap());
-            
-            if(!z[op1].needsSpill) {
-                asmcode.push_back("cmp " + z[op1].location + " , 0");
-                
-                if(curb->successors.size() == 1) {
+        //cout << "two ifs done" << endl;
+        if(op2.empty()&&opr.empty()){//if ti goto x case
+            vector<pair<string,bool>> tr;
+            //cout << "correct if reached" << endl;
+            tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
+            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap());
+            if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
+            if(!z[op1].needsSpill){
+                asmcode.push_back("cmp "+z[op1].location+" , 0");
+                if(curb->successors.size()==1){
                     string jmpl;
                     if(curb->successors[0]->getStartLine() != -1) 
                         jmpl = ".B" + to_string(curb->successors[0]->getId());
@@ -255,20 +256,22 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 exit(1);
             }
         }
-        else {
-            vector<pair<string, bool>> tr;
-            tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
-            tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
-            auto z = allocator.getRegisters(tr, curb->instructions[0].getNextUseMap());
-            
-            string op1l = z[op1].location;
-            if(!z[op1].isRegister && !z[op2].isRegister) {
-                vector<pair<string, bool>> ntr;
-                ntr.emplace_back(op1, true);
+        else{
+            vector<pair<string,bool>> tr;
+            tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
+            tr.emplace_back(op2,!temp_and_type[op2]->isreal_var);
+            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap());
+            string op1l=z[op1].location;
+            if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
+            if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
+            if(!z[op1].isRegister&&!z[op2].isRegister){
+                vector<pair<string,bool>> ntr;
+                ntr.emplace_back(op1,true);
                 //handle spilling
-                auto nz = allocator.getRegisters(ntr, curb->instructions[0].getNextUseMap());
-                asmcode.push_back("mov " + nz[op1].location + " , " + z[op1].location);
-                op1l = nz[op1].location;
+                auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap());
+                if(nz[op1].isRegister)allocator.loadToRegister(op1,nz[op1].location);
+                asmcode.push_back("mov "+nz[op1].location+" , "+z[op1].location);
+                op1l=nz[op1].location;
             }
             
             asmcode.push_back("cmp " + op1l + " , " + z[op2].location);
@@ -343,16 +346,19 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     }
                 }
                 
-                auto z = allocator.getRegisters(tr, tac.getNextUseMap());
-                string op1l = z[op1].location;
+                auto z=allocator.getRegisters(tr,tac.getNextUseMap());
+                if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
+                if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
+                string op1l=z[op1].location;
                 
-                if(!z[op1].isRegister && !z[op2].isRegister) {
-                    vector<pair<string, bool>> ntr;
-                    ntr.emplace_back(op1, true);
+                if(!z[op1].isRegister&&!z[op2].isRegister){
+                    vector<pair<string,bool>> ntr;
+                    ntr.emplace_back(op1,true);
                     //handle spilling
-                    auto nz = allocator.getRegisters(ntr, curb->instructions[0].getNextUseMap());
-                    asmcode.push_back("mov " + nz[op1].location + " , " + z[op1].location);
-                    op1l = nz[op1].location;
+                    auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap());
+                    if(nz[op1].isRegister)allocator.loadToRegister(op1,nz[op1].location);
+                    asmcode.push_back("mov "+nz[op1].location+" , "+z[op1].location);
+                    op1l=nz[op1].location;
                 }
                 
                 //handle spilling if register
@@ -387,10 +393,15 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 tr.emplace_back("xx", true);
                 
                 cout << "pushed vars" << endl;
-                auto z = allocator.getRegisters(tr, tac.getNextUseMap());
+                auto z=allocator.getRegisters(tr,tac.getNextUseMap());
+                if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
+                if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
+                if(z[result].isRegister)allocator.loadToRegister(result,z[result].location);
                 cout << "got z" << endl;
+                //handle spilling above
                 
-                if(opr != "/" && opr != "%") {
+                asmcode.push_back("mov "+z["xx"].location+" , "+z[op1].location);
+                if(opr!="/"&&opr!="%"){
                     cout << " reached correct if" << endl;
                     //handle spilling above
                     asmcode.push_back("mov " + z["xx"].location + " , " + z[op1].location);

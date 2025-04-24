@@ -1,7 +1,7 @@
 // RegisterAllocator.cpp
 #include <registerAllocator.h>
 #include <tac.h>
-
+extern vector<string> asmcode;
 RegisterAllocator::RegisterAllocator(const std::vector<std::string>& availableRegisters) : registers(availableRegisters) {
     // Initialize register descriptor table
     crbp=0;
@@ -52,14 +52,7 @@ std::string RegisterAllocator::loadToRegister(const std::string& variable, const
 }
 
 std::string RegisterAllocator::selectRegister(const std::unordered_set<std::string>& avoid) {
-    // First, try to find an empty register
-    for (const auto& reg : registers) {
-        if (registerDescriptor[reg].empty() && avoid.find(reg) == avoid.end()) {
-            return reg;
-        }
-    }
-    
-    // No empty register, find register with variable not used later
+    // find register with variable not used later
     for (const auto& reg : registers) {
         if (avoid.find(reg) == avoid.end()) {
             bool canUse = true;
@@ -80,6 +73,12 @@ std::string RegisterAllocator::selectRegister(const std::unordered_set<std::stri
                 
                 return reg;
             }
+        }
+    }
+    //try to find an empty register
+    for (const auto& reg : registers) {
+        if (registerDescriptor[reg].empty() && avoid.find(reg) == avoid.end()) {
+            return reg;
         }
     }
     
@@ -124,8 +123,10 @@ RegAllocResult RegisterAllocator::getLocationForVar(
         std::string selectedReg = selectRegister(avoidRegs);
         cout << "select register done" << endl;
         bool needsSpill = !registerDescriptor[selectedReg].empty();
-        
-        return {selectedReg, true, needsSpill};
+        if(needsSpill){
+            spillRegister(selectedReg);
+        }
+        return {selectedReg, true, false};
     }
     
     // Default: return memory location
@@ -188,6 +189,36 @@ void RegisterAllocator::printState() {
 }
 
 void RegisterAllocator::spillRegister(const std::string& reg) {
-    // This should be implemented by the caller as mentioned in requirements
-    std::cout << "Need to spill register: " << reg << std::endl;
+    // Get all variables currently in this register
+    auto& varsInReg = registerDescriptor[reg];
+    
+    // Nothing to spill if register is empty
+    if (varsInReg.empty()) {
+        return;
+    }
+    
+    // Process each variable in the register
+    for (const auto& var : varsInReg) {
+        // If variable is not already in memory, allocate memory for it
+        if (!addressDescriptor[var].inMemory) {
+            // Decrease crbp by 4 (allocate stack space)
+            crbp += 4;
+            
+            // Update address descriptor with new memory location
+            addressDescriptor[var].inMemory = true;
+            addressDescriptor[var].memoryLocation = "DWORD PTR [rbp-" + to_string(crbp) + "]";
+        }
+        
+        // Generate assembly instruction to move value from register to memory
+        std::string memLoc = addressDescriptor[var].memoryLocation;
+        asmcode.push_back("    mov " + memLoc + ", " + reg);
+    }
+    
+    // Update address descriptors for all spilled variables
+    for (const auto& var : varsInReg) {
+        addressDescriptor[var].registers.erase(reg);
+    }
+    
+    // Clear register descriptor entry
+    registerDescriptor[reg].clear();
 }

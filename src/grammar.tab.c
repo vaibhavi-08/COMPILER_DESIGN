@@ -717,9 +717,9 @@ static const yytype_int16 yyrline[] =
      739,   740,   741,   745,   746,   750,   751,   752,   753,   754,
      755,   756,   760,   761,   765,   770,   776,   780,   790,   791,
      792,   795,   801,   805,   809,   810,   814,   815,   818,   820,
-     825,   831,   839,   847,   851,   862,   872,   880,   890,   904,
-     907,   910,   913,   916,   921,   929,   932,   935,   936,   939,
-     940,   944,   945,   948,   982
+     825,   835,   843,   851,   855,   866,   876,   884,   894,   908,
+     911,   914,   917,   920,   925,   933,   936,   939,   940,   943,
+     944,   948,   949,   952,   986
 };
 #endif
 
@@ -2019,7 +2019,7 @@ yyreduce:
 
   case 42: /* shift_expression: shift_expression LEFT_OP additive_expression  */
 #line 310 "src/grammar.y"
-                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=(yyvsp[-2].typ);string nn=get_new_temp();string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"<<",nn);
+                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=new Type(*(yyvsp[-2].typ));string nn=get_new_temp();string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"<<",nn);
 		merge_code1(type->code,(yyvsp[0].typ)->code);type->code.push_back(cod);global_code.push_back(cod);type->place=nn;(yyval.typ)=type;
 		temp_and_type[nn]=(yyval.typ);}
 #line 2026 "src/grammar.tab.c"
@@ -2027,7 +2027,7 @@ yyreduce:
 
   case 43: /* shift_expression: shift_expression RIGHT_OP additive_expression  */
 #line 313 "src/grammar.y"
-                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=(yyvsp[-2].typ);string nn=get_new_temp();
+                                                        {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=new Type(*(yyvsp[-2].typ));string nn=get_new_temp();
 		string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,">>",nn);merge_code1(type->code,(yyvsp[0].typ)->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;(yyval.typ)=type;
 		temp_and_type[nn]=(yyval.typ);}
@@ -2102,7 +2102,7 @@ yyreduce:
 
   case 53: /* and_expression: and_expression '&' equality_expression  */
 #line 347 "src/grammar.y"
-                                                 {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=(yyvsp[-2].typ);string nn=get_new_temp();
+                                                 {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=new Type(*(yyvsp[-2].typ));string nn=get_new_temp();
 		string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"&",nn);merge_code1(type->code,(yyvsp[0].typ)->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;(yyval.typ)=type;temp_and_type[nn]=(yyval.typ);}
 #line 2109 "src/grammar.tab.c"
@@ -2116,7 +2116,7 @@ yyreduce:
 
   case 55: /* exclusive_or_expression: exclusive_or_expression '^' and_expression  */
 #line 354 "src/grammar.y"
-                                                     {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=(yyvsp[-2].typ);string nn=get_new_temp();
+                                                     {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=new Type(*(yyvsp[-2].typ));string nn=get_new_temp();
 		string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"^",nn);merge_code1(type->code,(yyvsp[0].typ)->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;(yyval.typ)=type;temp_and_type[nn]=(yyval.typ);}
 #line 2123 "src/grammar.tab.c"
@@ -2130,7 +2130,7 @@ yyreduce:
 
   case 57: /* inclusive_or_expression: inclusive_or_expression '|' exclusive_or_expression  */
 #line 361 "src/grammar.y"
-                                                              {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=(yyvsp[-2].typ);string nn=get_new_temp();
+                                                              {check_for_shift_op((yyvsp[-2].typ),(yyvsp[0].typ));Type* type=new Type(*(yyvsp[-2].typ));string nn=get_new_temp();
 		string cod=get_code4((yyvsp[-2].typ)->place,(yyvsp[0].typ)->place,"|",nn);merge_code1(type->code,(yyvsp[0].typ)->code);type->code.push_back(cod);
 		global_code.push_back(cod);type->place=nn;(yyval.typ)=type;temp_and_type[nn]=(yyval.typ);}
 #line 2137 "src/grammar.tab.c"
@@ -2147,7 +2147,7 @@ yyreduce:
 
   case 59: /* logical_and_expression: logical_and_expression AND_OP m inclusive_or_expression  */
 #line 371 "src/grammar.y"
-                                                                  {check_for_shift_op((yyvsp[-3].typ),(yyvsp[0].typ));Type* type=(yyvsp[-3].typ);string nn=get_new_temp();
+                                                                  {check_for_shift_op((yyvsp[-3].typ),(yyvsp[0].typ));Type* type=new Type(*(yyvsp[-3].typ));type->truelist=(yyvsp[-3].typ)->truelist;type->falselist=(yyvsp[-3].typ)->falselist;type->nextlist=(yyvsp[-3].typ)->nextlist;string nn=get_new_temp();
 		string cod=get_code4((yyvsp[-3].typ)->place,(yyvsp[0].typ)->place,"&&",nn);merge_code1(type->code,(yyvsp[0].typ)->code);type->code.push_back(cod);
 		(yyvsp[0].typ)->truelist.push_back(global_code.size());(yyvsp[0].typ)->falselist.push_back(global_code.size()+1);
 		global_code.push_back(get_if_true_code((yyvsp[0].typ)->place));global_code.push_back(get_if_false_code());
@@ -2164,7 +2164,7 @@ yyreduce:
 
   case 61: /* logical_or_expression: logical_or_expression OR_OP m logical_and_expression  */
 #line 381 "src/grammar.y"
-                                                               { cout << "logical or done" << endl;check_for_shift_op((yyvsp[-3].typ),(yyvsp[0].typ));Type* type=(yyvsp[-3].typ);string nn=get_new_temp();string cod=get_code4((yyvsp[-3].typ)->place,(yyvsp[0].typ)->place,"||",nn);merge_code1(type->code,(yyvsp[0].typ)->code);
+                                                               { cout << "logical or done" << endl;check_for_shift_op((yyvsp[-3].typ),(yyvsp[0].typ));Type* type=new Type(*(yyvsp[-3].typ));type->truelist=(yyvsp[-3].typ)->truelist;type->falselist=(yyvsp[-3].typ)->falselist;type->nextlist=(yyvsp[-3].typ)->nextlist;string nn=get_new_temp();string cod=get_code4((yyvsp[-3].typ)->place,(yyvsp[0].typ)->place,"||",nn);merge_code1(type->code,(yyvsp[0].typ)->code);
 		type->code.push_back(cod);global_code.push_back(cod);type->place=nn;
 		backpatch(type->falselist,(yyvsp[-1].int_value));type->truelist=merge(type->truelist,(yyvsp[0].typ)->truelist);type->falselist=(yyvsp[0].typ)->falselist;(yyval.typ)=type;temp_and_type[nn]=(yyval.typ);}
 #line 2171 "src/grammar.tab.c"
@@ -3080,39 +3080,43 @@ yyreduce:
 		backpatch((yyvsp[-4].typ)->truelist,(yyvsp[-3].int_value));
 		backpatch ((yyvsp[-4].typ)->falselist,(yyvsp[-1].int_value));
 		Type* zz=new Type(); zz->nextlist=merge((yyvsp[-2].typ)->nextlist,(yyvsp[0].typ)->nextlist);
-		backpatch(zz->nextlist,global_code.size()); (yyval.typ)=zz;}
-#line 3085 "src/grammar.tab.c"
+		backpatch(zz->nextlist,global_code.size());
+		vector<int> nw;
+		nw.push_back((yyvsp[-1].int_value)-1);
+		backpatch(nw,global_code.size());
+		 (yyval.typ)=zz;}
+#line 3089 "src/grammar.tab.c"
     break;
 
   case 201: /* selection_statement: SWITCH '(' expression crb emp statement  */
-#line 831 "src/grammar.y"
+#line 835 "src/grammar.y"
                                                   {(yyval.typ)=(yyvsp[0].typ);
 		backpatch((yyvsp[-3].typ)->truelist, (yyvsp[-2].int_value));
 		backpatch((yyvsp[-3].typ)->falselist, (yyvsp[-2].int_value));
 		backpatch(break_label, global_code.size());
 		fill_eqeq_exp2(switch_true, (yyvsp[-3].typ)->place);
 		}
-#line 3096 "src/grammar.tab.c"
+#line 3100 "src/grammar.tab.c"
     break;
 
   case 202: /* emp: %empty  */
-#line 839 "src/grammar.y"
+#line 843 "src/grammar.y"
           {
 		(yyval.int_value)=global_code.size();
 		
 		
 	  }
-#line 3106 "src/grammar.tab.c"
+#line 3110 "src/grammar.tab.c"
     break;
 
   case 203: /* m: %empty  */
-#line 847 "src/grammar.y"
+#line 851 "src/grammar.y"
           {(yyval.int_value)=global_code.size();}
-#line 3112 "src/grammar.tab.c"
+#line 3116 "src/grammar.tab.c"
     break;
 
   case 204: /* iteration_statement: WHILE srb expression crb statement  */
-#line 851 "src/grammar.y"
+#line 855 "src/grammar.y"
                                              {(yyval.typ)=(yyvsp[0].typ);
 	backpatch((yyvsp[0].typ)->nextlist, (yyvsp[-3].int_value));
 	backpatch((yyvsp[-2].typ)->truelist, (yyvsp[-1].int_value));
@@ -3122,11 +3126,11 @@ yyreduce:
 	backpatch(break_label, global_code.size());
 	backpatch(continue_label, (yyvsp[-3].int_value));
 	}
-#line 3126 "src/grammar.tab.c"
+#line 3130 "src/grammar.tab.c"
     break;
 
   case 205: /* iteration_statement: UNTIL srb expression crb statement  */
-#line 862 "src/grammar.y"
+#line 866 "src/grammar.y"
                                              {(yyval.typ)=(yyvsp[0].typ);
 	backpatch((yyvsp[0].typ)->nextlist, (yyvsp[-3].int_value));
 	backpatch((yyvsp[-2].typ)->truelist, (yyvsp[-1].int_value));
@@ -3136,11 +3140,11 @@ yyreduce:
 	backpatch(break_label, global_code.size());
 	backpatch(continue_label, (yyvsp[-3].int_value));
 	}
-#line 3140 "src/grammar.tab.c"
+#line 3144 "src/grammar.tab.c"
     break;
 
   case 206: /* iteration_statement: doo statement WHILE srb expression ')' ';'  */
-#line 872 "src/grammar.y"
+#line 876 "src/grammar.y"
                                                      {(yyval.typ)=(yyvsp[-5].typ);
 	(yyval.typ)->nextlist=(yyvsp[-2].typ)->falselist;
 	backpatch((yyvsp[-2].typ)->truelist, (yyvsp[-6].int_value));
@@ -3148,11 +3152,11 @@ yyreduce:
 	backpatch(break_label, global_code.size());
 	backpatch(continue_label, (yyvsp[-6].int_value));
 	}
-#line 3152 "src/grammar.tab.c"
+#line 3156 "src/grammar.tab.c"
     break;
 
   case 207: /* iteration_statement: FOR '(' expression smc expression smc ')' statement  */
-#line 880 "src/grammar.y"
+#line 884 "src/grammar.y"
                                                               { (yyval.typ)=(yyvsp[0].typ);
 		backpatch((yyvsp[-3].typ)->truelist,(yyvsp[-2].int_value));
 		(yyval.typ)->nextlist=(yyvsp[-3].typ)->falselist;
@@ -3161,11 +3165,11 @@ yyreduce:
 		backpatch(break_label, global_code.size());
 		backpatch(continue_label, (yyvsp[-4].int_value));
 		}
-#line 3165 "src/grammar.tab.c"
+#line 3169 "src/grammar.tab.c"
     break;
 
   case 208: /* iteration_statement: FOR '(' expression smc expression smc expression fcrb statement  */
-#line 890 "src/grammar.y"
+#line 894 "src/grammar.y"
                                                                           { (yyval.typ)=(yyvsp[0].typ);
 		backpatch((yyvsp[-4].typ)->truelist,(yyvsp[-1].for_cb)->pos);
 		backpatch((yyvsp[-1].for_cb)->nextlist,(yyvsp[-5].int_value));
@@ -3177,41 +3181,41 @@ yyreduce:
 		backpatch(break_label, global_code.size());
 		backpatch(continue_label, (yyvsp[-5].int_value));
 		}
-#line 3181 "src/grammar.tab.c"
+#line 3185 "src/grammar.tab.c"
     break;
 
   case 209: /* fcrb: ')'  */
-#line 904 "src/grammar.y"
+#line 908 "src/grammar.y"
               {FCRB* t=new FCRB();t->nextlist.push_back(global_code.size());global_code.push_back(get_if_false_code());t->pos=global_code.size();(yyval.for_cb)=t;}
-#line 3187 "src/grammar.tab.c"
+#line 3191 "src/grammar.tab.c"
     break;
 
   case 210: /* doo: DO  */
-#line 907 "src/grammar.y"
+#line 911 "src/grammar.y"
              {(yyval.int_value)=global_code.size();}
-#line 3193 "src/grammar.tab.c"
+#line 3197 "src/grammar.tab.c"
     break;
 
   case 211: /* crb: ')'  */
-#line 910 "src/grammar.y"
+#line 914 "src/grammar.y"
               {(yyval.int_value)=global_code.size();}
-#line 3199 "src/grammar.tab.c"
+#line 3203 "src/grammar.tab.c"
     break;
 
   case 212: /* els: ELSE  */
-#line 913 "src/grammar.y"
-               {(yyval.int_value)=global_code.size();}
-#line 3205 "src/grammar.tab.c"
+#line 917 "src/grammar.y"
+               {global_code.push_back("goto ");(yyval.int_value)=global_code.size();}
+#line 3209 "src/grammar.tab.c"
     break;
 
   case 213: /* srb: '('  */
-#line 916 "src/grammar.y"
+#line 920 "src/grammar.y"
               {(yyval.int_value)=global_code.size();}
-#line 3211 "src/grammar.tab.c"
+#line 3215 "src/grammar.tab.c"
     break;
 
   case 214: /* jump_statement: GOTO IDENTIFIER ';'  */
-#line 921 "src/grammar.y"
+#line 925 "src/grammar.y"
                               {(yyval.typ)=new Type();
  		goto_label.push_back(global_code.size());
  		if(identifier_found(labelgoto, (yyvsp[-1].str))){
@@ -3220,63 +3224,63 @@ yyreduce:
  		else{
  		global_code.push_back(get_if_false_code());}
  		}
-#line 3224 "src/grammar.tab.c"
+#line 3228 "src/grammar.tab.c"
     break;
 
   case 215: /* jump_statement: CONTINUE ';'  */
-#line 929 "src/grammar.y"
+#line 933 "src/grammar.y"
                        {(yyval.typ)=new Type();
  		continue_label.push_back(global_code.size());
  		global_code.push_back(get_if_false_code());}
-#line 3232 "src/grammar.tab.c"
+#line 3236 "src/grammar.tab.c"
     break;
 
   case 216: /* jump_statement: BREAK ';'  */
-#line 932 "src/grammar.y"
+#line 936 "src/grammar.y"
                     {(yyval.typ)=new Type();cout<<"found break"<<endl;
  		break_label.push_back(global_code.size());
  		global_code.push_back(get_if_false_code());}
-#line 3240 "src/grammar.tab.c"
+#line 3244 "src/grammar.tab.c"
     break;
 
   case 217: /* jump_statement: RETURN ';'  */
-#line 935 "src/grammar.y"
+#line 939 "src/grammar.y"
                      {Type* type=new Type();type->isvoid=true;check_for_assign(func_ret_type,type,"=");global_code.push_back(gen_return(""));}
-#line 3246 "src/grammar.tab.c"
+#line 3250 "src/grammar.tab.c"
     break;
 
   case 218: /* jump_statement: RETURN initializer ';'  */
-#line 936 "src/grammar.y"
+#line 940 "src/grammar.y"
                                  {check_for_assign(func_ret_type,(yyvsp[-1].ini)->type,"=");global_code.push_back(gen_return((yyvsp[-1].ini)->type->place));}
-#line 3252 "src/grammar.tab.c"
+#line 3256 "src/grammar.tab.c"
     break;
 
   case 219: /* translation_unit: external_declaration  */
-#line 939 "src/grammar.y"
+#line 943 "src/grammar.y"
                                {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
-#line 3258 "src/grammar.tab.c"
+#line 3262 "src/grammar.tab.c"
     break;
 
   case 220: /* translation_unit: translation_unit external_declaration  */
-#line 940 "src/grammar.y"
+#line 944 "src/grammar.y"
                                                 {Node* ext=create_node();cout<<"t_u and e_d"<<endl;}
-#line 3264 "src/grammar.tab.c"
+#line 3268 "src/grammar.tab.c"
     break;
 
   case 221: /* external_declaration: function_definition  */
-#line 944 "src/grammar.y"
+#line 948 "src/grammar.y"
                                {cout<<"external declaration started"<<endl;add_to_gst((yyvsp[0].fun_def),gst);cout<<"add to gst"<<endl;(yyval.node)=(yyvsp[0].fun_def);cout<<"external declaration started"<<endl;}
-#line 3270 "src/grammar.tab.c"
+#line 3274 "src/grammar.tab.c"
     break;
 
   case 222: /* external_declaration: declaration  */
-#line 945 "src/grammar.y"
+#line 949 "src/grammar.y"
                       {add_to_gst((yyvsp[0].declaration),gst);(yyval.node)=(yyvsp[0].declaration);}
-#line 3276 "src/grammar.tab.c"
+#line 3280 "src/grammar.tab.c"
     break;
 
   case 223: /* function_declaration: declaration_specifiers declarator  */
-#line 948 "src/grammar.y"
+#line 952 "src/grammar.y"
                                             { Function_Declaration* x=new Function_Declaration((yyvsp[-1].dec_spec),(yyvsp[0].dec));
 		Type* type=new Type();
 		string t=create_type((yyvsp[-1].dec_spec),(yyvsp[0].dec),type);
@@ -3308,11 +3312,11 @@ yyreduce:
 		}
 		cout<<"final func decl done huuh"<<endl;
 		}
-#line 3312 "src/grammar.tab.c"
+#line 3316 "src/grammar.tab.c"
     break;
 
   case 224: /* function_definition: function_declaration compound_statement  */
-#line 982 "src/grammar.y"
+#line 986 "src/grammar.y"
                                                   {Function_Declaration* x=(yyvsp[-1].func_decl);(yyval.fun_def)=create_func_def(x->ds,x->d,(yyvsp[0].comp_stmt));
 	cout<<"create func def done"<< endl;
 	current_params_list.clear();
@@ -3324,11 +3328,11 @@ yyreduce:
 	current_func_name="";
 	current_func_si=nullptr;
 	lvl_name.pop();}
-#line 3328 "src/grammar.tab.c"
+#line 3332 "src/grammar.tab.c"
     break;
 
 
-#line 3332 "src/grammar.tab.c"
+#line 3336 "src/grammar.tab.c"
 
       default: break;
     }
@@ -3521,7 +3525,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 997 "src/grammar.y"
+#line 1001 "src/grammar.y"
 
 #include <stdio.h>
 #include <bits/stdc++.h>

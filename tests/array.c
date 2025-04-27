@@ -1,7 +1,7 @@
 int main() {
     char bb[4]={'a','b','c','d'};
-     int numbers[5] = {1, 2, 3, 4, 5}; // array declaration and initialization
-    int x=3 + numbers[0];
+     int numbers[5][6] = {1, 2, 3, 4, 5}; // array declaration and initialization
+    int x=3 + numbers[6];
     int sum = 0;
     int i;
     int arr[10][10];

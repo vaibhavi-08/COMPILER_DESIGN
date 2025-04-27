@@ -16,19 +16,19 @@ void RegisterAllocator::addVariable(const std::string& variable) {
             if(temp_and_type[variable]->size==4){
                 crbp+=4;
                 cout << "adding this variable " << variable << "with size 4" << endl;
-                addressDescriptor[variable] = {true, "DWORD PTR [rbp-"+to_string(crbp)+"]", {}};
+                addressDescriptor[variable] = {true, "DWORD PTR [ebp-"+to_string(crbp)+"]", {}};
             }
             else if(temp_and_type[variable]->size==8){
                 crbp+=8;
-                addressDescriptor[variable] = {true, "QWORD PTR [rbp-"+to_string(crbp)+"]", {}};
+                addressDescriptor[variable] = {true, "QWORD PTR [ebp-"+to_string(crbp)+"]", {}};
             }
             else if(temp_and_type[variable]->size==1){
                 crbp+=1;
-                addressDescriptor[variable] = {true, "BYTE PTR [rbp-"+to_string(crbp)+"]", {}};
+                addressDescriptor[variable] = {true, "BYTE PTR [ebp-"+to_string(crbp)+"]", {}};
             }
             else{
                 crbp+=2;
-                addressDescriptor[variable] = {true, "WORD PTR [rbp-"+to_string(crbp)+"]", {}};
+                addressDescriptor[variable] = {true, "WORD PTR [ebp-"+to_string(crbp)+"]", {}};
             }
         }
         else addressDescriptor[variable]={false,"",{}};
@@ -135,13 +135,17 @@ RegAllocResult RegisterAllocator::getLocationForVar(
 
 std::unordered_map<std::string, RegAllocResult> RegisterAllocator::getRegisters(
     const std::vector<std::pair<std::string, bool>>& operands,
-    const std::unordered_map<std::string, bool>& nextUseInfo
+    const std::unordered_map<std::string, bool>& nextUseInfo,
+    std::unordered_set<std::string> nottouse
 ) {
     // Update next use information
     updateNextUse(nextUseInfo);
     cout << "next use info updated" << endl;
     std::unordered_map<std::string, RegAllocResult> result;
     std::unordered_set<std::string> allocatedRegs;
+    for(auto i:nottouse){
+        allocatedRegs.insert(i);
+    }
     cout << "next use :" << endl;
     for(auto i : nextUse){
         cout << i.first << " " << i.second << endl;
@@ -211,7 +215,7 @@ void RegisterAllocator::spillRegister(const std::string& reg) {
         
         // Generate assembly instruction to move value from register to memory
         std::string memLoc = addressDescriptor[var].memoryLocation;
-        asmcode.push_back("    mov " + memLoc + ", " + reg);
+        asmcode.push_back("mov " + memLoc + ", " + reg);
     }
     
     // Update address descriptors for all spilled variables

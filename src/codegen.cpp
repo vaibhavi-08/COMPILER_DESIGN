@@ -189,8 +189,6 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
     cout << " dfs runned" << endl;
     
     if(curb->getStartLine() == -1) {
-        string s = ".end :";
-        asmcode.push_back(s);
         return;
     }
     
@@ -218,7 +216,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
             vector<pair<string,bool>> tr;
             //cout << "correct if reached" << endl;
             tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
-            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap());
+            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap(),unordered_set<string>());
             if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
             if(!z[op1].needsSpill){
                 asmcode.push_back("cmp "+z[op1].location+" , 0");
@@ -260,7 +258,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
             vector<pair<string,bool>> tr;
             tr.emplace_back(op1,!temp_and_type[op1]->isreal_var);
             tr.emplace_back(op2,!temp_and_type[op2]->isreal_var);
-            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap());
+            auto z=allocator.getRegisters(tr,curb->instructions[0].getNextUseMap(),unordered_set<string>());
             string op1l=z[op1].location;
             if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
             if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
@@ -268,7 +266,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 vector<pair<string,bool>> ntr;
                 ntr.emplace_back(op1,true);
                 //handle spilling
-                auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap());
+                auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap(),unordered_set<string>());
                 if(nz[op1].isRegister)allocator.loadToRegister(op1,nz[op1].location);
                 asmcode.push_back("mov "+nz[op1].location+" , "+z[op1].location);
                 op1l=nz[op1].location;
@@ -280,7 +278,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
             vector<pair<string, bool>> ctr;
             ctr.emplace_back("xx", true);
             //handle spilling
-            auto cz = allocator.getRegisters(ctr, curb->instructions[0].getNextUseMap());
+            auto cz = allocator.getRegisters(ctr, curb->instructions[0].getNextUseMap(),unordered_set<string>());
             asmcode.push_back("movzx " + cz["xx"].location + " , al");
             asmcode.push_back("cmp " + cz["xx"].location + " , 0");
             
@@ -324,8 +322,8 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
             if(isLabelStatement(instr)) {
                 string label = getLabel(instr);
                 asmcode.push_back(label + ":");
-                asmcode.push_back("push rbp");
-                asmcode.push_back("mov rbp , rsp");
+                asmcode.push_back("push ebp");
+                asmcode.push_back("mov ebp , esp");
             }
             //if it is an assignment statement simple
             else if(isSimpleAssignment(instr)) {
@@ -346,7 +344,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     }
                 }
                 
-                auto z=allocator.getRegisters(tr,tac.getNextUseMap());
+                auto z=allocator.getRegisters(tr,tac.getNextUseMap(),unordered_set<string>());
                 if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
                 if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
                 string op1l=z[op1].location;
@@ -355,7 +353,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     vector<pair<string,bool>> ntr;
                     ntr.emplace_back(op1,true);
                     //handle spilling
-                    auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap());
+                    auto nz=allocator.getRegisters(ntr,curb->instructions[0].getNextUseMap(),unordered_set<string>());
                     if(nz[op1].isRegister)allocator.loadToRegister(op1,nz[op1].location);
                     asmcode.push_back("mov "+nz[op1].location+" , "+z[op1].location);
                     op1l=nz[op1].location;
@@ -386,23 +384,23 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 
                 cout << "add variables done " << endl;
                 
-                vector<pair<string, bool>> tr;
-                tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
-                tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
-                tr.emplace_back(result, !temp_and_type[result]->isreal_var);
-                tr.emplace_back("xx", true);
                 
-                cout << "pushed vars" << endl;
-                auto z=allocator.getRegisters(tr,tac.getNextUseMap());
-                if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
-                if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
-                if(z[result].isRegister)allocator.loadToRegister(result,z[result].location);
-                cout << "got z" << endl;
-                //handle spilling above
-                
-                asmcode.push_back("mov "+z["xx"].location+" , "+z[op1].location);
+                //asmcode.push_back("mov "+z["xx"].location+" , "+z[op1].location);
                 if(opr!="/"&&opr!="%"){
                     cout << " reached correct if" << endl;
+                    vector<pair<string, bool>> tr;
+                    tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
+                    tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
+                    tr.emplace_back(result, !temp_and_type[result]->isreal_var);
+                    tr.emplace_back("xx", true);
+                    
+                    cout << "pushed vars" << endl;
+                    auto z=allocator.getRegisters(tr,tac.getNextUseMap(),unordered_set<string>());
+                    if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
+                    if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
+                    if(z[result].isRegister)allocator.loadToRegister(result,z[result].location);
+                    cout << "got z" << endl;
+                    //handle spilling above
                     //handle spilling above
                     asmcode.push_back("mov " + z["xx"].location + " , " + z[op1].location);
                     
@@ -418,22 +416,157 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     asmcode.push_back("mov " + z[result].location + " , " + z["xx"].location);
                 }
                 else {
-                    // For division operations we need to:
-                    // 1. Ensure EAX is available for dividend
-                    // 2. Use CDQ to sign extend EAX to EDX
-                    // 3. Use the IDIV instruction with the divisor
                     
-                    // Request specific registers for division
-                    vector<pair<string, bool>> divRegs;
-                    divRegs.emplace_back("eax", true);  // Need EAX specifically
-                    divRegs.emplace_back("edx", true);  // Need EDX for sign extension
                     
-                    // Get register locations
-                    auto divZ = allocator.getRegisters(divRegs, tac.getNextUseMap());
-                    
-                    // Move dividend to EAX
-                    asmcode.push_back("mov eax, " + z[op1].location);
-                    
+                    vector<pair<string, bool>> tr;
+                    tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
+                    tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
+                    tr.emplace_back(result, !temp_and_type[result]->isreal_var);
+                    auto z=allocator.getRegisters(tr,tac.getNextUseMap(),unordered_set<string>());
+                    if(!z[op1].isRegister&&!z[op2].isRegister){
+                        //getting eax for y
+                        bool canUse = true;
+                        //checking if variables stored in y needs spilling 
+                        unordered_map<string,bool> nextuse=tac.getNextUseMap();
+                        for (const auto& var : allocator.registerDescriptor["eax"]) {
+                            if (tac.getNextUseMap().find(var) != tac.getNextUseMap().end() && nextuse[var]) {
+                                canUse = false;
+                                break;
+                            }
+                        }
+                        if(canUse){
+                            //no spilling required
+                            allocator.loadToRegister(op1,"eax");
+                            asmcode.push_back("mov eax , "+z[op1].location);
+                        }
+                        else {
+                            //needs spilling
+                            allocator.spillRegister("eax");
+                            allocator.loadToRegister(op1,"eax");
+                            asmcode.push_back("mov eax , "+z[op1].location);
+                        }
+                    }
+                    else if(z[op1].isRegister&&!z[op2].isRegister){
+                        allocator.loadToRegister(op1,z[op1].location);
+                        if(z[op1].location=="eax");//no need to mov
+                        else {
+                            //updating address descriptor and register descriptor is left
+                            bool canUse = true;
+                            //checking if variables stored in y needs spilling 
+                            unordered_map<string,bool> nextuse=tac.getNextUseMap();
+                            for (const auto& var : allocator.registerDescriptor["eax"]) {
+                                if (tac.getNextUseMap().find(var) != tac.getNextUseMap().end() && nextuse[var]) {
+                                    canUse = false;
+                                    break;
+                                }
+                            }
+                            if(canUse){
+                                //no spilling required
+                                allocator.loadToRegister(op1,"eax");
+                                asmcode.push_back("mov eax , "+z[op1].location);
+                            }
+                            else {
+                                //needs spilling
+                                allocator.spillRegister("eax");
+                                allocator.loadToRegister(op1,"eax");
+                                asmcode.push_back("mov eax , "+z[op1].location);
+                            }
+                        }
+                    }
+                    else if(!z[op1].isRegister&&z[op2].isRegister){
+                        if(z[op2].location=="eax"){
+                            unordered_set<string> avr;
+                            if(z[result].isRegister)avr.insert(z[result].location);
+                            avr.insert("eax");
+                            auto zz=allocator.getRegisters({{op2,true}},tac.getNextUseMap(),avr);
+                            z[op2]=zz[op2];
+                            allocator.loadToRegister(op2,zz[op2].location);
+                            asmcode.push_back("mov "+zz[op2].location+" , eax");
+                            allocator.spillRegister("eax");
+                            allocator.loadToRegister(op1,"eax");
+                            asmcode.push_back("mov eax , "+z[op1].location);
+                        }
+                        else{
+                            bool canUse = true;
+                            //checking if variables stored in y needs spilling 
+                            unordered_map<string,bool> nextuse=tac.getNextUseMap();
+                            for (const auto& var : allocator.registerDescriptor["eax"]) {
+                                if (tac.getNextUseMap().find(var) != tac.getNextUseMap().end() && nextuse[var]) {
+                                    canUse = false;
+                                    break;
+                                }
+                            }
+                            if(canUse){
+                                //no spilling required
+                                allocator.loadToRegister(op1,"eax");
+                                asmcode.push_back("mov eax , "+z[op1].location);
+                            }
+                            else {
+                                //needs spilling
+                                allocator.spillRegister("eax");
+                                allocator.loadToRegister(op1,"eax");
+                                asmcode.push_back("mov eax , "+z[op1].location);
+                            }
+                        }
+                    }
+                    else{
+                        if(z[op2].location=="eax"){
+                            unordered_set<string> avr;
+                            if(z[result].isRegister)avr.insert(z[result].location);
+                            avr.insert("eax");
+                            auto zz=allocator.getRegisters({{op2,true}},tac.getNextUseMap(),avr);
+                            z[op2]=zz[op2];
+                            allocator.loadToRegister(op2,zz[op2].location);
+                            asmcode.push_back("mov "+zz[op2].location+" , eax");
+                            allocator.spillRegister("eax");
+                            allocator.loadToRegister(op1,"eax");
+                            asmcode.push_back("mov eax , "+z[op1].location);
+                        }
+                        else if(z[op1].location=="eax");//no need to mov
+                        else {
+                            //updating address descriptor and register descriptor is left
+                            bool canUse = true;
+                            //checking if variables stored in y needs spilling 
+                            unordered_map<string,bool> nextuse=tac.getNextUseMap();
+                            for (const auto& var : allocator.registerDescriptor["eax"]) {
+                                if (tac.getNextUseMap().find(var) != tac.getNextUseMap().end() && nextuse[var]) {
+                                    canUse = false;
+                                    break;
+                                }
+                            }
+                            if(canUse){
+                                //no spilling required
+                                allocator.loadToRegister(op1,"eax");
+                                asmcode.push_back("mov eax , "+z[op1].location);
+                            }
+                            else {
+                                //needs spilling
+                                allocator.spillRegister("eax");
+                                allocator.loadToRegister(op1,"eax");
+                                asmcode.push_back("mov eax , "+z[op1].location);
+                            }
+                        }
+                    }
+                    if(z[op2].isRegister&&z[op2].location=="edx"){
+                        unordered_set<string> avr;
+                        if(z[result].isRegister)avr.insert(z[result].location);
+                        avr.insert("edx");
+                        auto zz=allocator.getRegisters({{op2,true}},tac.getNextUseMap(),avr);
+                        z[op2]=zz[op2];
+                        allocator.loadToRegister(op2,zz[op2].location);
+                        asmcode.push_back("mov "+zz[op2].location+" , edx");
+                        allocator.spillRegister("edx");
+                    }
+                    else if(z[result].isRegister&&z[result].location=="edx"){
+                        unordered_set<string> avr;
+                        if(z[result].isRegister)avr.insert(z[result].location);
+                        avr.insert("edx");
+                        auto zz=allocator.getRegisters({{result,true}},tac.getNextUseMap(),avr);
+                        z[result]=zz[result];
+                        allocator.loadToRegister(op2,zz[result].location);
+                        asmcode.push_back("mov "+zz[result].location+" , edx");
+                        allocator.spillRegister("edx");
+                    }
                     // Sign extend EAX into EDX
                     asmcode.push_back("cdq");
                     
@@ -474,7 +607,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 tr.emplace_back(var, !temp_and_type[var]->isreal_var);
                 
                 // Get register/memory locations
-                auto z = allocator.getRegisters(tr, tac.getNextUseMap());
+                auto z = allocator.getRegisters(tr, tac.getNextUseMap(),unordered_set<string>());
                 
                 // Select instruction based on operand location
                 string opcode;
@@ -660,10 +793,6 @@ int main(int argc, char* argv[]) {
         cout << "Three address code written to '" << tacOutputFile << "'" << endl;
     }
 
-	
-
-
-
 
     //codegen
     BasicBlock* mainblock;
@@ -686,7 +815,11 @@ int main(int argc, char* argv[]) {
     fout << ".globl main\n";
 
     dfs(mainblock, allocator);  // This fills asmcode
-
+    string s = ".end :";
+    asmcode.push_back(s);
+    asmcode.push_back("mov eax , 0");
+    asmcode.push_back("leave");
+    asmcode.push_back("ret");
     // Write generated assembly to output file
     for (const string& line : asmcode) {
         fout << line << '\n';

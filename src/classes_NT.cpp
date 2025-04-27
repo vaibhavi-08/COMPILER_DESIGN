@@ -1351,6 +1351,8 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
     cout<< t1->isbasic<<" " <<t2->isbasic<<endl;
     cout << t1->ptr_level << " " << t2->ptr_level << endl;
     cout << "base checked" << endl;
+    Type* ct1=new Type(*t1);
+    Type* ct2=new Type(*t2);
     if(op=="="){
         bool isconst=false;
         if(t1->ptr_level>0){
@@ -1377,7 +1379,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
             exit(1);
         }
         else if(t1->isauto){
-            return t2;
+            return ct2;
         }
         else if(t2->isauto){
             cout << "first assign value to auto" << endl;
@@ -1392,7 +1394,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                 exit(1);
             }
             else{
-                return t2;
+                return ct2;
             }
         }
         else if(t1->func_ptr_lev>0||t2->func_ptr_lev>0||t2->isfunction){
@@ -1407,7 +1409,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                         for(int i=0;i<n;i++){
                             check_for_assign(t1->prms[i],t2->prms[i],"=");
                         }
-                        return t2;
+                        return ct2;
                     }
                     else{
                         cout << "function pointer prms not matching" << endl;
@@ -1425,11 +1427,11 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
         }
         else if(t1->ptr_level>0&&t2->isnull){
             cout<<"another ppointer in check for assign"<<endl;
-            return t2;
+            return ct2;
         }
         else if(t2->isenum){
             if(t1->isbasic&&t1->base!="CHAR"&&t1->base!="SHORT"&&t1->ptr_level==0&&t1->array_dim==0&&t1->func_ptr_lev==0){
-                return t2;
+                return ct2;
             }
             else{
                 cout << "enum cannot be asgined to this type" << endl;
@@ -1438,7 +1440,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
         }
         else if(t1->array_dim>0||t2->array_dim>0){
             if(is_equal(t1,t2)){
-                return t2;
+                return ct2;
             }
             else{
                 cout << "invalid assignment with arrays" << endl;
@@ -1450,7 +1452,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                 cout << "reached is basic block" << endl;
                 if(is_equal(t1,t2)){
                     cout << "problem in isequal function" << endl;
-                    return t2;
+                    return ct2;
                 }
                 else{
                     cout << "invalid assignment with ptrs" << endl;
@@ -1464,7 +1466,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                     if(t1->objtype==t1->objtype){
                         if(t1->objtype=="class"){
                             if(t1->obj_class==t2->obj_class){
-                                return t2;
+                                return ct2;
                             }
                             else{
                                 bool check=false;
@@ -1476,7 +1478,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                                     }
                                 }
                                 if(check){
-                                    return t2;
+                                    return ct2;
                                 }
                                 else{
                                     cout << "different classes " << endl;
@@ -1486,7 +1488,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                         }
                         else{
                             if(t1->obj_class==t2->obj_class){
-                                return t2;
+                                return ct2;
                             }
                             else{
                                 cout << "different struct/union" << endl;
@@ -1501,7 +1503,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                 }
                 else{
                     if(is_equal(t1,t2)){
-                        return t2;
+                        return ct2;
                     }
                     else{
                         cout << "not proper assignment between objects pointers" << endl;
@@ -1515,22 +1517,22 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                 if(t1->isbasic&&t2->isbasic){
                     cout << t1->base << " " << t2->base << endl;
                     if(t1->base==t2->base){
-                        return t2;
+                        return ct2;
                     }
                     else if(t1->base=="LONG LONG"&&(t2->base=="INT"||t2->base=="SHORT"||t2->base=="LONG"||t2->base=="CHAR")){
-                        return t2;
+                        return ct2;
                     }
                     else if(t1->base=="LONG"&&(t2->base=="INT"||t2->base=="SHORT"||t2->base=="CHAR")){
-                        return t2;
+                        return ct2;
                     }
                     else if(t1->base=="FLOAT"&&(t2->base=="INT"||t2->base=="SHORT"||t2->base=="CHAR")){
-                        return t2;
+                        return ct2;
                     }
                     else if(t1->base=="DOUBLE"&&(t2->base=="INT"||t2->base=="SHORT"||t2->base=="LONG"||t2->base=="FLOAT"||t2->base=="CHAR")){
-                        return t2;
+                        return ct2;
                     }
                     else if(t1->base=="INT"&&(t2->base=="CHAR"||t2->base=="SHORT")){
-                        return t2;
+                        return ct2;
                     }
                     else{
                         cout << "basic types not compatible for assignment" << endl;
@@ -1548,7 +1550,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                 if(t1->objtype==t1->objtype){
                     if(t1->objtype=="class"){
                         if(t1->obj_class==t2->obj_class){
-                            return t2;
+                            return ct2;
                         }
                         else{
                             Type* z2=get_type_id(t2->obj_class);
@@ -1560,7 +1562,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                                 }
                             }
                             if(check){
-                                return t2;
+                                return ct2;
                             }
                             else{
                                 cout << "different classes " << endl;
@@ -1570,7 +1572,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
                     }
                     else{
                         if(t1->obj_class==t2->obj_class){
-                            return t2;
+                            return ct2;
                         }
                         else{
                             cout << "different struct/union" << endl;
@@ -1588,7 +1590,7 @@ Type* check_for_assign(Type* t1, Type* t2,string op) {
     }
     else{
         check_for_assign(t1,check_for_arithmatic_op(t1,t2,"*"),"=");
-        return t1;
+        return ct1;
     }
 }
 

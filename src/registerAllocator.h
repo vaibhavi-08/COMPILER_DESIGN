@@ -12,7 +12,7 @@ struct RegAllocResult {
     bool needsSpill;       // Whether register needs to be spilled
 };
 class RegisterAllocator {
-private:
+public:
     // Register Descriptor Table: maps register -> set of variables it contains
     std::unordered_map<std::string, std::unordered_set<std::string>> registerDescriptor;
     
@@ -58,7 +58,8 @@ public:
     // Main function to get registers/memory for instruction operands
     std::unordered_map<std::string, RegAllocResult> getRegisters(
         const std::vector<std::pair<std::string, bool>>& operands,
-        const std::unordered_map<std::string, bool>& nextUseInfo
+        const std::unordered_map<std::string, bool>& nextUseInfo,
+        std:: unordered_set<std:: string> nototuse
     );
     
     // Helper function to print the current state

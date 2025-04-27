@@ -826,7 +826,11 @@ selection_statement
 		backpatch($3->truelist,$4);
 		backpatch ($3->falselist,$6);
 		Type* zz=new Type(); zz->nextlist=merge($5->nextlist,$7->nextlist);
-		backpatch(zz->nextlist,global_code.size()); $$=zz;}
+		backpatch(zz->nextlist,global_code.size());
+		vector<int> nw;
+		nw.push_back($6-1);
+		backpatch(nw,global_code.size());
+		 $$=zz;}
 
 	| SWITCH '(' expression crb emp statement {$$=$6;
 		backpatch($3->truelist, $4);
@@ -910,7 +914,7 @@ crb
 	: ')' {$$=global_code.size();}
 	;
 els 
-	: ELSE {$$=global_code.size();}
+	: ELSE {global_code.push_back("goto ");$$=global_code.size();}
 
 srb
 	: '(' {$$=global_code.size();}

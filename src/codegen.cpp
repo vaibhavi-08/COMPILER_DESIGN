@@ -620,7 +620,6 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 // Generate assembly code for increment/decrement
                 asmcode.push_back(opcode + " " + z[var].location + " , 1");
             }
-            
             // Other unary expressions
             else {
                 cout << "to be handled##" << endl;
@@ -795,12 +794,10 @@ int main(int argc, char* argv[]) {
 
 
     //codegen
-    BasicBlock* mainblock;
+    vector<BasicBlock*> mainblocks;
     string inputFile = "output_tac.txt";
-    mainblock=generateCode(inputFile, true);
+    mainblocks=generateCode(inputFile, true);
     
-    if(mainblock)cout << "mainblock id: " << mainblock->id << endl;
-    RegisterAllocator allocator(x86_regs);
     string outFile = "out.s";  // Output file name is hardcoded
 
     ofstream fout(outFile);
@@ -813,13 +810,17 @@ int main(int argc, char* argv[]) {
     fout << ".intel_syntax noprefix\n";
     fout << ".text\n";
     fout << ".globl main\n";
+    for(auto mainblock:mainblocks){
+        if(mainblock)cout << "mainblock id: " << mainblock->id << endl;
+        RegisterAllocator allocator(x86_regs);
 
-    dfs(mainblock, allocator);  // This fills asmcode
-    string s = ".end :";
-    asmcode.push_back(s);
-    asmcode.push_back("mov eax , 0");
-    asmcode.push_back("leave");
-    asmcode.push_back("ret");
+        dfs(mainblock, allocator);  // This fills asmcode
+        string s = ".end :";
+        asmcode.push_back(s);
+        asmcode.push_back("mov eax , 0");
+        asmcode.push_back("leave");
+        asmcode.push_back("ret");
+    }
     // Write generated assembly to output file
     for (const string& line : asmcode) {
         fout << line << '\n';

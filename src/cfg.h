@@ -52,7 +52,7 @@ public:
     bool visited; // For graph traversal
 
 public:
-    BasicBlock(int blockId = 0);
+    BasicBlock(int blockId=0);
     
     void setId(int blockId);
     int getId() const;
@@ -79,15 +79,15 @@ public:
 };
 
 // Function declarations
-vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile = false);
+vector<vector<ThreeAddressCode>> read3ACCode(const string& input, bool isFile = false);
 set<int> identifyLeaders(const vector<ThreeAddressCode>& code);
-vector<BasicBlock*> createBasicBlocks(const vector<ThreeAddressCode>& code, const set<int>& leaders);
+vector<BasicBlock*> createBasicBlocks(const vector<ThreeAddressCode>& code, const set<int>& leaders,int& blockId);
 void determineControlFlow(vector<BasicBlock*>& blocks, const vector<ThreeAddressCode>& code);
 vector<BasicBlock*> filterGotoOnlyBlocks(vector<BasicBlock*>& blocks);
-void printBasicBlocks(const vector<BasicBlock*>& blocks);
+void printBasicBlocks(const vector<BasicBlock*>& blocks,ofstream& outFile);
 void cleanupBlocks(vector<BasicBlock*>& blocks);
 BasicBlock* findMainBlock(const vector<BasicBlock*>& blocks);
-BasicBlock* generateCode(const string& input, bool isFile = false);
+vector<BasicBlock*> generateCode(const string& input, bool isFile = false);
 
 // New functions for next-use analysis
 void computeNextUseInfo(vector<BasicBlock*>& blocks, BasicBlock* mainBlock);

@@ -1,6 +1,19 @@
 #include <cfg.h>
 #include <algorithm>
 #include <queue>
+bool isLabelStatement2(const string& line) {
+    size_t len = line.length();
+    //cout << len << endl;
+    // Minimum format should be like "a :" => length >= 3
+    if (len < 4) return false;
+
+    // Must end with " :" (space then colon)
+    if (line[len - 3] == ' ' && line[len - 2] == ':') {
+        return true;
+    }
+
+    return false;
+}
 
 // ThreeAddressCode class implementation
 ThreeAddressCode::ThreeAddressCode(int line, const string& instr) : lineNumber(line), instruction(instr) {}
@@ -229,45 +242,10 @@ const ThreeAddressCode& BasicBlock::getLastInstruction() const {
     }
     return instructions.back();
 }
-
-// Function to read 3AC code from file or string
-// vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile) {
-//     vector<ThreeAddressCode> code;
-//     istringstream iss;
-//     ifstream file;
+vector<vector<ThreeAddressCode>> read3ACCode(const string& input, bool isFile) {
+    vector<vector<ThreeAddressCode>> functions;
+    vector<ThreeAddressCode> currentFunction;
     
-//     if (isFile) {
-//         file.open(input);
-//         if (!file.is_open()) {
-//             cerr << "Error opening file: " << input << endl;
-//             return code;
-//         }
-//     } else {
-//         iss.str(input);
-//     }
-    
-//     istream& stream = isFile ? static_cast<istream&>(file) : static_cast<istream&>(iss);
-//     string line;
-    
-//     // Read 3AC instructions directly
-//     regex linePattern("\\s*(\\d+):\\s*(.+)");
-//     smatch match;
-    
-//     while (getline(stream, line)) {
-//         if (regex_search(line, match, linePattern) && match.size() > 2) {
-//             ThreeAddressCode tac(stoi(match[1]), match[2]);
-//             code.push_back(tac);
-//         }
-//     }
-    
-//     if (isFile) {
-//         file.close();
-//     }
-    
-//     return code;
-// }
-vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile) {
-    vector<ThreeAddressCode> code;
     istringstream iss;
     ifstream file;
     
@@ -275,7 +253,7 @@ vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile) {
         file.open(input);
         if (!file.is_open()) {
             cerr << "Error opening file: " << input << endl;
-            return code;
+            return functions;
         }
     } else {
         iss.str(input);
@@ -292,63 +270,98 @@ vector<ThreeAddressCode> read3ACCode(const string& input, bool isFile) {
     while (getline(stream, line)) {
         if (regex_search(line, match, linePattern) && match.size() > 2) {
             int lineNum = stoi(match[1]);
-            string instr = match[2];
+            string instr = match[2].str();
             
-            // Add to temp storage
-            tempLines.push_back({lineNum, instr});
+            // Trim the instruction
+            instr.erase(0, instr.find_first_not_of(" \t"));
+            instr.erase(instr.find_last_not_of(" \t") + 1);
             
-            // Process tempLines when we have at least 2 lines
-            if (tempLines.size() >= 2) {
-                // Check if we have a redundant conditional pattern
-                bool isRedundantPattern = false;
-                
-                if (tempLines.size() == 2) {
-                    // Get the current instruction and previous instruction
-                    string prevInstr = tempLines[0].second;
-                    string currInstr = tempLines[1].second;
-                    
-                    // Check for "if x goto N" followed by "goto N" pattern
-                    regex ifGotoPattern("if\\s+(.+)\\s+goto\\s+(\\d+)");
-                    regex gotoPattern("goto\\s+(\\d+)");
-                    smatch ifMatch, gotoMatch;
-                    
-                    if (regex_search(prevInstr, ifMatch, ifGotoPattern) && 
-                        regex_search(currInstr, gotoMatch, gotoPattern)) {
-                        
-                        // Check if both goto targets are the same
-                        if (ifMatch[2] == gotoMatch[1]) {
-                            // This is a redundant pattern - skip both instructions
-                            isRedundantPattern = true;
-                            tempLines.clear();
-                        }
-                    }
+            // Check if this is a function label (ends with colon)
+            bool isFunctionLabel = false;
+            if (!instr.empty()) {
+                // Simple and direct check for a function label
+                // Function labels in your format look like "t1 :" or "main :"
+                size_t colonPos = instr.find(':');
+                if (colonPos != string::npos && 
+                    (colonPos == instr.length() - 1 || 
+                     instr.find_first_not_of(" \t", colonPos + 1) == string::npos)) {
+                    isFunctionLabel = true;
+                }
+            }
+            
+            if (isFunctionLabel) {
+                // If we have a previous function, add it to our functions list
+                for (const auto& [lineNum, instr] : tempLines) {
+                    ThreeAddressCode tac(lineNum, instr);
+                    currentFunction.push_back(tac);
+                }
+                if (!currentFunction.empty()) {
+                    functions.push_back(currentFunction);
+                    currentFunction.clear();
                 }
                 
-                if (!isRedundantPattern) {
-                    // Add the first line to our code vector
-                    ThreeAddressCode tac(tempLines[0].first, tempLines[0].second);
-                    code.push_back(tac);
+                // Start a new function
+                currentFunction.push_back(ThreeAddressCode(lineNum, instr));
+                tempLines.clear();
+            } else {
+                // Add to temp storage
+                tempLines.push_back({lineNum, instr});
+                
+                // Process tempLines when we have at least 2 lines
+                if (tempLines.size() == 2) {
+                    // Check if we have a redundant conditional pattern
+                    bool isRedundantPattern = false;
+                    if (tempLines.size() == 2) {
+                        // Get the current instruction and previous instruction
+                        string prevInstr = tempLines[0].second;
+                        string currInstr = tempLines[1].second;
+                        
+                        // Check for "if x goto N" followed by "goto N" pattern
+                        regex ifGotoPattern("if\\s+(.+)\\s+goto\\s+(\\d+)");
+                        regex gotoPattern("goto\\s+(\\d+)");
+                        smatch ifMatch, gotoMatch;
+                        
+                        if (regex_search(prevInstr, ifMatch, ifGotoPattern) &&
+                            regex_search(currInstr, gotoMatch, gotoPattern)) {
+                            // Check if both goto targets are the same
+                            if (ifMatch[2] == gotoMatch[1]) {
+                                // This is a redundant pattern - skip both instructions
+                                isRedundantPattern = true;
+                                tempLines.clear();
+                            }
+                        }
+                    }
                     
-                    // Remove the first line from tempLines
-                    tempLines.erase(tempLines.begin());
+                    if (!isRedundantPattern) {
+                        // Add the first line to our current function vector
+                        ThreeAddressCode tac(tempLines[0].first, tempLines[0].second);
+                        currentFunction.push_back(tac);
+                        
+                        // Remove the first line from tempLines
+                        tempLines.erase(tempLines.begin());
+                    }
                 }
             }
         }
     }
     
-    // Add any remaining lines
+    // Add any remaining lines to the current function
     for (const auto& [lineNum, instr] : tempLines) {
         ThreeAddressCode tac(lineNum, instr);
-        code.push_back(tac);
+        currentFunction.push_back(tac);
+    }
+    
+    // Add the last function if it's not empty
+    if (!currentFunction.empty()) {
+        functions.push_back(currentFunction);
     }
     
     if (isFile) {
         file.close();
     }
     
-    return code;
+    return functions;
 }
-
 // Function to identify leaders in the 3AC code based on specific conditions
 set<int> identifyLeaders(const vector<ThreeAddressCode>& code) {
     set<int> leaders;
@@ -385,14 +398,20 @@ set<int> identifyLeaders(const vector<ThreeAddressCode>& code) {
 }
 
 // Function to create basic blocks from leaders
-vector<BasicBlock*> createBasicBlocks(const vector<ThreeAddressCode>& code, const set<int>& leaders) {
+vector<BasicBlock*> createBasicBlocks(const vector<ThreeAddressCode>& code, const set<int>& leaders,int& blockId) {
+    cout << "CREATE BASIC BLOCKS" << endl;
     vector<BasicBlock*> blocks;
     vector<int> leadersList(leaders.begin(), leaders.end());
+    for(int i:leadersList){
+        cout << i << " ";
+    }
+    cout << endl;
     sort(leadersList.begin(), leadersList.end());
-    
-    int blockId = 0;
     for (size_t i = 0; i < leadersList.size(); i++) {
-        BasicBlock* block = new BasicBlock(blockId++);
+        int alpha=blockId;
+        BasicBlock* block = new BasicBlock(alpha);
+        cout << "$#@^% " << block->id << endl;
+        blockId++;
         int startIdx = leadersList[i];
         block->setStartLine(code[startIdx].getLineNumber());
         
@@ -413,7 +432,7 @@ vector<BasicBlock*> createBasicBlocks(const vector<ThreeAddressCode>& code, cons
         
         blocks.push_back(block);
     }
-    
+    cout << "blocks.size :" << blocks.size() << endl;
     return blocks;
 }
 
@@ -510,7 +529,7 @@ void determineControlFlow(vector<BasicBlock*>& blocks, const vector<ThreeAddress
 // Function to find the basic block that contains the main function
 BasicBlock* findMainBlock(const vector<BasicBlock*>& blocks) {
     // Pattern to look for in the 3AC code that indicates the start of main
-    regex mainPattern("\\bmain\\b");
+    //regex mainPattern("\\bmain\\b");
     
     for (BasicBlock* block : blocks) {
         const vector<ThreeAddressCode>& instructions = block->getInstructions();
@@ -519,7 +538,7 @@ BasicBlock* findMainBlock(const vector<BasicBlock*>& blocks) {
             const string& instruction = tac.getInstruction();
             
             // Check if the instruction contains "main"
-            if (regex_search(instruction, mainPattern)) {
+            if (isLabelStatement2(instruction)) {
                 return block;
             }
         }
@@ -559,16 +578,8 @@ vector<BasicBlock*> filterGotoOnlyBlocks(vector<BasicBlock*>& blocks) {
 }
 
 // Function to print basic blocks and their control flow, now including next use info
-void printBasicBlocks(const vector<BasicBlock*>& blocks) {
+void printBasicBlocks(const vector<BasicBlock*>& blocks,ofstream& outFile) {
     // Create output file
-    ofstream outFile("basic_blocks_info.txt");
-    
-    if (!outFile.is_open()) {
-        cerr << "Error: Could not open file for writing" << endl;
-        return;
-    }
-    
-    outFile << "======== BASIC BLOCKS WITH NEXT USE INFO ========" << endl;
     
     for (const BasicBlock* block : blocks) {
         // Skip printing the EOC block itself, but still reference it in successors
@@ -617,8 +628,6 @@ void printBasicBlocks(const vector<BasicBlock*>& blocks) {
         outFile << endl << endl;
     }
     
-    outFile.close();
-    cout << "Basic blocks information written to basic_blocks_info.txt" << endl;
 }
 
 // Clean up allocated memory
@@ -733,148 +742,66 @@ void computeNextUseForBlock(BasicBlock* block, unordered_map<string, bool>& acti
         }
     }
 }
-
-// // New function to identify and remove redundant conditional/goto patterns
-// vector<BasicBlock*> removeRedundantConditionals(vector<BasicBlock*>& blocks) {
-//     vector<BasicBlock*> cleanedBlocks;
-//     map<int, int> oldToNewIdMap;
-    
-//     // First pass: identify blocks to remove
-//     vector<bool> shouldRemove(blocks.size(), false);
-    
-//     for (size_t i = 0; i < blocks.size(); i++) {
-//         BasicBlock* block = blocks[i];
-//         const vector<ThreeAddressCode>& instructions = block->getInstructions();
-        
-//         // Check for pattern where conditional and unconditional goto point to same target
-//         if (instructions.size() == 2 && 
-//             instructions[0].isConditional() && 
-//             instructions[1].isGoto()) {
-            
-//             int condTarget = instructions[0].getGotoTarget();
-//             int uncondTarget = instructions[1].getGotoTarget();
-            
-//             // If both branches target the same line, mark this block for removal
-//             if (condTarget == uncondTarget) {
-//                 shouldRemove[i] = true;
-//             }
-//         }
-        
-//         // Check for single statement blocks that only contain an unconditional goto
-//         if (instructions.size() == 1 && instructions[0].isGoto()) {
-//             shouldRemove[i] = true;
-//         }
-//     }
-    
-//     // Create a mapping from line numbers to blocks
-//     map<int, BasicBlock*> lineToBlockMap;
-//     for (BasicBlock* block : blocks) {
-//         for (const ThreeAddressCode& tac : block->getInstructions()) {
-//             lineToBlockMap[tac.getLineNumber()] = block;
-//         }
-//     }
-    
-//     // Second pass: find redirection targets for blocks to be removed
-//     map<BasicBlock*, BasicBlock*> redirectMap;
-//     for (size_t i = 0; i < blocks.size(); i++) {
-//         if (shouldRemove[i]) {
-//             BasicBlock* block = blocks[i];
-//             const vector<ThreeAddressCode>& instructions = block->getInstructions();
-            
-//             // Find the ultimate target block
-//             int targetLine = -1;
-//             if (instructions.size() == 1 && instructions[0].isGoto()) {
-//                 // For simple goto blocks
-//                 targetLine = instructions[0].getGotoTarget();
-//             }
-//             else if (instructions.size() == 2 && 
-//                      instructions[0].isConditional() && 
-//                      instructions[1].isGoto()) {
-//                 // For conditional + goto blocks with same target
-//                 targetLine = instructions[1].getGotoTarget();
-//             }
-            
-//             // Find the target block
-//             if (targetLine != -1 && lineToBlockMap.find(targetLine) != lineToBlockMap.end()) {
-//                 redirectMap[block] = lineToBlockMap[targetLine];
-//             }
-//         }
-//     }
-    
-//     // Third pass: redirect successors
-//     for (BasicBlock* block : blocks) {
-//         vector<BasicBlock*>& successors = block->getSuccessors();
-//         for (size_t j = 0; j < successors.size(); j++) {
-//             // Keep following redirection chain until we reach a block that isn't being removed
-//             BasicBlock* targetBlock = successors[j];
-//             while (redirectMap.find(targetBlock) != redirectMap.end()) {
-//                 targetBlock = redirectMap[targetBlock];
-//             }
-//             successors[j] = targetBlock;
-//         }
-//     }
-    
-//     // Final pass: rebuild the block list without removed blocks
-//     int newId = 0;
-//     for (size_t i = 0; i < blocks.size(); i++) {
-//         if (!shouldRemove[i]) {
-//             BasicBlock* block = blocks[i];
-//             block->setId(newId++);
-//             cleanedBlocks.push_back(block);
-//         } else {
-//             // Free memory for removed blocks
-//             delete blocks[i];
-//         }
-//     }
-    
-//     return cleanedBlocks;
-// }
-
 // Update your generateCode function to use the new function
-BasicBlock* generateCode(const string& input, bool isFile) {
+vector<BasicBlock*> generateCode(const string& input, bool isFile) {
     // Read 3AC code
-    vector<ThreeAddressCode> code = read3ACCode(input, isFile);
-    
-    if (code.empty()) {
+    vector<vector<ThreeAddressCode>> allcodes = read3ACCode(input, isFile);
+    cout << "allcodes size " << allcodes.size() << endl;
+    if (allcodes.empty()) {
         cerr << "No valid 3AC code found!" << endl;
-        return nullptr;
+        return {};
+    }
+    ofstream outFile("basic_blocks_info.txt");
+    
+    if (!outFile.is_open()) {
+        cerr << "Error: Could not open file for writing" << endl;
+        return {};
     }
     
+    outFile << "======== BASIC BLOCKS WITH NEXT USE INFO ========" << endl;
     // Identify leaders
-    set<int> leaders = identifyLeaders(code);
+    vector<BasicBlock*> mainblocks;
+    int blockId=0;
+    for(auto code:allcodes){
+        set<int> leaders = identifyLeaders(code);
     
-    // Create basic blocks
-    vector<BasicBlock*> blocks = createBasicBlocks(code, leaders);
-    
-    // Determine control flow
-    determineControlFlow(blocks, code);
-    
-    // Filter out blocks that only contain goto statements
-    vector<BasicBlock*> filteredBlocks = filterGotoOnlyBlocks(blocks);
-    
-    // NEW: Remove redundant conditionals
-    //vector<BasicBlock*> cleanedBlocks = removeRedundantConditionals(filteredBlocks);
-    
-    // Find the main block (now in cleaned blocks)
-    BasicBlock* mainBlock = findMainBlock(filteredBlocks);
-    
-    if (mainBlock) {
-        cout << "======== MAIN FUNCTION BLOCK ========" << endl;
-        cout << "Found main function in Block B" << mainBlock->getId() << endl;
-        cout << "Main block lines: " << mainBlock->getStartLine() << "-" << mainBlock->getEndLine() << endl << endl;
+        // Create basic blocks
+        vector<BasicBlock*> blocks = createBasicBlocks(code, leaders,blockId);
+        // Determine control flow
+        determineControlFlow(blocks, code);
+        cout << blocks.size() << endl;
+        cout << "block[0] id " << blocks[0]->getId() << endl;
+        //cout << "block[1] id " << blocks[1]->getId() << endl;
+        // Filter out blocks that only contain goto statements
+        //vector<BasicBlock*> filteredBlocks = filterGotoOnlyBlocks(blocks);
         
-        // Compute next use information
-        computeNextUseInfo(filteredBlocks, mainBlock);
-    } else {
-        cout << "No main function found in the code!" << endl;
+        // NEW: Remove redundant conditionals
+        //vector<BasicBlock*> cleanedBlocks = removeRedundantConditionals(filteredBlocks);
+        
+        // Find the main block (now in cleaned blocks)
+        BasicBlock* mainBlock = findMainBlock(blocks);
+        
+        if (mainBlock) {
+            cout << "======== MAIN FUNCTION BLOCK ========" << endl;
+            cout << "Found main function in Block B" << mainBlock->getId() << endl;
+            cout << "Main block lines: " << mainBlock->getStartLine() << "-" << mainBlock->getEndLine() << endl << endl;
+            
+            // Compute next use information
+            computeNextUseInfo(blocks, mainBlock);
+        } else {
+            cout << "No main function found in the code!" << endl;
+        }
+        
+        for (BasicBlock* block : blocks) {
+            block->visited = false;
+        }
+        
+        // Print basic blocks with next use info
+        printBasicBlocks(blocks,outFile);
+        mainblocks.push_back(mainBlock);
     }
-    
-    for (BasicBlock* block : filteredBlocks) {
-        block->visited = false;
-    }
-    
-    // Print basic blocks with next use info
-    printBasicBlocks(filteredBlocks);
-    
-    return mainBlock;
+    outFile.close();
+    cout << "Basic blocks information written to basic_blocks_info.txt" << endl;
+    cout << mainblocks.size() << endl;
+    return mainblocks;
 }

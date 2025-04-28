@@ -14,11 +14,6 @@
     
 // }
 int main(){
-    int x=5;
-    int y=6;
-    int z=3;
-    z=x*y;
-    z=x/y;
-    z=x+y;
-    z=x-y;
+int x[3]={1,2,3};
+int y=x[1]*2;
 }

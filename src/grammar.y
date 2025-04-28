@@ -492,7 +492,20 @@ init_declarator
 	| declarator '=' initializer {cout<<"init_declartor started"<<endl;$1->ini=$3;$$=$1;
 	cout<<"init_declarator done"<<endl;
 	$1->tempname=get_new_temp();
-		global_code.push_back(get_code4($3->type->place,"","",$1->tempname));
+		if($3->ini_lst==nullptr){
+			global_code.push_back(get_code4($3->type->place,"","",$1->tempname));
+		}
+		else{
+			vector<Initializer*> alpha=$3->ini_lst->iv;
+			for(int i=0;i<alpha.size();i++){
+				string s=$1->tempname;
+				s+=" [ ";
+				s+=to_string(i);
+				s+=" ]";
+				global_code.push_back(get_code4(alpha[i]->type->place,"","",s));
+			}
+		}
+		
 	}
 	;
 

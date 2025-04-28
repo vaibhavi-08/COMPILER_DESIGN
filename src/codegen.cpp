@@ -16,6 +16,8 @@ bool iserror = false;
 vector<pair<string, int>> error;
 unordered_map<string, string> symtab;
 vector<string> program;
+int funcoffset=4;
+int endno=0;
 vector<string> x86_regs = {
     // General purpose registers (64-bit)
     // "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp",
@@ -62,6 +64,88 @@ vector<string> x86_regs = {
     // "rip",  // Instruction pointer
     // "rflags" // Flags register
 };
+std::string extract_return_identifier(const std::string& str) {
+    const std::string prefix = "return ";
+
+    if (str.substr(0, prefix.length()) != prefix) {
+        return "";
+    }
+
+    return str.substr(prefix.length());
+}
+
+bool is_return_format(const std::string& str) {
+    const std::string prefix = "return ";
+    return str.substr(0, prefix.length()) == prefix;
+}
+
+bool is_param_format(const std::string& str) {
+    const std::string prefix = "param ";
+
+    // Check if str starts with "param "
+    return str.substr(0, prefix.length()) == prefix;
+}
+string extract_identifier(const std::string& str) {
+    const string prefix = "param ";
+
+    if (str.substr(0, prefix.length()) != prefix) {
+        return ""; // Not in correct format
+    }
+
+    // Return substring after "param "
+    return str.substr(prefix.length());
+}
+bool is_arg_format(const std::string& str) {
+    const std::string prefix = "arg ";
+
+    // Check if str starts with "param "
+    return str.substr(0, prefix.length()) == prefix;
+}
+string extract_arg_identifier(const std::string& str) {
+    const string prefix = "arg ";
+
+    if (str.substr(0, prefix.length()) != prefix) {
+        return ""; // Not in correct format
+    }
+
+    // Return substring after "param "
+    return str.substr(prefix.length());
+}
+
+bool is_call_format(const std::string& str) {
+    const std::string call_keyword = "= call ";
+
+    size_t eq_pos = str.find('=');
+    if (eq_pos == std::string::npos) return false;
+
+    // Check that after '=' there is " call " (with spaces)
+    if (str.substr(eq_pos, call_keyword.length()) == call_keyword) {
+        return true;
+    }
+
+    return false;
+}
+
+std::pair<std::string, std::string> extract_call_variables(const std::string& str) {
+    const std::string call_keyword = "= call ";
+
+    size_t eq_pos = str.find('=');
+    if (eq_pos == std::string::npos) return {"", ""};
+
+    // Left of '=' is first variable (remove spaces)
+    std::string lhs = str.substr(0, eq_pos);
+    lhs.erase(lhs.find_last_not_of(' ') + 1); // remove trailing spaces
+
+    // After "= call " should be second variable
+    size_t call_pos = str.find(call_keyword, eq_pos);
+    if (call_pos != eq_pos) return {"", ""}; // not matching exactly "= call "
+
+    std::string rhs = str.substr(call_pos + call_keyword.length());
+    rhs.erase(0, rhs.find_first_not_of(' ')); // remove leading spaces
+
+    return {lhs, rhs};
+}
+
 void parseCondition(const string& line,string &op1,string&op2,string& opr) {
     //string op1 = "", op2 = "", opr = "";
     
@@ -96,10 +180,11 @@ bool isLabelStatement(const string& line) {
     size_t len = line.length();
     //cout << len << endl;
     // Minimum format should be like "a :" => length >= 3
-    if (len < 4) return false;
-
+    if (len < 3) return false;
+    cout << len << endl;
+    cout << line[len-2] << endl;
     // Must end with " :" (space then colon)
-    if (line[len - 3] == ' ' && line[len - 2] == ':') {
+    if (line[len - 1] == ':') {
         return true;
     }
 
@@ -225,7 +310,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     if(curb->successors[0]->getStartLine() != -1) 
                         jmpl = ".B" + to_string(curb->successors[0]->getId());
                     else 
-                        jmpl = ".end";
+                        jmpl = ".end"+to_string(endno);
                     asmcode.push_back("jmp " + jmpl);
                 }
                 else if(curb->successors.size() == 2) {
@@ -233,13 +318,13 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     if(curb->successors[0]->getStartLine() != -1) 
                         jumpl = ".B" + to_string(curb->successors[0]->getId());
                     else 
-                        jumpl = ".end";
+                        jumpl = ".end"+to_string(endno);
                     
                     string jel;
                     if(curb->successors[1]->getStartLine() != -1) 
                         jel = ".B" + to_string(curb->successors[1]->getId());
                     else 
-                        jel = ".end";
+                        jel = ".end"+to_string(endno);
                     
                     asmcode.push_back("je " + jel);
                     asmcode.push_back("jmp " + jumpl);
@@ -287,7 +372,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 if(curb->successors[0]->getStartLine() != -1) 
                     jmpl = ".B" + to_string(curb->successors[0]->getId());
                 else 
-                    jmpl = ".end";
+                    jmpl = ".end"+to_string(endno);
                 asmcode.push_back("jmp " + jmpl);
             }
             else if(curb->successors.size() == 2) {
@@ -295,13 +380,13 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 if(curb->successors[0]->getStartLine() != -1) 
                     jumpl = ".B" + to_string(curb->successors[0]->getId());
                 else 
-                    jumpl = ".end";
+                    jumpl = ".end"+to_string(endno);
                 
                 string jel;
                 if(curb->successors[1]->getStartLine() != -1) 
                     jel = ".B" + to_string(curb->successors[1]->getId());
                 else 
-                    jel = ".end";
+                    jel = ".end"+to_string(endno);
                 
                 asmcode.push_back("je " + jel);
                 asmcode.push_back("jmp " + jumpl);
@@ -320,10 +405,12 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
             
             //check if label
             if(isLabelStatement(instr)) {
+                cout << "got in label statement" << endl;
                 string label = getLabel(instr);
                 asmcode.push_back(label + ":");
                 asmcode.push_back("push ebp");
                 asmcode.push_back("mov ebp , esp");
+                funcoffset=4;
             }
             //if it is an assignment statement simple
             else if(isSimpleAssignment(instr)) {
@@ -608,7 +695,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 
                 // Get register/memory locations
                 auto z = allocator.getRegisters(tr, tac.getNextUseMap(),unordered_set<string>());
-                
+                if(z[var].isRegister)allocator.loadToRegister(var,z[var].location);
                 // Select instruction based on operand location
                 string opcode;
                 if (z[var].isRegister) {
@@ -620,7 +707,75 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 // Generate assembly code for increment/decrement
                 asmcode.push_back(opcode + " " + z[var].location + " , 1");
             }
-            // Other unary expressions
+            //function args
+            else if(is_param_format(instr)){
+                string prm=extract_identifier(instr);
+                vector<pair<string, bool>> tr;
+                tr.emplace_back(prm, !temp_and_type[prm]->isreal_var);
+                auto z = allocator.getRegisters(tr, tac.getNextUseMap(),unordered_set<string>());
+                if(z[prm].isRegister)allocator.loadToRegister(prm,z[prm].location);
+                asmcode.push_back("push "+z[prm].location);
+            }
+            else if(is_arg_format(instr)){
+                string arg=extract_arg_identifier(instr);
+                funcoffset+=temp_and_type[arg]->size;
+                //allocator.addVariable(arg);
+                if(allocator.addressDescriptor.find(arg)==allocator.addressDescriptor.end()){
+                    if(temp_and_type.find(arg)!=temp_and_type.end()&&temp_and_type[arg]->isreal_var){
+                        if(temp_and_type[arg]->size==4){
+                            cout << "adding this variable " << arg << "with size 4" << endl;
+                            allocator.addressDescriptor[arg] = {true, "DWORD PTR [ebp+"+to_string(funcoffset)+"]", {}};
+                        }
+                        else if(temp_and_type[arg]->size==8){
+                            allocator.addressDescriptor[arg] = {true, "QWORD PTR [ebp+"+to_string(funcoffset)+"]", {}};
+                        }
+                        else if(temp_and_type[arg]->size==1){
+                            allocator.addressDescriptor[arg] = {true, "BYTE PTR [ebp+"+to_string(funcoffset)+"]", {}};
+                        }
+                        else{
+                            allocator.addressDescriptor[arg] = {true, "WORD PTR [ebp+"+to_string(funcoffset)+"]", {}};
+                        }
+                    }
+                    else allocator.addressDescriptor[arg]={false,"",{}};
+                }
+            }
+            else if(is_call_format(instr)){
+                pair<string,string> p=extract_call_variables(instr);
+                string res=p.first;
+                string func=p.second;
+                asmcode.push_back("call "+func);
+                vector<pair<string, bool>> tr;
+                tr.emplace_back(res, !temp_and_type[res]->isreal_var);
+                auto z = allocator.getRegisters(tr, tac.getNextUseMap(),unordered_set<string>());
+                if(z[res].isRegister)allocator.loadToRegister(res,z[res].location);
+                asmcode.push_back("mov "+z[res].location+" , "+"eax");
+            }
+            else if(is_return_format(instr)){
+                string ret=extract_return_identifier(instr);
+                vector<pair<string, bool>> tr;
+                tr.emplace_back(ret, !temp_and_type[ret]->isreal_var);
+                auto z = allocator.getRegisters(tr, tac.getNextUseMap(),unordered_set<string>());
+                bool canUse = true;
+                //checking if variables stored in y needs spilling 
+                unordered_map<string,bool> nextuse=tac.getNextUseMap();
+                for (const auto& var : allocator.registerDescriptor["eax"]) {
+                    if (tac.getNextUseMap().find(var) != tac.getNextUseMap().end() && nextuse[var]) {
+                        canUse = false;
+                        break;
+                    }
+                }
+                if(canUse){
+                    //no spilling required
+                    allocator.loadToRegister(ret,"eax");
+                    asmcode.push_back("mov eax , "+z[ret].location);
+                }
+                else {
+                    //needs spilling
+                    allocator.spillRegister("eax");
+                    allocator.loadToRegister(ret,"eax");
+                    asmcode.push_back("mov eax , "+z[ret].location);
+                }
+            }
             else {
                 cout << "to be handled##" << endl;
             }
@@ -632,7 +787,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
             if(curb->successors[0]->getStartLine() != -1)
                 jmpl = ".B" + to_string(curb->successors[0]->getId());
             else
-                jmpl = ".end";
+                jmpl = ".end"+to_string(endno);
             asmcode.push_back("jmp " + jmpl);
         }
         else {
@@ -814,12 +969,21 @@ int main(int argc, char* argv[]) {
         if(mainblock)cout << "mainblock id: " << mainblock->id << endl;
         RegisterAllocator allocator(x86_regs);
 
-        dfs(mainblock, allocator);  // This fills asmcode
-        string s = ".end :";
+        dfs(mainblock, allocator);  
+        // This fills asmcode
+        string s = ".end"+to_string(endno)+" :";
         asmcode.push_back(s);
-        asmcode.push_back("mov eax , 0");
-        asmcode.push_back("leave");
-        asmcode.push_back("ret");
+        if(getLabel(mainblock->getInstructions()[0].getInstruction())=="main"){
+            asmcode.push_back("mov eax , 0");
+            asmcode.push_back("leave");
+            asmcode.push_back("ret");
+        }
+        else{
+            asmcode.push_back("pop ebp");
+            asmcode.push_back("ret");
+        }
+        
+        endno++;
     }
     // Write generated assembly to output file
     for (const string& line : asmcode) {

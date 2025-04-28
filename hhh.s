@@ -1,29 +1,28 @@
-	.file	"verybasic.c"
+	.file	"funcCall.c"
 	.intel_syntax noprefix
 	.text
+	.globl	sum
+	.type	sum, @function
+sum:
+	push	ebp
+	mov	ebp, esp
+	mov	edx, DWORD PTR [ebp+8]
+	mov	eax, DWORD PTR [ebp+12]
+	add	eax, edx
+	pop	ebp
+	ret
+	.size	sum, .-sum
 	.globl	main
 	.type	main, @function
 main:
 	push	ebp
 	mov	ebp, esp
 	sub	esp, 16
-	mov	DWORD PTR [ebp-4], 5
-	mov	DWORD PTR [ebp-8], 6
-	mov	DWORD PTR [ebp-12], 3
-	mov	eax, DWORD PTR [ebp-4]
-	imul	eax, DWORD PTR [ebp-8]
-	mov	DWORD PTR [ebp-12], eax
-	mov	eax, DWORD PTR [ebp-4]
-	cdq
-	idiv	DWORD PTR [ebp-8]
-	mov	DWORD PTR [ebp-12], eax
-	mov	edx, DWORD PTR [ebp-4]
-	mov	eax, DWORD PTR [ebp-8]
-	add	eax, edx
-	mov	DWORD PTR [ebp-12], eax
-	mov	eax, DWORD PTR [ebp-4]
-	sub	eax, DWORD PTR [ebp-8]
-	mov	DWORD PTR [ebp-12], eax
+	push	7
+	push	5
+	call	sum
+	add	esp, 8
+	mov	DWORD PTR [ebp-4], eax
 	mov	eax, 0
 	leave
 	ret

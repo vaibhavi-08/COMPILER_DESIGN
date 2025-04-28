@@ -1,7 +1,7 @@
 ====================== FINAL SYMBOL TABLE ======================
 
 Temp: t8
-  Name: z
+  Name: a
   Type: INT
   Scope: main:
   Level: 1

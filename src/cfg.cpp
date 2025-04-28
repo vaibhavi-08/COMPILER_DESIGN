@@ -5,10 +5,10 @@ bool isLabelStatement2(const string& line) {
     size_t len = line.length();
     //cout << len << endl;
     // Minimum format should be like "a :" => length >= 3
-    if (len < 4) return false;
+    if (len < 3) return false;
 
     // Must end with " :" (space then colon)
-    if (line[len - 3] == ' ' && line[len - 2] == ':') {
+    if (line[len - 1] == ':') {
         return true;
     }
 
@@ -759,18 +759,25 @@ vector<BasicBlock*> generateCode(const string& input, bool isFile) {
     }
     
     outFile << "======== BASIC BLOCKS WITH NEXT USE INFO ========" << endl;
+    // for(auto i:allcodes){
+    //     for(auto j:i){
+    //         cout  << j.getInstruction() << endl;
+    //     }
+    // }
     // Identify leaders
     vector<BasicBlock*> mainblocks;
     int blockId=0;
     for(auto code:allcodes){
         set<int> leaders = identifyLeaders(code);
-    
         // Create basic blocks
         vector<BasicBlock*> blocks = createBasicBlocks(code, leaders,blockId);
         // Determine control flow
         determineControlFlow(blocks, code);
         cout << blocks.size() << endl;
         cout << "block[0] id " << blocks[0]->getId() << endl;
+        // for(auto i:blocks[0]->getInstructions()){
+        //     cout << i.getInstruction() << endl;
+        // }
         //cout << "block[1] id " << blocks[1]->getId() << endl;
         // Filter out blocks that only contain goto statements
         //vector<BasicBlock*> filteredBlocks = filterGotoOnlyBlocks(blocks);

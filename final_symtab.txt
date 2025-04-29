@@ -1,11 +1,38 @@
 ====================== FINAL SYMBOL TABLE ======================
 
+<<<<<<< HEAD
 Temp: t4
   Name: b
   Type: DOUBLE
   Scope: main:
   Level: 1
 
+=======
+Temp: t16
+  Name: b
+  Type: INT
+  Scope: main:
+  Level: 1
+
+Temp: t11
+  Name: z
+  Type: INT$
+  Scope: main:
+  Level: 1
+
+Temp: t1
+  Name: sum
+  Type: INT
+  Scope: sum:
+  Level: 0
+
+Temp: t3
+  Name: y
+  Type: 
+  Scope: 
+  Level: 0
+
+>>>>>>> 5367b2d891ce1cf6d891443a57c77a89788db560
 Temp: main
   Name: main
   Type: INT
@@ -20,11 +47,241 @@ Temp: t2
 
 ====================== FINAL TEMP SYMBOL TABLE ======================
 
+<<<<<<< HEAD
 Temp: t4
   Type Info:
     is real var? 1
     size: 8
     base: DOUBLE
+=======
+Temp: main
+  Type Info:
+    is real var? 1
+    size: -1
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 1
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+    func_ret_type.base: INT
+Temp: t19
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t18
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t17
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t14
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t15
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t2
+  Type Info:
+    is real var? 1
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t4
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t1
+  Type Info:
+    is real var? 1
+    size: -1
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 1
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+    func_ret_type.base: INT
+Temp: t6
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t5
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+>>>>>>> 5367b2d891ce1cf6d891443a57c77a89788db560
     ptr_level: 0
     array_dim: 0
     isbasic: 1
@@ -64,16 +321,16 @@ Temp: t3
     isenum: 0
     isvarargs: 0
     func_ptr_lev: 0
-Temp: main
+Temp: t9
   Type Info:
-    is real var? 1
-    size: -1
+    is real var? 0
+    size: 4
     base: INT
     ptr_level: 0
     array_dim: 0
     isbasic: 1
     isobj: 0
-    isfunction: 1
+    isfunction: 0
     isconst: 0
     isvolatile: 0
     isstatic: 0
@@ -86,8 +343,73 @@ Temp: main
     isenum: 0
     isvarargs: 0
     func_ptr_lev: 0
-    func_ret_type.base: INT
-Temp: t2
+Temp: t12
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t8
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t11
+  Type Info:
+    is real var? 1
+    size: 16
+    base: INT
+    ptr_level: 0
+    array_dim: 1
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t16
   Type Info:
     is real var? 1
     size: 8
@@ -114,6 +436,72 @@ Temp: t1
     is real var? 0
     size: 4
     base: FLOAT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t7
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t10
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
+    ptr_level: 0
+    array_dim: 0
+    isbasic: 1
+    isobj: 0
+    isfunction: 0
+    isconst: 0
+    isvolatile: 0
+    isstatic: 0
+    isauto: 0
+    isextern: 0
+    isregister: 0
+    isigned: 0
+    isunsigned: 0
+    isnull: 0
+    isenum: 0
+    isvarargs: 0
+    func_ptr_lev: 0
+Temp: t13
+  Type Info:
+    is real var? 0
+    size: 4
+    base: INT
     ptr_level: 0
     array_dim: 0
     isbasic: 1

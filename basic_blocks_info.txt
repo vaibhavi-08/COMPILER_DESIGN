@@ -1,9 +1,42 @@
 ======== BASIC BLOCKS WITH NEXT USE INFO ========
+<<<<<<< HEAD
 Block B0 (Lines 0-8):
   0: main :
   1: t1 = 7.9 [Next Use: t1:false]
   4: t2 = t1 [Next Use: t2:false]
   5: t3 = 6.9 [Next Use: t3:false]
   8: t4 = t3 [Next Use: t4:false]
+=======
+Block B0 (Lines 0-6):
+  0: t1 : [Next Use: t3:true, t2:true, t4:true]
+  1: arg t2 [Next Use: t3:true, t2:true, t4:true]
+  2: arg t3 [Next Use: t3:true, t2:true, t4:true]
+  3: t4 = t2 + t3 [Next Use: t4:true]
+  6: return t4
+Successors: EOC
+
+Block B1 (Lines 7-47):
+  7: main : [Next Use: t15:true, t9:true, t14:true, t5:true, t6:true, t18:true, t19:true, t10:true, t7:true, t16:true, t13:true, t11:true, t8:true, t17:true, t12:true]
+  8: t5 = 4 [Next Use: t14:true, t6:true, t18:true, t19:true, t10:true, t7:true, t16:true, t13:true, t8:true, t11:true, t17:true, t12:true, t9:true, t15:true]
+  11: t6 = 1 [Next Use: t14:true, t6:true, t18:true, t19:true, t10:true, t7:true, t16:true, t13:true, t8:true, t11:true, t17:true, t12:true, t9:true, t15:true]
+  14: t7 = 2 [Next Use: t14:true, t6:true, t18:true, t19:true, t10:true, t7:true, t16:true, t13:true, t8:true, t11:true, t17:true, t12:true, t9:true, t15:true]
+  17: t8 = 3 [Next Use: t14:true, t6:true, t18:true, t19:true, t10:true, t7:true, t16:true, t13:true, t8:true, t11:true, t17:true, t12:true, t9:true, t15:true]
+  20: t9 = 4 [Next Use: t14:true, t6:true, t18:true, t19:true, t10:true, t7:true, t16:true, t13:true, t8:true, t11:true, t17:true, t12:true, t9:true, t15:true]
+  23: t10 = 5 [Next Use: t14:true, t6:true, t18:true, t19:true, t10:true, t7:true, t16:true, t13:true, t8:true, t11:true, t17:true, t12:true, t9:true, t15:true]
+  26: t11 [ 0 ] = t6 [Next Use: t14:true, t8:true, t15:true, t9:true, t12:true, t17:true, t13:true, t11:true, t16:true, t19:true, t7:true, t10:true, t18:true]
+  27: t11 [ 1 ] = t7 [Next Use: t14:true, t8:true, t15:true, t9:true, t12:true, t17:true, t13:true, t11:true, t16:true, t19:true, t10:true, t18:true]
+  28: t11 [ 2 ] = t8 [Next Use: t14:true, t15:true, t9:true, t12:true, t17:true, t13:true, t11:true, t16:true, t19:true, t10:true, t18:true]
+  29: t11 [ 3 ] = t9 [Next Use: t14:true, t15:true, t12:true, t17:true, t13:true, t11:true, t16:true, t19:true, t10:true, t18:true]
+  30: t11 [ 4 ] = t10 [Next Use: t14:true, t15:true, t12:true, t17:true, t13:true, t11:true, t16:true, t19:true, t18:true]
+  31: t12 = 1 [Next Use: t14:true, t15:true, t12:true, t17:true, t13:true, t11:true, t16:true, t19:true, t18:true]
+  34: t13 = t11 [ t12 ] [Next Use: t14:true, t15:true, t17:true, t13:true, t11:true, t16:true, t19:true, t18:true]
+  35: t14 = 2 [Next Use: t14:true, t15:true, t17:true, t13:true, t11:true, t16:true, t19:true, t18:true]
+  36: t15 = t13 * t14 [Next Use: t15:true, t17:true, t11:true, t16:true, t19:true, t18:true]
+  39: t16 = t15 [Next Use: t17:true, t11:true, t19:true, t18:true]
+  40: t17 = 0 [Next Use: t17:true, t11:true, t19:true, t18:true]
+  43: t18 = t11 [ t17 ] [Next Use: t19:true, t18:true]
+  44: t19 = 3 [Next Use: t19:true, t18:true]
+  47: t18 = t19
+>>>>>>> 5367b2d891ce1cf6d891443a57c77a89788db560
 Successors: EOC
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
    0: main : 
    1: t1 = 7.9  
    2: if t1 goto 4
@@ -7,3 +8,53 @@
    6: if t3 goto 8
    7: goto 8
    8: t4 = t3  
+=======
+   0: t1 : 
+   1: arg t2
+   2: arg t3
+   3: t4 = t2 + t3
+   4: if t4 goto 6
+   5: goto 6
+   6: return t4
+   7: main : 
+   8: t5 = 4  
+   9: if t5 goto 11
+  10: goto 11
+  11: t6 = 1  
+  12: if t6 goto 14
+  13: goto 14
+  14: t7 = 2  
+  15: if t7 goto 17
+  16: goto 17
+  17: t8 = 3  
+  18: if t8 goto 20
+  19: goto 20
+  20: t9 = 4  
+  21: if t9 goto 23
+  22: goto 23
+  23: t10 = 5  
+  24: if t10 goto 26
+  25: goto 26
+  26: t11 [ 0 ] = t6  
+  27: t11 [ 1 ] = t7  
+  28: t11 [ 2 ] = t8  
+  29: t11 [ 3 ] = t9  
+  30: t11 [ 4 ] = t10  
+  31: t12 = 1  
+  32: if t12 goto 34
+  33: goto 34
+  34: t13 = t11 [ t12 ]
+  35: t14 = 2  
+  36: t15 = t13 * t14
+  37: if t15 goto 39
+  38: goto 39
+  39: t16 = t15  
+  40: t17 = 0  
+  41: if t17 goto 43
+  42: goto 43
+  43: t18 = t11 [ t17 ]
+  44: t19 = 3  
+  45: if t19 goto 47
+  46: goto 47
+  47: t18 = t19  
+>>>>>>> 5367b2d891ce1cf6d891443a57c77a89788db560

@@ -1,4 +1,5 @@
 Errors Found:
+<<<<<<< HEAD
 invalid character :  at line no. 1
 invalid character :  at line no. 2
 invalid character :  at line no. 3
@@ -6,3 +7,16 @@ invalid character :  at line no. 4
 invalid character :  at line no. 5
 invalid character :  at line no. 6
 invalid character :  at line no. 7
+=======
+invalid character :  at line no. 2
+invalid character :  at line no. 5
+invalid character :  at line no. 15
+invalid character :  at line no. 16
+invalid character :  at line no. 17
+invalid character :  at line no. 18
+invalid character :  at line no. 19
+invalid character :  at line no. 20
+invalid character :  at line no. 21
+invalid character :  at line no. 22
+invalid character :  at line no. 23
+>>>>>>> 5367b2d891ce1cf6d891443a57c77a89788db560

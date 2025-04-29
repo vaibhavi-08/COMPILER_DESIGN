@@ -13,23 +13,51 @@ RegisterAllocator::RegisterAllocator(const std::vector<std::string>& availableRe
 void RegisterAllocator::addVariable(const std::string& variable) {
     if(addressDescriptor.find(variable)==addressDescriptor.end()){
         if(temp_and_type.find(variable)!=temp_and_type.end()&&temp_and_type[variable]->isreal_var){
-            if(temp_and_type[variable]->size==4){
-                crbp+=4;
-                cout << "adding this variable " << variable << "with size 4" << endl;
-                addressDescriptor[variable] = {true, "DWORD PTR [ebp-"+to_string(crbp)+"]", {}};
-            }
-            else if(temp_and_type[variable]->size==8){
-                crbp+=8;
-                addressDescriptor[variable] = {true, "QWORD PTR [ebp-"+to_string(crbp)+"]", {}};
-            }
-            else if(temp_and_type[variable]->size==1){
-                crbp+=1;
-                addressDescriptor[variable] = {true, "BYTE PTR [ebp-"+to_string(crbp)+"]", {}};
+            if(temp_and_type[variable]->array_dim==0){
+                if(temp_and_type[variable]->size==4){
+                    crbp+=4;
+                    cout << "adding this variable " << variable << "with size 4" << endl;
+                    addressDescriptor[variable] = {true, "DWORD PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
+                else if(temp_and_type[variable]->size==8){
+                    crbp+=8;
+                    addressDescriptor[variable] = {true, "QWORD PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
+                else if(temp_and_type[variable]->size==1){
+                    crbp+=1;
+                    addressDescriptor[variable] = {true, "BYTE PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
+                else{
+                    crbp+=2;
+                    addressDescriptor[variable] = {true, "WORD PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
             }
             else{
-                crbp+=2;
-                addressDescriptor[variable] = {true, "WORD PTR [ebp-"+to_string(crbp)+"]", {}};
+                int prod=1;
+                for(auto i:temp_and_type[variable]->arr_sizes){
+                    prod*=i;
+                }
+            
+                int res=(temp_and_type[variable]->size)/prod;
+                if(res==4){
+                    crbp+=temp_and_type[variable]->size;
+                    cout << "adding this variable " << variable << "with size 4" << endl;
+                    addressDescriptor[variable] = {true, "DWORD PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
+                else if(res==8){
+                    crbp+=temp_and_type[variable]->size;
+                    addressDescriptor[variable] = {true, "QWORD PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
+                else if(res==1){
+                    crbp+=temp_and_type[variable]->size;
+                    addressDescriptor[variable] = {true, "BYTE PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
+                else{
+                    crbp+=temp_and_type[variable]->size;
+                    addressDescriptor[variable] = {true, "WORD PTR [ebp-"+to_string(crbp)+"]", {}};
+                }
             }
+            
         }
         else addressDescriptor[variable]={false,"",{}};
             

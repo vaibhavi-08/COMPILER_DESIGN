@@ -1,4 +1,3 @@
-
 // int add (int x){
 
 //     return 2;
@@ -17,8 +16,9 @@ int sum(int x,int y){
     return x+y;
 }
 int main(){
-    //int z[4];//={1,2,3,4};
-    int z=sum(5,7);
+    int z[4]={1,2,3,4,5};
+    int b=z[1]*2;
+    z[0]=3;
     
     
 }

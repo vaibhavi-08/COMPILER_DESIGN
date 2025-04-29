@@ -28,7 +28,6 @@ class Class_Specifier;
 class Base_Class;
 class Base_Class_List;
 class Inheritance_Specifier;
-class Constant_Expression;
 class Member_Declaration;
 class Constructor_Declaration;
 class Enum_Specifier;
@@ -123,7 +122,7 @@ void check_typecast_compatibility(Type* t1,Type* t2);
 Type* check_if_function(Type* t);
 vector<Type*> get_func_params(Abstract_Declarator* ad);
 Symbol_Info* get_symbol_info_id(string id);
-Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
+Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Type* ce,Parameter_List* pl);
 Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd);
 class Symbol_Info{
     public:
@@ -185,6 +184,9 @@ class Type {
     vector<int> falselist;
     vector<int> nextlist;
     vector<Tq> ptrtql;  // Now this will work, assuming Tq is defined earlier
+    vector<int> arr_sizes;
+    int val;
+    bool const_expr;
     Type();
     Type(const Type& other);
 };
@@ -449,9 +451,9 @@ class Direct_Declarator:public Node{
     string id;     
     Declarator* d;
     Direct_Declarator* dd;
-    Constant_Expression* ce;
+    Type* ce;
     Parameter_List* pl;
-    Direct_Declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl);
+    Direct_Declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Type* ce,Parameter_List* pl);
 };
 class Pointer:public Node{
     public:

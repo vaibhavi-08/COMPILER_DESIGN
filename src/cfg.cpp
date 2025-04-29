@@ -5,10 +5,10 @@ bool isLabelStatement2(const string& line) {
     size_t len = line.length();
     //cout << len << endl;
     // Minimum format should be like "a :" => length >= 3
-    if (len < 4) return false;
+    if (len < 3) return false;
 
     // Must end with " :" (space then colon)
-    if (line[len - 3] == ' ' && line[len - 2] == ':') {
+    if (line[len - 1] == ':') {
         return true;
     }
 
@@ -66,121 +66,116 @@ const unordered_map<string, bool>& ThreeAddressCode::getNextUseMap() const {
     return nextUseMap;
 }
 
-// Extract used variables from the instruction
 vector<string> ThreeAddressCode::getUsedVariables() const {
     vector<string> usedVars;
-    
-    // Helper function to check if a string is a temporary variable (t1, t2, etc. or "main")
+
     auto isTempVar = [](const string& var) -> bool {
         if (var == "main") return true;
-        
         if (var.size() < 2 || var[0] != 't') return false;
-        
-        // Check if the rest is a number
         for (size_t i = 1; i < var.size(); i++) {
             if (!isdigit(var[i])) return false;
         }
-        
         return true;
     };
-    
-    // Split the instruction by spaces
+
     istringstream iss(instruction);
     string token;
     vector<string> tokens;
-    
+
     while (iss >> token) {
-        // Remove any punctuation at the end (like commas or parentheses)
         while (!token.empty() && !isalnum(token.back()) && token.back() != '_') {
             token.pop_back();
         }
         tokens.push_back(token);
     }
-    
-    // For conditional statements
+
     if (isConditional()) {
-        // Skip the "if" token and process the remaining tokens
         for (size_t i = 1; i < tokens.size(); i++) {
-            // Skip goto and line number in "goto N"
             if (tokens[i] == "goto") {
-                i++; // Skip the next token (line number)
+                i++;
                 continue;
             }
-            
             if (isTempVar(tokens[i])) {
                 usedVars.push_back(tokens[i]);
             }
         }
-    } 
-    // For regular assignments
-    else {
-        // Find the position of '=' token
-        auto equalsPos = find(tokens.begin(), tokens.end(), "=");
-        
-        if (equalsPos != tokens.end()) {
-            // Process tokens after the '=' sign
-            for (auto it = equalsPos + 1; it != tokens.end(); ++it) {
-                if (isTempVar(*it)) {
-                    usedVars.push_back(*it);
+    } else {
+        // For array operations
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (tokens[i] == "=" && i > 0) {
+                // Left hand side already processed
+                continue;
+            }
+
+            // For cases like t11 [ 0 ] = t6
+            if (tokens[i] == "[") {
+                if (i >= 1 && isTempVar(tokens[i-1])) {
+                    usedVars.push_back(tokens[i-1]); // array name
                 }
+                if (i + 1 < tokens.size() && isTempVar(tokens[i+1])) {
+                    usedVars.push_back(tokens[i+1]); // array index
+                }
+            } else if (isTempVar(tokens[i])) {
+                usedVars.push_back(tokens[i]);
             }
         }
+
+        // Remove defined variable (LHS of '=')
+        auto equalsIt = find(tokens.begin(), tokens.end(), "=");
+        if (equalsIt != tokens.end() && equalsIt != tokens.begin()) {
+            string potentialDef = *(equalsIt - 1);
+            usedVars.erase(remove(usedVars.begin(), usedVars.end(), potentialDef), usedVars.end());
+        }
     }
-    
+
+    // Remove duplicates
+    sort(usedVars.begin(), usedVars.end());
+    usedVars.erase(unique(usedVars.begin(), usedVars.end()), usedVars.end());
+
     return usedVars;
 }
-// Extract defined variables from the instruction
+
+
 vector<string> ThreeAddressCode::getDefinedVariables() const {
     vector<string> definedVars;
-    
-    // Skip if it's a conditional or goto
+
     if (isConditional() || isGoto()) {
         return definedVars;
     }
-    
-    // Helper function to check if a string is a temporary variable (t1, t2, etc. or "main")
+
     auto isTempVar = [](const string& var) -> bool {
         if (var == "main") return true;
-        
         if (var.size() < 2 || var[0] != 't') return false;
-        
-        // Check if the rest is a number
         for (size_t i = 1; i < var.size(); i++) {
             if (!isdigit(var[i])) return false;
         }
-        
         return true;
     };
-    
-    // Split the instruction by spaces
+
     istringstream iss(instruction);
     string token;
     vector<string> tokens;
-    
+
     while (iss >> token) {
+        while (!token.empty() && !isalnum(token.back()) && token.back() != '_') {
+            token.pop_back();
+        }
         tokens.push_back(token);
     }
-    
-    // Find the position of '=' token
+
     auto equalsIt = find(tokens.begin(), tokens.end(), "=");
-    
-    if (equalsIt != tokens.end() && equalsIt != tokens.begin()) {
-        // The token immediately before '=' is the defined variable
-        string potentialVar = *(equalsIt - 1);
-        
-        // Remove any punctuation
-        while (!potentialVar.empty() && !isalnum(potentialVar.back()) && potentialVar.back() != '_') {
-            potentialVar.pop_back();
-        }
-        
-        // Check if it's a temporary variable
-        if (isTempVar(potentialVar)) {
-            definedVars.push_back(potentialVar);
+    if (equalsIt != tokens.end()) {
+        if (equalsIt != tokens.begin()) {
+            string potentialDef = *(equalsIt - 1);
+            if (isTempVar(potentialDef)) {
+                definedVars.push_back(potentialDef);
+            }
         }
     }
-    
+
     return definedVars;
 }
+
 
 // BasicBlock class implementation
 BasicBlock::BasicBlock(int blockId) : id(blockId), startLine(0), endLine(0), visited(false) {}
@@ -701,47 +696,75 @@ void computeNextUseInfo(vector<BasicBlock*>& blocks, BasicBlock* mainBlock) {
         computeNextUseForBlock(block, activeVars);
     }
 }
+void ThreeAddressCode::setFullNextUse(const unordered_map<string, bool>& nextUseInfo) {
+    for (const auto& p : nextUseInfo) {
+        nextUseMap[p.first] = p.second;
+    }
+}
 
-// Compute next use information for a single block
+// void computeNextUseForBlock(BasicBlock* block, unordered_map<string, bool>& activeVars) {
+//     vector<ThreeAddressCode>& instructions = block->getInstructions();
+
+//     for (auto it = instructions.rbegin(); it != instructions.rend(); ++it) {
+//         ThreeAddressCode& tac = *it;
+
+//         vector<string> definedVars = tac.getDefinedVariables();
+//         vector<string> usedVars = tac.getUsedVariables();
+
+//         // Step 1: First, set NextUse = true for ALL currently active variables
+//         for (const auto& var : activeVars) {
+//             tac.setNextUse(var.first, true);
+//         }
+
+//         // Step 2: Now, for used variables in this instruction, add them as active
+//         for (const string& var : usedVars) {
+//             activeVars[var] = true;
+//         }
+
+//         // Step 3: For defined variables (LHS), mark them as dead (they are redefined)
+//         for (const string& var : definedVars) {
+//             activeVars.erase(var);
+//         }
+//     }
+// }
 void computeNextUseForBlock(BasicBlock* block, unordered_map<string, bool>& activeVars) {
-    // Work backwards through the instructions
     vector<ThreeAddressCode>& instructions = block->getInstructions();
-    
+
+    unordered_set<string> futureUse;
+    // Initialize futureUse with activeVars at block end
+    for (auto& p : activeVars) {
+        if (p.second) {
+            futureUse.insert(p.first);
+        }
+    }
+
     for (auto it = instructions.rbegin(); it != instructions.rend(); ++it) {
         ThreeAddressCode& tac = *it;
-        
-        // Get variables used in this instruction
-        vector<string> usedVars = tac.getUsedVariables();
-        
-        // Mark each used variable as having a next use here
-        for (const string& var : usedVars) {
-            tac.setNextUse(var, true);
-            activeVars[var] = true;  // This variable is now "live"
+
+        // Build a full map for this instruction: every variable appearing so far
+        unordered_map<string, bool> nextUseInfo;
+
+        // For ALL variables seen so far (futureUse), mark true
+        for (const string& var : futureUse) {
+            nextUseInfo[var] = true;
         }
-        
-        // Get variables defined in this instruction
+
+        tac.setFullNextUse(nextUseInfo);  // a new function you create
+
+        // Now update futureUse set
         vector<string> definedVars = tac.getDefinedVariables();
-        
-        // For each defined variable, check if it has a next use
+        vector<string> usedVars = tac.getUsedVariables();
+
         for (const string& var : definedVars) {
-            auto it = activeVars.find(var);
-            bool hasNextUse = (it != activeVars.end()) && it->second;
-            tac.setNextUse(var, hasNextUse);
-            
-            // If this is a definition without next use, mark it as "dead" after this point
-            if (!hasNextUse) {
-                activeVars.erase(var);
-            }
+            futureUse.erase(var);
         }
-        
-        // For all other active variables, mark their next use as true
-        for (const auto& pair : activeVars) {
-            if (pair.second) {
-                tac.setNextUse(pair.first, true);
-            }
+        for (const string& var : usedVars) {
+            futureUse.insert(var);
         }
     }
 }
+
+
 // Update your generateCode function to use the new function
 vector<BasicBlock*> generateCode(const string& input, bool isFile) {
     // Read 3AC code
@@ -759,18 +782,25 @@ vector<BasicBlock*> generateCode(const string& input, bool isFile) {
     }
     
     outFile << "======== BASIC BLOCKS WITH NEXT USE INFO ========" << endl;
+    // for(auto i:allcodes){
+    //     for(auto j:i){
+    //         cout  << j.getInstruction() << endl;
+    //     }
+    // }
     // Identify leaders
     vector<BasicBlock*> mainblocks;
     int blockId=0;
     for(auto code:allcodes){
         set<int> leaders = identifyLeaders(code);
-    
         // Create basic blocks
         vector<BasicBlock*> blocks = createBasicBlocks(code, leaders,blockId);
         // Determine control flow
         determineControlFlow(blocks, code);
         cout << blocks.size() << endl;
         cout << "block[0] id " << blocks[0]->getId() << endl;
+        // for(auto i:blocks[0]->getInstructions()){
+        //     cout << i.getInstruction() << endl;
+        // }
         //cout << "block[1] id " << blocks[1]->getId() << endl;
         // Filter out blocks that only contain goto statements
         //vector<BasicBlock*> filteredBlocks = filterGotoOnlyBlocks(blocks);

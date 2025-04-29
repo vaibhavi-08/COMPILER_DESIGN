@@ -39,6 +39,7 @@ public:
     // Variable tracking functions
     vector<string> getUsedVariables() const;
     vector<string> getDefinedVariables() const;
+    void setFullNextUse(const unordered_map<string, bool>& nextUseInfo);
 };
 
 // Class for Basic Block

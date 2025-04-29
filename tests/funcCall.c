@@ -16,9 +16,9 @@ int sum(int x,int y){
     return x+y;
 }
 int main(){
-    //int z[4]={1,2,3,4,5};
-    int a=sum(5,7);
-    //z[0]=3;
+    int z[4]={1,2,3,4,5};
+    int b=z[1]*2;
+    z[0]=3;
     
     
 }

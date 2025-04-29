@@ -17,13 +17,30 @@ ret
 main:
 push ebp
 mov ebp , esp
-mov eax , 5
-mov eax , 7
-push eax
-push eax
-call t1
+mov eax , 4
+mov eax , 1
+mov ebx , 2
+mov ecx , 3
+mov edx , 4
+mov esi , 5
+mov DWORD PTR [ebp-16] , eax
+mov DWORD PTR [ebp-12] , ebx
+mov DWORD PTR [ebp-8] , ecx
+mov DWORD PTR [ebp-4] , edx
+mov DWORD PTR [ebp+0] , esi
+mov eax , 1
+mov eax , DWORD PTR [ebp-12]
 mov eax , eax
-mov DWORD PTR [ebp-4] , eax
+mov eax , 2
+mov edx , eax
+imul edx , ebx
+mov ecx , edx
+mov DWORD PTR [ebp-20] , ecx
+mov eax , 0
+mov eax , DWORD PTR [ebp-16]
+mov eax , eax
+mov eax , 3
+mov DWORD PTR [ebp-16] , eax
 jmp .end1
 .end1 :
 mov eax , 0

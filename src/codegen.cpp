@@ -64,6 +64,45 @@ vector<string> x86_regs = {
     // "rip",  // Instruction pointer
     // "rflags" // Flags register
 };
+bool isArrayAssignment1(const std::string& str) {
+    std::istringstream iss(str);
+    std::vector<std::string> tokens;
+    std::string token;
+    
+    // Split the input string into tokens
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
+    
+    // Check if we have the expected pattern
+    // Format: identifier [ constant ] = identifier
+    // With space separation: tokens should be: [identifier, [, constant, ], =, identifier]
+    if (tokens.size() != 6) {
+        return false;
+    }
+    
+    // Check the syntax of brackets and equals sign
+    if (tokens[1] != "[" || tokens[3] != "]" || tokens[4] != "=") {
+        return false;
+    }
+    
+    // Check if the third token (index 2) is a number
+    for (char c : tokens[2]) {
+        if (!isdigit(c)) {
+            return false;
+        }
+    }
+    
+    // If we reach here, the format is correct
+    return true;
+}
+void extractArrayAssignmentParts1(const std::string& str, std::string& arrayName, int& index, std::string& value) {
+    std::istringstream iss(str);
+    std::string bracket1, bracket2, equals;
+    
+    // Extract each part directly into the variables
+    iss >> arrayName >> bracket1 >> index >> bracket2 >> equals >> value;
+}
 std::string extract_return_identifier(const std::string& str) {
     const std::string prefix = "return ";
 
@@ -145,7 +184,68 @@ std::pair<std::string, std::string> extract_call_variables(const std::string& st
 
     return {lhs, rhs};
 }
-
+std::string addToOffset(const std::string& memoryRef, int addValue) {
+    // Find the position of '+' or '-' in the string
+    size_t plusPos = memoryRef.find('+');
+    size_t minusPos = memoryRef.find('-');
+    size_t operatorPos;
+    bool isNegativeOffset = false;
+    
+    if (plusPos != std::string::npos) {
+        operatorPos = plusPos;
+        isNegativeOffset = false;
+    } else if (minusPos != std::string::npos) {
+        operatorPos = minusPos;
+        isNegativeOffset = true;
+    } else {
+        // No explicit operator found
+        return memoryRef;
+    }
+    
+    // Find the closing bracket position
+    size_t closeBracketPos = memoryRef.find(']', operatorPos);
+    if (closeBracketPos == std::string::npos) {
+        // No closing bracket found, return the original string
+        return memoryRef;
+    }
+    
+    // Extract the current offset
+    std::string offsetStr = memoryRef.substr(operatorPos + 1, closeBracketPos - operatorPos - 1);
+    int currentOffset = std::stoi(offsetStr);
+    
+    // Calculate the new offset
+    int newOffset;
+    if (isNegativeOffset) {
+        // For negative offsets, adding a positive value decreases the absolute value
+        newOffset = currentOffset - addValue;  // currentOffset is already positive here
+    } else {
+        newOffset = currentOffset + addValue;
+    }
+    
+    // Construct the new memory reference string
+    std::string result = memoryRef.substr(0, operatorPos);
+    if (newOffset > 0) {
+        if (isNegativeOffset) {
+            result += "-" + std::to_string(newOffset);
+        } else {
+            result += "+" + std::to_string(newOffset);
+        }
+    } else if (newOffset < 0) {
+        if (isNegativeOffset) {
+            // If offset was negative and becomes more negative
+            result += "-" + std::to_string(-newOffset);  // Make the number positive for display
+        } else {
+            // If offset was positive and becomes negative
+            result += "-" + std::to_string(-newOffset);  // Make the number positive for display
+        }
+    } else {
+        // newOffset is 0
+        result += "+0";
+    }
+    result += memoryRef.substr(closeBracketPos);
+    
+    return result;
+}
 void parseCondition(const string& line,string &op1,string&op2,string& opr) {
     //string op1 = "", op2 = "", opr = "";
     
@@ -175,6 +275,38 @@ void parseCondition(const string& line,string &op1,string&op2,string& opr) {
     }
 
     //cout << "op1 = \"" << op1 << "\", op2 = \"" << op2 << "\", opr = \"" << opr << "\"" << endl;
+}
+bool isArrayAccess(const std::string& str) {
+    std::istringstream iss(str);
+    std::vector<std::string> tokens;
+    std::string token;
+    
+    // Split the input string into tokens
+    while (iss >> token) {
+        tokens.push_back(token);
+    }
+    
+    // Check if we have the expected pattern
+    // Format: identifier = identifier [ identifier ]
+    // With space separation: tokens should be: [identifier, =, identifier, [, identifier, ]]
+    if (tokens.size() != 6) {
+        return false;
+    }
+    
+    // Check the syntax of equals sign and brackets
+    if (tokens[1] != "=" || tokens[3] != "[" || tokens[5] != "]") {
+        return false;
+    }
+    
+    // If we reach here, the format is correct
+    return true;
+}
+void extractArrayAccessParts(const std::string& str, std::string& leftSide, std::string& arrayName, std::string& indexVar) {
+    std::istringstream iss(str);
+    std::string equals, openBracket, closeBracket;
+    
+    // Extract each part directly into the variables
+    iss >> leftSide >> equals >> arrayName >> openBracket >> indexVar >> closeBracket;
 }
 bool isLabelStatement(const string& line) {
     size_t len = line.length();
@@ -422,7 +554,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 }
                 
                 vector<pair<string, bool>> tr;
-                tr.emplace_back(op1, !temp_and_type[op1]->isreal_var);
+                tr.emplace_back(op1, false);
                 
                 if(!op2.empty() && op2[0] == 't') {
                     tr.emplace_back(op2, !temp_and_type[op2]->isreal_var);
@@ -433,7 +565,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 
                 auto z=allocator.getRegisters(tr,tac.getNextUseMap(),unordered_set<string>());
                 if(z[op1].isRegister)allocator.loadToRegister(op1,z[op1].location);
-                if(z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
+                if(z.find(op2)!=z.end()&&z[op2].isRegister)allocator.loadToRegister(op2,z[op2].location);
                 string op1l=z[op1].location;
                 
                 if(!z[op1].isRegister&&!z[op2].isRegister){
@@ -774,6 +906,84 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                     allocator.spillRegister("eax");
                     allocator.loadToRegister(ret,"eax");
                     asmcode.push_back("mov eax , "+z[ret].location);
+                }
+            }
+            else if(isArrayAssignment1(instr)){
+                string arr;
+                string val;
+                int ind;
+                extractArrayAssignmentParts1(instr,arr,ind,val);
+                if(temp_and_type[arr]->size>0){
+                    if(temp_and_type[arr]->isreal_var) {
+                        allocator.addVariable(arr);
+                    }
+                    if(temp_and_type[val]->isreal_var) {
+                        allocator.addVariable(val);
+                    }
+                    vector<pair<string, bool>> tr;
+                    tr.emplace_back(val,!temp_and_type[val]->isreal_var);
+                    tr.emplace_back(arr, !temp_and_type[arr]->isreal_var);
+                    auto z = allocator.getRegisters(tr, tac.getNextUseMap(),unordered_set<string>());
+                    if(!z[val].isRegister){
+                        vector<pair<string, bool>> ntr;
+                        ntr.emplace_back(val,true);
+                        auto zz = allocator.getRegisters(ntr, tac.getNextUseMap(),unordered_set<string>());
+                        asmcode.push_back("mov "+zz[val].location+" , "+z[val].location);
+                        allocator.loadToRegister(val,zz[val].location);
+                        z[val].location=zz[val].location;
+                    }
+                    int prod=1;
+                    for(auto i:temp_and_type[arr]->arr_sizes){
+                        prod*=i;
+                    }
+                
+                    int res=(ind*temp_and_type[arr]->size)/prod;
+                    string floc=addToOffset(z[arr].location,res);
+                    asmcode.push_back("mov "+floc+" , "+z[val].location);
+                }
+                else {
+                    cout << "not handled array without size" << endl;
+                }
+            }
+            else if(isArrayAccess(instr)){
+                string lhs;
+                string rhs;
+                string index;
+                extractArrayAccessParts(instr,lhs,rhs,index);
+                if(temp_and_type[index]->const_expr){
+                    int ind=temp_and_type[index]->val;
+                    if(temp_and_type[lhs]->isreal_var) {
+                        allocator.addVariable(lhs);
+                    }
+                    if(temp_and_type[rhs]->isreal_var) {
+                        allocator.addVariable(rhs);
+                    }
+                    vector<pair<string, bool>> tr;
+                    tr.emplace_back(rhs,!temp_and_type[rhs]->isreal_var);
+                    tr.emplace_back(lhs, !temp_and_type[lhs]->isreal_var);
+                    auto z = allocator.getRegisters(tr, tac.getNextUseMap(),unordered_set<string>());
+                    string prev=z[lhs].location;
+                    if(!z[lhs].isRegister){
+                        vector<pair<string, bool>> ntr;
+                        ntr.emplace_back(lhs,true);
+                        auto zz = allocator.getRegisters(ntr, tac.getNextUseMap(),unordered_set<string>());
+                        allocator.loadToRegister(lhs,zz[lhs].location);
+                        z[lhs].location=zz[lhs].location;
+                    }
+                    int prod=1;
+                    for(auto i:temp_and_type[rhs]->arr_sizes){
+                        prod*=i;
+                    }
+                
+                    int res=(ind*temp_and_type[rhs]->size)/prod;
+                    string floc=addToOffset(z[rhs].location,res);
+                    allocator.addressDescriptor[lhs].inMemory=true;
+                    allocator.addressDescriptor[lhs].memoryLocation=floc;
+                    asmcode.push_back("mov "+z[lhs].location+" , "+floc);
+                    asmcode.push_back("mov "+prev+" , "+z[lhs].location);
+                }
+                else{
+                    cout << "not handled yet" << endl;
                 }
             }
             else {

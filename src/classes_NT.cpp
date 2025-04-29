@@ -330,6 +330,19 @@ string create_type(Declaration_Specifiers* ds,Declarator* d,Type* t){
             while(a->type=="array"){
                 type+='$';
                 t->array_dim++;
+                if(d->dd->ce!=nullptr&&d->dd->ce->const_expr&&d->dd->ce->val>0){
+                    t->arr_sizes.push_back(d->dd->ce->val);
+                }
+                else if(d->dd->ce==nullptr){
+                    t->arr_sizes.push_back(-1);
+                }
+                else if(!d->dd->ce->const_expr){
+                    t->arr_sizes.push_back(-2);
+                }
+                else{
+                    cout << "array dimensions cannot be negative" << endl;
+                    exit(1);
+                }
                 a=a->dd;
             }
         }
@@ -640,6 +653,19 @@ string create_type(Specifier_Qualifier_List* ds,Declarator* d,Type* t){
             while(a->type=="array"){
                 type+='$';
                 t->array_dim++;
+                if(d->dd->ce!=nullptr&&d->dd->ce->const_expr&&d->dd->ce->val>0){
+                    t->arr_sizes.push_back(d->dd->ce->val);
+                }
+                else if(d->dd->ce==nullptr){
+                    t->arr_sizes.push_back(-1);
+                }
+                else if(!d->dd->ce->const_expr){
+                    t->arr_sizes.push_back(-2);
+                }
+                else{
+                    cout << "array dimensions cannot be negative" << endl;
+                    exit(1);
+                }
                 a=a->dd;
             }
         }
@@ -1182,6 +1208,7 @@ void check_for_shift_op(Type* e1, Type* e2) {
 }
 Type :: Type(){
     this-> isconst=false;
+    this->const_expr=false;
     this-> isvoid=false;
     this-> isvolatile=false;
     this-> isfunction=false;
@@ -1204,6 +1231,7 @@ Type :: Type(){
     this-> array_dim = 0;
     this-> ptr_level = 0;
     this-> func_ptr_lev = 0;
+    this->val=0;
     this->code=vector<string>();
     this->place="";
     this->isreal_var=false;
@@ -1931,6 +1959,8 @@ Type* get_type_id(string id) {
 }
 Type::Type(const Type& other) {
     isconst = other.isconst;
+    const_expr=false;
+    val=0;
     isvoid = other.isvoid;
     isvolatile = other.isvolatile;
     isfunction = other.isfunction;
@@ -2436,7 +2466,7 @@ vector<pair<string, pair<string,Type*>>> create_name_type_list(Declaration_Speci
 
 
 
-Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Constant_Expression* ce,Parameter_List* pl){
+Direct_Declarator* create_direct_declarator(const string& type,const string& id,Declarator* d,Direct_Declarator* dd,Type* ce,Parameter_List* pl){
     Direct_Declarator* z=new Direct_Declarator(type,id,d,dd,ce,pl);
     cout << "created dir decl obj" << endl;
     cout << type << endl;
@@ -2474,7 +2504,7 @@ Declarator* create_new_declarator(Pointer* p,Direct_Declarator* dd){
 }
 
 
-Direct_Declarator::Direct_Declarator(const string& type,const string& id, Declarator* d, Direct_Declarator* dd, Constant_Expression* ce, Parameter_List* pl)
+Direct_Declarator::Direct_Declarator(const string& type,const string& id, Declarator* d, Direct_Declarator* dd,Type* ce, Parameter_List* pl)
     : type(type), id(id), d(d), dd(dd), ce(ce), pl(pl) {
 }
 
@@ -2552,19 +2582,89 @@ void check_if_declared(Local_Symbol_Table* current_table,const string& var_name,
 
 }
 int getBasicTypeSize(Type* t) {
-    if (!t || !t->isbasic || t->ptr_level != 0 || t->array_dim != 0||t->isfunction||t->func_ptr_lev!=0) {
+    if (!t || !t->isbasic || t->ptr_level != 0 ||t->isfunction||t->func_ptr_lev!=0) {
         return -1;
     }
 
     string base = t->base;
 
-    if (base == "CHAR") return 1;
-    if (base == "SHORT") return 2;
-    if (base == "INT") return 4;
-    if (base == "LONG") return 8;
-    if (base == "LONG LONG") return 8;
-    if (base == "FLOAT") return 4;
-    if (base == "DOUBLE") return 8;
+    if (base == "CHAR"){
+        if(t->array_dim==0)return 1;
+        else{
+            int prod=1;
+            for(auto i:t->arr_sizes){
+                if(i>0)prod*=i;
+                else return -1;
+            }
+            return prod;
+        }
+    } 
+    if (base == "SHORT"){
+        if(t->array_dim==0)return 2;
+        else{
+            int prod=2;
+            for(auto i:t->arr_sizes){
+                if(i>0)prod*=i;
+                else return -1;
+            }
+            return prod;
+        }
+    } 
+    if (base == "INT") {
+        if(t->array_dim==0)return 4;
+        else{
+            int prod=4;
+            for(auto i:t->arr_sizes){
+                if(i>0)prod*=i;
+                else return -1;
+            }
+            return prod;
+        }
+    } 
+    if (base == "LONG") {
+        if(t->array_dim==0)return 8;
+        else{
+            int prod=8;
+            for(auto i:t->arr_sizes){
+                if(i>0)prod*=i;
+                else return -1;
+            }
+            return prod;
+        }
+    } 
+    if (base == "LONG LONG") {
+        if(t->array_dim==0)return 8;
+        else{
+            int prod=8;
+            for(auto i:t->arr_sizes){
+                if(i>0)prod*=i;
+                else return -1;
+            }
+            return prod;
+        }
+    } 
+    if (base == "FLOAT") {
+        if(t->array_dim==0)return 4;
+        else{
+            int prod=4;
+            for(auto i:t->arr_sizes){
+                if(i>0)prod*=i;
+                else return -1;
+            }
+            return prod;
+        }
+    } 
+    if (base == "DOUBLE") {
+        if(t->array_dim==0)return 8;
+        else{
+            int prod=8;
+            for(auto i:t->arr_sizes){
+                if(i>0)prod*=i;
+                else return -1;
+            }
+            return prod;
+        }
+    } 
 
     // Unknown basic type
     return -1;

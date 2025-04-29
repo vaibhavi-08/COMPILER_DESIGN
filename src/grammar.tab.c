@@ -711,15 +711,15 @@ static const yytype_int16 yyrline[] =
      545,   547,   551,   554,   557,   560,   564,   566,   570,   574,
      575,   576,   577,   581,   582,   586,   623,   657,   658,   662,
      663,   667,   668,   672,   673,   678,   679,   683,   684,   685,
-     686,   687,   689,   693,   694,   695,   696,   700,   701,   706,
-     707,   711,   712,   716,   727,   728,   732,   733,   734,   738,
-     739,   740,   741,   742,   743,   744,   745,   746,   750,   751,
-     752,   753,   754,   758,   759,   763,   764,   765,   766,   767,
-     768,   769,   773,   774,   778,   783,   789,   793,   803,   804,
-     805,   808,   814,   818,   822,   823,   827,   828,   831,   833,
-     838,   848,   856,   864,   868,   879,   889,   897,   907,   921,
-     924,   927,   930,   933,   938,   946,   949,   952,   953,   956,
-     957,   961,   962,   965,   999
+     687,   688,   690,   694,   695,   696,   697,   701,   702,   707,
+     708,   712,   713,   717,   728,   729,   733,   734,   735,   739,
+     740,   741,   742,   743,   744,   745,   746,   747,   751,   752,
+     753,   754,   755,   759,   760,   764,   765,   766,   767,   768,
+     769,   770,   774,   775,   779,   784,   790,   794,   804,   805,
+     806,   809,   815,   819,   823,   824,   828,   829,   832,   834,
+     839,   849,   857,   865,   869,   880,   890,   898,   908,   922,
+     925,   928,   931,   934,   939,   947,   950,   953,   954,   957,
+     958,   962,   963,   966,  1000
 };
 #endif
 
@@ -1739,7 +1739,7 @@ yyreduce:
 
   case 3: /* primary_expression: CONSTANT  */
 #line 202 "src/grammar.y"
-                   {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();global_code.push_back(get_code4((yyvsp[0].str),"","",nn));t->place=nn;(yyval.typ)=t;temp_and_type[nn]=t;}
+                   {Type* t=new Type(); t->isbasic=true;t->base="INT";string nn=get_new_temp();global_code.push_back(get_code4((yyvsp[0].str),"","",nn));t->place=nn;t->const_expr=true;t->val=std::stoi(std::string((yyvsp[0].str)));(yyval.typ)=t;temp_and_type[nn]=t;}
 #line 1744 "src/grammar.tab.c"
     break;
 
@@ -2697,303 +2697,304 @@ yyreduce:
 
   case 139: /* direct_declarator: direct_declarator '[' constant_expression ']'  */
 #line 685 "src/grammar.y"
-                                                        {(yyval.dir_dec)=create_direct_declarator(std::string("array"),"",nullptr,(yyvsp[-3].dir_dec),nullptr,nullptr);check_int_comp((yyvsp[-1].typ));backpatch((yyvsp[-1].typ)->truelist,global_code.size());backpatch((yyvsp[-1].typ)->falselist,global_code.size());}
-#line 2702 "src/grammar.tab.c"
+                                                        {(yyval.dir_dec)=create_direct_declarator(std::string("array"),"",nullptr,(yyvsp[-3].dir_dec),(yyvsp[-1].typ),nullptr);check_int_comp((yyvsp[-1].typ));
+	backpatch((yyvsp[-1].typ)->truelist,global_code.size());backpatch((yyvsp[-1].typ)->falselist,global_code.size());}
+#line 2703 "src/grammar.tab.c"
     break;
 
   case 140: /* direct_declarator: direct_declarator '[' ']'  */
-#line 686 "src/grammar.y"
+#line 687 "src/grammar.y"
                                     {(yyval.dir_dec)=create_direct_declarator(std::string("array"),"",nullptr,(yyvsp[-2].dir_dec),nullptr,nullptr);}
-#line 2708 "src/grammar.tab.c"
+#line 2709 "src/grammar.tab.c"
     break;
 
   case 141: /* direct_declarator: direct_declarator '(' parameter_type_list ')'  */
-#line 687 "src/grammar.y"
+#line 688 "src/grammar.y"
                                                         {(yyval.dir_dec)=create_direct_declarator(std::string("function"),"",nullptr,(yyvsp[-3].dir_dec),nullptr,(yyvsp[-1].pl));}
-#line 2714 "src/grammar.tab.c"
+#line 2715 "src/grammar.tab.c"
     break;
 
   case 142: /* direct_declarator: direct_declarator '(' ')'  */
-#line 689 "src/grammar.y"
+#line 690 "src/grammar.y"
                                     {(yyval.dir_dec)=create_direct_declarator(std::string("function"),"",nullptr,(yyvsp[-2].dir_dec),nullptr,nullptr);}
-#line 2720 "src/grammar.tab.c"
+#line 2721 "src/grammar.tab.c"
     break;
 
   case 143: /* pointer: '*'  */
-#line 693 "src/grammar.y"
+#line 694 "src/grammar.y"
               {(yyval.point)=new Pointer(nullptr,nullptr);}
-#line 2726 "src/grammar.tab.c"
+#line 2727 "src/grammar.tab.c"
     break;
 
   case 144: /* pointer: '*' type_qualifier_list  */
-#line 694 "src/grammar.y"
+#line 695 "src/grammar.y"
                                   {(yyval.point)=new Pointer((yyvsp[0].tql),nullptr);}
-#line 2732 "src/grammar.tab.c"
+#line 2733 "src/grammar.tab.c"
     break;
 
   case 145: /* pointer: '*' pointer  */
-#line 695 "src/grammar.y"
+#line 696 "src/grammar.y"
                       {(yyval.point)=new Pointer(nullptr,(yyvsp[0].point));}
-#line 2738 "src/grammar.tab.c"
+#line 2739 "src/grammar.tab.c"
     break;
 
   case 146: /* pointer: '*' type_qualifier_list pointer  */
-#line 696 "src/grammar.y"
+#line 697 "src/grammar.y"
                                           {(yyval.point)=new Pointer((yyvsp[-1].tql),(yyvsp[0].point));}
-#line 2744 "src/grammar.tab.c"
+#line 2745 "src/grammar.tab.c"
     break;
 
   case 147: /* type_qualifier_list: type_qualifier  */
-#line 700 "src/grammar.y"
+#line 701 "src/grammar.y"
                          {Type_Qualifier_List* x=new Type_Qualifier_List();x->tq.push_back((yyvsp[0].str));(yyval.tql)=x;}
-#line 2750 "src/grammar.tab.c"
+#line 2751 "src/grammar.tab.c"
     break;
 
   case 148: /* type_qualifier_list: type_qualifier_list type_qualifier  */
-#line 701 "src/grammar.y"
+#line 702 "src/grammar.y"
                                              {Type_Qualifier_List* x=(yyvsp[-1].tql);x->tq.push_back((yyvsp[0].str));(yyval.tql)=x;}
-#line 2756 "src/grammar.tab.c"
+#line 2757 "src/grammar.tab.c"
     break;
 
   case 149: /* parameter_type_list: parameter_list  */
-#line 706 "src/grammar.y"
+#line 707 "src/grammar.y"
                          {(yyval.pl)=(yyvsp[0].pl);}
-#line 2762 "src/grammar.tab.c"
+#line 2763 "src/grammar.tab.c"
     break;
 
   case 150: /* parameter_type_list: parameter_list ',' ELLIPSIS  */
-#line 707 "src/grammar.y"
+#line 708 "src/grammar.y"
                                       {Parameter_List* x=(yyvsp[-2].pl); x->ellipses=true;}
-#line 2768 "src/grammar.tab.c"
+#line 2769 "src/grammar.tab.c"
     break;
 
   case 151: /* parameter_list: parameter_declaration  */
-#line 711 "src/grammar.y"
+#line 712 "src/grammar.y"
                                 {Parameter_List* x=new Parameter_List();x->pl.push_back((yyvsp[0].par_dec));(yyval.pl)=x;}
-#line 2774 "src/grammar.tab.c"
+#line 2775 "src/grammar.tab.c"
     break;
 
   case 152: /* parameter_list: parameter_list ',' parameter_declaration  */
-#line 712 "src/grammar.y"
+#line 713 "src/grammar.y"
                                                    {(yyvsp[-2].pl)->pl.push_back((yyvsp[0].par_dec));(yyval.pl)=(yyvsp[-2].pl);}
-#line 2780 "src/grammar.tab.c"
+#line 2781 "src/grammar.tab.c"
     break;
 
   case 153: /* parameter_declaration: declaration_specifiers declarator  */
-#line 716 "src/grammar.y"
+#line 717 "src/grammar.y"
                                             {(yyval.par_dec)=new Parameter_Declaration((yyvsp[-1].dec_spec),(yyvsp[0].dec));}
-#line 2786 "src/grammar.tab.c"
+#line 2787 "src/grammar.tab.c"
     break;
 
   case 154: /* type_name: specifier_qualifier_list  */
-#line 727 "src/grammar.y"
+#line 728 "src/grammar.y"
                                     { (yyval.ty_nm)=new Type_Name((yyvsp[0].sql),nullptr);}
-#line 2792 "src/grammar.tab.c"
+#line 2793 "src/grammar.tab.c"
     break;
 
   case 155: /* type_name: specifier_qualifier_list abstract_declarator  */
-#line 728 "src/grammar.y"
+#line 729 "src/grammar.y"
                                                        {(yyval.ty_nm)=new Type_Name((yyvsp[-1].sql),(yyvsp[0].abs_d));(yyvsp[0].abs_d)->type=(yyvsp[0].abs_d)->check_abstract_declarator();}
-#line 2798 "src/grammar.tab.c"
+#line 2799 "src/grammar.tab.c"
     break;
 
   case 156: /* abstract_declarator: pointer  */
-#line 732 "src/grammar.y"
+#line 733 "src/grammar.y"
                   {Abstract_Declarator* x=new Abstract_Declarator((yyvsp[0].point),nullptr);(yyval.abs_d)=x;}
-#line 2804 "src/grammar.tab.c"
+#line 2805 "src/grammar.tab.c"
     break;
 
   case 157: /* abstract_declarator: direct_abstract_declarator  */
-#line 733 "src/grammar.y"
+#line 734 "src/grammar.y"
                                      {Abstract_Declarator* x=new Abstract_Declarator(nullptr,(yyvsp[0].dir_ad));(yyval.abs_d)=x;}
-#line 2810 "src/grammar.tab.c"
+#line 2811 "src/grammar.tab.c"
     break;
 
   case 158: /* abstract_declarator: pointer direct_abstract_declarator  */
-#line 734 "src/grammar.y"
+#line 735 "src/grammar.y"
                                              {Abstract_Declarator* x=new Abstract_Declarator((yyvsp[-1].point),(yyvsp[0].dir_ad));(yyval.abs_d)=x;}
-#line 2816 "src/grammar.tab.c"
+#line 2817 "src/grammar.tab.c"
     break;
 
   case 159: /* direct_abstract_declarator: '(' abstract_declarator ')'  */
-#line 738 "src/grammar.y"
+#line 739 "src/grammar.y"
                                       {(yyval.dir_ad)=new Direct_Abstract_Declarator("abs_dec",(yyvsp[-1].abs_d),nullptr,nullptr,nullptr);}
-#line 2822 "src/grammar.tab.c"
+#line 2823 "src/grammar.tab.c"
     break;
 
   case 160: /* direct_abstract_declarator: '[' ']'  */
-#line 739 "src/grammar.y"
+#line 740 "src/grammar.y"
                                                                 {(yyval.dir_ad)=new Direct_Abstract_Declarator("array",nullptr,nullptr,nullptr,nullptr);}
-#line 2828 "src/grammar.tab.c"
+#line 2829 "src/grammar.tab.c"
     break;
 
   case 161: /* direct_abstract_declarator: '[' constant_expression ']'  */
-#line 740 "src/grammar.y"
+#line 741 "src/grammar.y"
                                       {check_int_comp((yyvsp[-1].typ));(yyval.dir_ad)=new Direct_Abstract_Declarator("array",nullptr,nullptr,(yyvsp[-1].typ),nullptr);}
-#line 2834 "src/grammar.tab.c"
+#line 2835 "src/grammar.tab.c"
     break;
 
   case 162: /* direct_abstract_declarator: direct_abstract_declarator '[' ']'  */
-#line 741 "src/grammar.y"
+#line 742 "src/grammar.y"
                                              {(yyval.dir_ad)=new Direct_Abstract_Declarator("array",nullptr,(yyvsp[-2].dir_ad),nullptr,nullptr);}
-#line 2840 "src/grammar.tab.c"
+#line 2841 "src/grammar.tab.c"
     break;
 
   case 163: /* direct_abstract_declarator: direct_abstract_declarator '[' constant_expression ']'  */
-#line 742 "src/grammar.y"
+#line 743 "src/grammar.y"
                                                                  {check_int_comp((yyvsp[-1].typ));(yyval.dir_ad)=new Direct_Abstract_Declarator("array",nullptr,(yyvsp[-3].dir_ad),(yyvsp[-1].typ),nullptr);}
-#line 2846 "src/grammar.tab.c"
+#line 2847 "src/grammar.tab.c"
     break;
 
   case 164: /* direct_abstract_declarator: '(' ')'  */
-#line 743 "src/grammar.y"
+#line 744 "src/grammar.y"
                         {(yyval.dir_ad)=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,nullptr);}
-#line 2852 "src/grammar.tab.c"
+#line 2853 "src/grammar.tab.c"
     break;
 
   case 165: /* direct_abstract_declarator: '(' parameter_type_list ')'  */
-#line 744 "src/grammar.y"
+#line 745 "src/grammar.y"
                                        {(yyval.dir_ad)=new Direct_Abstract_Declarator("func",nullptr,nullptr,nullptr,(yyvsp[-1].pl));}
-#line 2858 "src/grammar.tab.c"
+#line 2859 "src/grammar.tab.c"
     break;
 
   case 166: /* direct_abstract_declarator: direct_abstract_declarator '(' ')'  */
-#line 745 "src/grammar.y"
+#line 746 "src/grammar.y"
                                              {(yyval.dir_ad)=new Direct_Abstract_Declarator("func",nullptr,(yyvsp[-2].dir_ad),nullptr,nullptr);}
-#line 2864 "src/grammar.tab.c"
+#line 2865 "src/grammar.tab.c"
     break;
 
   case 167: /* direct_abstract_declarator: direct_abstract_declarator '(' parameter_type_list ')'  */
-#line 746 "src/grammar.y"
+#line 747 "src/grammar.y"
                                                                  {(yyval.dir_ad)=new Direct_Abstract_Declarator("func",nullptr,(yyvsp[-3].dir_ad),nullptr,(yyvsp[-1].pl));}
-#line 2870 "src/grammar.tab.c"
+#line 2871 "src/grammar.tab.c"
     break;
 
   case 168: /* initializer: assignment_expression  */
-#line 750 "src/grammar.y"
+#line 751 "src/grammar.y"
                                  {Initializer* x=new Initializer((yyvsp[0].typ),"",nullptr,"",nullptr);x->type=(yyvsp[0].typ);(yyval.ini)=x;backpatch((yyvsp[0].typ)->truelist,global_code.size());backpatch((yyvsp[0].typ)->falselist,global_code.size());}
-#line 2876 "src/grammar.tab.c"
+#line 2877 "src/grammar.tab.c"
     break;
 
   case 169: /* initializer: '{' initializer_list '}'  */
-#line 751 "src/grammar.y"
+#line 752 "src/grammar.y"
                                    {(yyval.ini)=new Initializer(new Type(),"",(yyvsp[-1].ini_lst),"",nullptr);}
-#line 2882 "src/grammar.tab.c"
+#line 2883 "src/grammar.tab.c"
     break;
 
   case 170: /* initializer: '{' initializer_list ',' '}'  */
-#line 752 "src/grammar.y"
+#line 753 "src/grammar.y"
                                        {(yyval.ini)=new Initializer(new Type(),"",(yyvsp[-2].ini_lst),"",nullptr);}
-#line 2888 "src/grammar.tab.c"
+#line 2889 "src/grammar.tab.c"
     break;
 
   case 171: /* initializer: NEW class_name '(' argument_expression_list ')'  */
-#line 753 "src/grammar.y"
+#line 754 "src/grammar.y"
                                                           {Type* t=get_type_id((yyvsp[-3].str));check_if_constructor(t);check_argument_with_params(t->prms,(yyvsp[-1].arg_ex_list)->vec_exp,false);Type* z=new Type();z->isobj=true;z->objtype="class";z->obj_class=(yyvsp[-3].str);Initializer* gg=new Initializer(z,"",nullptr,(yyvsp[-3].str),(yyvsp[-1].arg_ex_list));(yyval.ini)=gg;}
-#line 2894 "src/grammar.tab.c"
+#line 2895 "src/grammar.tab.c"
     break;
 
   case 172: /* initializer: NEW class_name '(' ')'  */
-#line 754 "src/grammar.y"
+#line 755 "src/grammar.y"
                                  {Type* t=get_type_id((yyvsp[-2].str));check_if_constructor(t);check_argument_with_params(t->prms,vector<Type*>(),false);Type*z=new Type();z->isobj=true;z->objtype=="class";z->obj_class=(yyvsp[-2].str);Initializer* gg=new Initializer(z,"",nullptr,(yyvsp[-2].str),nullptr);(yyval.ini)=gg;}
-#line 2900 "src/grammar.tab.c"
+#line 2901 "src/grammar.tab.c"
     break;
 
   case 173: /* initializer_list: initializer  */
-#line 758 "src/grammar.y"
+#line 759 "src/grammar.y"
                       {Initializer_List* x=new Initializer_List();x->iv.push_back((yyvsp[0].ini));(yyval.ini_lst)=x;}
-#line 2906 "src/grammar.tab.c"
+#line 2907 "src/grammar.tab.c"
     break;
 
   case 174: /* initializer_list: initializer_list ',' initializer  */
-#line 759 "src/grammar.y"
+#line 760 "src/grammar.y"
                                            {(yyvsp[-2].ini_lst)->iv.push_back((yyvsp[0].ini));(yyval.ini_lst)=(yyvsp[-2].ini_lst);}
-#line 2912 "src/grammar.tab.c"
+#line 2913 "src/grammar.tab.c"
     break;
 
   case 175: /* statement: labeled_statement  */
-#line 763 "src/grammar.y"
+#line 764 "src/grammar.y"
                             {(yyval.typ)=(yyvsp[0].typ); }
-#line 2918 "src/grammar.tab.c"
+#line 2919 "src/grammar.tab.c"
     break;
 
   case 176: /* statement: compound_statement  */
-#line 764 "src/grammar.y"
+#line 765 "src/grammar.y"
                              {(yyval.typ)=(yyvsp[0].comp_stmt)->st;cout<<"finally statemeexpression_statementnt has compound statement"<<endl;}
-#line 2924 "src/grammar.tab.c"
+#line 2925 "src/grammar.tab.c"
     break;
 
   case 177: /* statement: expression_statement  */
-#line 765 "src/grammar.y"
+#line 766 "src/grammar.y"
                                {(yyval.typ)=(yyvsp[0].typ); cout << "expression statement" << endl;}
-#line 2930 "src/grammar.tab.c"
+#line 2931 "src/grammar.tab.c"
     break;
 
   case 178: /* statement: selection_statement  */
-#line 766 "src/grammar.y"
+#line 767 "src/grammar.y"
                               {(yyval.typ)=(yyvsp[0].typ);}
-#line 2936 "src/grammar.tab.c"
+#line 2937 "src/grammar.tab.c"
     break;
 
   case 179: /* statement: iteration_statement  */
-#line 767 "src/grammar.y"
+#line 768 "src/grammar.y"
                               {(yyval.typ)=(yyvsp[0].typ);}
-#line 2942 "src/grammar.tab.c"
+#line 2943 "src/grammar.tab.c"
     break;
 
   case 180: /* statement: jump_statement  */
-#line 768 "src/grammar.y"
+#line 769 "src/grammar.y"
                          {(yyval.typ)=(yyvsp[0].typ);}
-#line 2948 "src/grammar.tab.c"
+#line 2949 "src/grammar.tab.c"
     break;
 
   case 181: /* statement: delete_statement  */
-#line 769 "src/grammar.y"
+#line 770 "src/grammar.y"
                            {}
-#line 2954 "src/grammar.tab.c"
+#line 2955 "src/grammar.tab.c"
     break;
 
   case 182: /* delete_statement: DELETE IDENTIFIER  */
-#line 773 "src/grammar.y"
+#line 774 "src/grammar.y"
                             {check_if_pointer(get_type_id((yyvsp[0].str)));}
-#line 2960 "src/grammar.tab.c"
+#line 2961 "src/grammar.tab.c"
     break;
 
   case 183: /* delete_statement: DELETE '[' ']' IDENTIFIER  */
-#line 774 "src/grammar.y"
+#line 775 "src/grammar.y"
                                     {check_if_array(get_type_id((yyvsp[0].str)));}
-#line 2966 "src/grammar.tab.c"
+#line 2967 "src/grammar.tab.c"
     break;
 
   case 184: /* labeled_statement: IDENTIFIER ':' m statement  */
-#line 778 "src/grammar.y"
+#line 779 "src/grammar.y"
                                      {if(labelset.find((yyvsp[-3].str))==labelset.end())labelset.insert((yyvsp[-3].str));else {cout << "label declared twice" << endl;exit(1);}(yyval.typ)=(yyvsp[0].typ);
 		backpatch(goto_label, (yyvsp[-1].int_value));
 		labelgoto.push_back((yyvsp[-3].str));
 		labelmap[(yyvsp[-3].str)]=(yyvsp[-1].int_value);
 		}
-#line 2976 "src/grammar.tab.c"
+#line 2977 "src/grammar.tab.c"
     break;
 
   case 185: /* labeled_statement: CASE constant_expression colon statement  */
-#line 783 "src/grammar.y"
+#line 784 "src/grammar.y"
                                                    {(yyval.typ)=(yyvsp[0].typ); 
 	
 		fill_eqeq_exp1((yyvsp[-1].int_value)-2,(yyvsp[-2].typ)->place);
 		backpatch1((yyvsp[-1].int_value)-2,(yyvsp[-1].int_value));
 		backpatch1((yyvsp[-1].int_value)-1, global_code.size());
 		}
-#line 2987 "src/grammar.tab.c"
+#line 2988 "src/grammar.tab.c"
     break;
 
   case 186: /* labeled_statement: DEFAULT ':' statement  */
-#line 789 "src/grammar.y"
+#line 790 "src/grammar.y"
                                 {cout<<"finally reached to default"<<endl;(yyval.typ)=(yyvsp[0].typ);}
-#line 2993 "src/grammar.tab.c"
+#line 2994 "src/grammar.tab.c"
     break;
 
   case 187: /* colon: ':'  */
-#line 793 "src/grammar.y"
+#line 794 "src/grammar.y"
               { switch_true.push_back(global_code.size());
 			global_code.push_back(get_if_true_code("=="));	
 			switch_false.push_back(global_code.size());		
@@ -3001,94 +3002,94 @@ yyreduce:
 			(yyval.int_value)=global_code.size();
 
 			}
-#line 3005 "src/grammar.tab.c"
+#line 3006 "src/grammar.tab.c"
     break;
 
   case 188: /* compound_statement: '{' '}'  */
-#line 803 "src/grammar.y"
+#line 804 "src/grammar.y"
                   {Compound_Statement* x=new Compound_Statement(new Type(),nullptr);(yyval.comp_stmt)=x;}
-#line 3011 "src/grammar.tab.c"
+#line 3012 "src/grammar.tab.c"
     break;
 
   case 189: /* compound_statement: '{' statement_list '}'  */
-#line 804 "src/grammar.y"
+#line 805 "src/grammar.y"
                                  {Compound_Statement* x=new Compound_Statement((yyvsp[-1].typ),nullptr);cout<<"obj of compound statement done for st_lst"<<endl; cout<<"loop completed"<<endl;(yyval.comp_stmt)=x;cout<<"statement_list done in compound_statement"<<endl;}
-#line 3017 "src/grammar.tab.c"
+#line 3018 "src/grammar.tab.c"
     break;
 
   case 190: /* compound_statement: '{' declaration_list '}'  */
-#line 805 "src/grammar.y"
+#line 806 "src/grammar.y"
                                    {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),(yyvsp[-1].dec_list));cout << "compound_statement parsed" << endl;
 	current_level--;current_table=current_table->parent;cout << current_level << "in compound statement" << endl;
 	(yyval.comp_stmt)=x;}
-#line 3025 "src/grammar.tab.c"
+#line 3026 "src/grammar.tab.c"
     break;
 
   case 191: /* compound_statement: '{' declaration_list statement_list '}'  */
-#line 808 "src/grammar.y"
+#line 809 "src/grammar.y"
                                                   {cout << "calling comp statement constr"<<endl;Compound_Statement* x=new Compound_Statement(new Type(),(yyvsp[-2].dec_list));
 	current_level--;current_table=current_table->parent;
 	(yyval.comp_stmt)=x;cout << "compound_statement parsed" << endl;}
-#line 3033 "src/grammar.tab.c"
+#line 3034 "src/grammar.tab.c"
     break;
 
   case 192: /* declaration_list: declaration  */
-#line 814 "src/grammar.y"
+#line 815 "src/grammar.y"
                       {current_level++;cout << "checking for next table" << endl;Declaration_List* x=new Declaration_List();x->dv.push_back((yyvsp[0].declaration));current_table=next_table();
 	cout << "next table working fine" << endl;add_to_local_table(current_table,(yyvsp[0].declaration));cout << "declaration list done successfully" << endl;
 	cout << current_level << "in declaration_list" << endl;
 	(yyval.dec_list)=x;}
-#line 3042 "src/grammar.tab.c"
+#line 3043 "src/grammar.tab.c"
     break;
 
   case 193: /* declaration_list: declaration_list declaration  */
-#line 818 "src/grammar.y"
+#line 819 "src/grammar.y"
                                        {cout<<"declaration_list done"<<endl;(yyvsp[-1].dec_list)->dv.push_back((yyvsp[0].declaration));(yyval.dec_list)=(yyvsp[-1].dec_list);add_to_local_table(current_table,(yyvsp[0].declaration));}
-#line 3048 "src/grammar.tab.c"
+#line 3049 "src/grammar.tab.c"
     break;
 
   case 194: /* statement_list: statement  */
-#line 822 "src/grammar.y"
+#line 823 "src/grammar.y"
                     { cout << "statement parsed" << endl;(yyval.typ)=(yyvsp[0].typ);}
-#line 3054 "src/grammar.tab.c"
+#line 3055 "src/grammar.tab.c"
     break;
 
   case 195: /* statement_list: statement_list statement  */
-#line 823 "src/grammar.y"
+#line 824 "src/grammar.y"
                                    {(yyval.typ)=(yyvsp[0].typ);}
-#line 3060 "src/grammar.tab.c"
+#line 3061 "src/grammar.tab.c"
     break;
 
   case 196: /* expression_statement: ';'  */
-#line 827 "src/grammar.y"
+#line 828 "src/grammar.y"
               {(yyval.typ)=new Type();cout<<"semi colon"<<endl;}
-#line 3066 "src/grammar.tab.c"
+#line 3067 "src/grammar.tab.c"
     break;
 
   case 197: /* expression_statement: expression  */
-#line 828 "src/grammar.y"
+#line 829 "src/grammar.y"
                      {(yyval.typ)=(yyvsp[0].typ);backpatch((yyvsp[0].typ)->truelist,global_code.size());backpatch((yyvsp[0].typ)->falselist,global_code.size());}
-#line 3072 "src/grammar.tab.c"
+#line 3073 "src/grammar.tab.c"
     break;
 
   case 198: /* smc: ';'  */
-#line 831 "src/grammar.y"
+#line 832 "src/grammar.y"
               {(yyval.int_value)=global_code.size();}
-#line 3078 "src/grammar.tab.c"
+#line 3079 "src/grammar.tab.c"
     break;
 
   case 199: /* selection_statement: IF '(' expression crb statement  */
-#line 833 "src/grammar.y"
+#line 834 "src/grammar.y"
                                           { cout << "other if else done" << endl;
 		backpatch((yyvsp[-2].typ)->truelist,(yyvsp[-1].int_value));
 		 Type* zz=new Type();
 		zz->nextlist=merge((yyvsp[-2].typ)->falselist, (yyvsp[0].typ)->nextlist);backpatch(zz->nextlist,global_code.size());(yyval.typ)=zz; 
 	}
-#line 3088 "src/grammar.tab.c"
+#line 3089 "src/grammar.tab.c"
     break;
 
   case 200: /* selection_statement: IF '(' expression crb statement els statement  */
-#line 838 "src/grammar.y"
+#line 839 "src/grammar.y"
                                                          {cout << "if_else done" << endl;
 		backpatch((yyvsp[-4].typ)->truelist,(yyvsp[-3].int_value));
 		backpatch ((yyvsp[-4].typ)->falselist,(yyvsp[-1].int_value));
@@ -3098,38 +3099,38 @@ yyreduce:
 		nw.push_back((yyvsp[-1].int_value)-1);
 		backpatch(nw,global_code.size());
 		 (yyval.typ)=zz;}
-#line 3102 "src/grammar.tab.c"
+#line 3103 "src/grammar.tab.c"
     break;
 
   case 201: /* selection_statement: SWITCH '(' expression crb emp statement  */
-#line 848 "src/grammar.y"
+#line 849 "src/grammar.y"
                                                   {(yyval.typ)=(yyvsp[0].typ);
 		backpatch((yyvsp[-3].typ)->truelist, (yyvsp[-2].int_value));
 		backpatch((yyvsp[-3].typ)->falselist, (yyvsp[-2].int_value));
 		backpatch(break_label, global_code.size());
 		fill_eqeq_exp2(switch_true, (yyvsp[-3].typ)->place);
 		}
-#line 3113 "src/grammar.tab.c"
+#line 3114 "src/grammar.tab.c"
     break;
 
   case 202: /* emp: %empty  */
-#line 856 "src/grammar.y"
+#line 857 "src/grammar.y"
           {
 		(yyval.int_value)=global_code.size();
 		
 		
 	  }
-#line 3123 "src/grammar.tab.c"
+#line 3124 "src/grammar.tab.c"
     break;
 
   case 203: /* m: %empty  */
-#line 864 "src/grammar.y"
+#line 865 "src/grammar.y"
           {(yyval.int_value)=global_code.size();}
-#line 3129 "src/grammar.tab.c"
+#line 3130 "src/grammar.tab.c"
     break;
 
   case 204: /* iteration_statement: WHILE srb expression crb statement  */
-#line 868 "src/grammar.y"
+#line 869 "src/grammar.y"
                                              {(yyval.typ)=(yyvsp[0].typ);
 	backpatch((yyvsp[0].typ)->nextlist, (yyvsp[-3].int_value));
 	backpatch((yyvsp[-2].typ)->truelist, (yyvsp[-1].int_value));
@@ -3139,11 +3140,11 @@ yyreduce:
 	backpatch(break_label, global_code.size());
 	backpatch(continue_label, (yyvsp[-3].int_value));
 	}
-#line 3143 "src/grammar.tab.c"
+#line 3144 "src/grammar.tab.c"
     break;
 
   case 205: /* iteration_statement: UNTIL srb expression crb statement  */
-#line 879 "src/grammar.y"
+#line 880 "src/grammar.y"
                                              {(yyval.typ)=(yyvsp[0].typ);
 	backpatch((yyvsp[0].typ)->nextlist, (yyvsp[-3].int_value));
 	backpatch((yyvsp[-2].typ)->truelist, (yyvsp[-1].int_value));
@@ -3153,11 +3154,11 @@ yyreduce:
 	backpatch(break_label, global_code.size());
 	backpatch(continue_label, (yyvsp[-3].int_value));
 	}
-#line 3157 "src/grammar.tab.c"
+#line 3158 "src/grammar.tab.c"
     break;
 
   case 206: /* iteration_statement: doo statement WHILE srb expression ')' ';'  */
-#line 889 "src/grammar.y"
+#line 890 "src/grammar.y"
                                                      {(yyval.typ)=(yyvsp[-5].typ);
 	(yyval.typ)->nextlist=(yyvsp[-2].typ)->falselist;
 	backpatch((yyvsp[-2].typ)->truelist, (yyvsp[-6].int_value));
@@ -3165,11 +3166,11 @@ yyreduce:
 	backpatch(break_label, global_code.size());
 	backpatch(continue_label, (yyvsp[-6].int_value));
 	}
-#line 3169 "src/grammar.tab.c"
+#line 3170 "src/grammar.tab.c"
     break;
 
   case 207: /* iteration_statement: FOR '(' expression smc expression smc ')' statement  */
-#line 897 "src/grammar.y"
+#line 898 "src/grammar.y"
                                                               { (yyval.typ)=(yyvsp[0].typ);
 		backpatch((yyvsp[-3].typ)->truelist,(yyvsp[-2].int_value));
 		(yyval.typ)->nextlist=(yyvsp[-3].typ)->falselist;
@@ -3178,11 +3179,11 @@ yyreduce:
 		backpatch(break_label, global_code.size());
 		backpatch(continue_label, (yyvsp[-4].int_value));
 		}
-#line 3182 "src/grammar.tab.c"
+#line 3183 "src/grammar.tab.c"
     break;
 
   case 208: /* iteration_statement: FOR '(' expression smc expression smc expression fcrb statement  */
-#line 907 "src/grammar.y"
+#line 908 "src/grammar.y"
                                                                           { (yyval.typ)=(yyvsp[0].typ);
 		backpatch((yyvsp[-4].typ)->truelist,(yyvsp[-1].for_cb)->pos);
 		backpatch((yyvsp[-1].for_cb)->nextlist,(yyvsp[-5].int_value));
@@ -3194,41 +3195,41 @@ yyreduce:
 		backpatch(break_label, global_code.size());
 		backpatch(continue_label, (yyvsp[-5].int_value));
 		}
-#line 3198 "src/grammar.tab.c"
+#line 3199 "src/grammar.tab.c"
     break;
 
   case 209: /* fcrb: ')'  */
-#line 921 "src/grammar.y"
+#line 922 "src/grammar.y"
               {FCRB* t=new FCRB();t->nextlist.push_back(global_code.size());global_code.push_back(get_if_false_code());t->pos=global_code.size();(yyval.for_cb)=t;}
-#line 3204 "src/grammar.tab.c"
+#line 3205 "src/grammar.tab.c"
     break;
 
   case 210: /* doo: DO  */
-#line 924 "src/grammar.y"
+#line 925 "src/grammar.y"
              {(yyval.int_value)=global_code.size();}
-#line 3210 "src/grammar.tab.c"
+#line 3211 "src/grammar.tab.c"
     break;
 
   case 211: /* crb: ')'  */
-#line 927 "src/grammar.y"
+#line 928 "src/grammar.y"
               {(yyval.int_value)=global_code.size();}
-#line 3216 "src/grammar.tab.c"
+#line 3217 "src/grammar.tab.c"
     break;
 
   case 212: /* els: ELSE  */
-#line 930 "src/grammar.y"
+#line 931 "src/grammar.y"
                {global_code.push_back("goto ");(yyval.int_value)=global_code.size();}
-#line 3222 "src/grammar.tab.c"
+#line 3223 "src/grammar.tab.c"
     break;
 
   case 213: /* srb: '('  */
-#line 933 "src/grammar.y"
+#line 934 "src/grammar.y"
               {(yyval.int_value)=global_code.size();}
-#line 3228 "src/grammar.tab.c"
+#line 3229 "src/grammar.tab.c"
     break;
 
   case 214: /* jump_statement: GOTO IDENTIFIER ';'  */
-#line 938 "src/grammar.y"
+#line 939 "src/grammar.y"
                               {(yyval.typ)=new Type();
  		goto_label.push_back(global_code.size());
  		if(identifier_found(labelgoto, (yyvsp[-1].str))){
@@ -3237,63 +3238,63 @@ yyreduce:
  		else{
  		global_code.push_back(get_if_false_code());}
  		}
-#line 3241 "src/grammar.tab.c"
+#line 3242 "src/grammar.tab.c"
     break;
 
   case 215: /* jump_statement: CONTINUE ';'  */
-#line 946 "src/grammar.y"
+#line 947 "src/grammar.y"
                        {(yyval.typ)=new Type();
  		continue_label.push_back(global_code.size());
  		global_code.push_back(get_if_false_code());}
-#line 3249 "src/grammar.tab.c"
+#line 3250 "src/grammar.tab.c"
     break;
 
   case 216: /* jump_statement: BREAK ';'  */
-#line 949 "src/grammar.y"
+#line 950 "src/grammar.y"
                     {(yyval.typ)=new Type();cout<<"found break"<<endl;
  		break_label.push_back(global_code.size());
  		global_code.push_back(get_if_false_code());}
-#line 3257 "src/grammar.tab.c"
+#line 3258 "src/grammar.tab.c"
     break;
 
   case 217: /* jump_statement: RETURN ';'  */
-#line 952 "src/grammar.y"
+#line 953 "src/grammar.y"
                      {Type* type=new Type();type->isvoid=true;check_for_assign(func_ret_type,type,"=");global_code.push_back(gen_return(""));}
-#line 3263 "src/grammar.tab.c"
+#line 3264 "src/grammar.tab.c"
     break;
 
   case 218: /* jump_statement: RETURN initializer ';'  */
-#line 953 "src/grammar.y"
+#line 954 "src/grammar.y"
                                  {check_for_assign(func_ret_type,(yyvsp[-1].ini)->type,"=");global_code.push_back(gen_return((yyvsp[-1].ini)->type->place));}
-#line 3269 "src/grammar.tab.c"
+#line 3270 "src/grammar.tab.c"
     break;
 
   case 219: /* translation_unit: external_declaration  */
-#line 956 "src/grammar.y"
+#line 957 "src/grammar.y"
                                {cout<<"reached ext declaration"<<endl;Node* ext=create_node();cout<<"create node done"<<endl;}
-#line 3275 "src/grammar.tab.c"
+#line 3276 "src/grammar.tab.c"
     break;
 
   case 220: /* translation_unit: translation_unit external_declaration  */
-#line 957 "src/grammar.y"
+#line 958 "src/grammar.y"
                                                 {Node* ext=create_node();cout<<"t_u and e_d"<<endl;}
-#line 3281 "src/grammar.tab.c"
+#line 3282 "src/grammar.tab.c"
     break;
 
   case 221: /* external_declaration: function_definition  */
-#line 961 "src/grammar.y"
+#line 962 "src/grammar.y"
                                {cout<<"external declaration started"<<endl;add_to_gst((yyvsp[0].fun_def),gst);cout<<"add to gst"<<endl;(yyval.node)=(yyvsp[0].fun_def);cout<<"external declaration started"<<endl;}
-#line 3287 "src/grammar.tab.c"
+#line 3288 "src/grammar.tab.c"
     break;
 
   case 222: /* external_declaration: declaration  */
-#line 962 "src/grammar.y"
+#line 963 "src/grammar.y"
                       {add_to_gst((yyvsp[0].declaration),gst);(yyval.node)=(yyvsp[0].declaration);}
-#line 3293 "src/grammar.tab.c"
+#line 3294 "src/grammar.tab.c"
     break;
 
   case 223: /* function_declaration: declaration_specifiers declarator  */
-#line 965 "src/grammar.y"
+#line 966 "src/grammar.y"
                                             { Function_Declaration* x=new Function_Declaration((yyvsp[-1].dec_spec),(yyvsp[0].dec));
 		Type* type=new Type();
 		string t=create_type((yyvsp[-1].dec_spec),(yyvsp[0].dec),type);
@@ -3325,11 +3326,11 @@ yyreduce:
 		}
 		cout<<"final func decl done huuh"<<endl;
 		}
-#line 3329 "src/grammar.tab.c"
+#line 3330 "src/grammar.tab.c"
     break;
 
   case 224: /* function_definition: function_declaration compound_statement  */
-#line 999 "src/grammar.y"
+#line 1000 "src/grammar.y"
                                                   {Function_Declaration* x=(yyvsp[-1].func_decl);(yyval.fun_def)=create_func_def(x->ds,x->d,(yyvsp[0].comp_stmt));
 	cout<<"create func def done"<< endl;
 	current_params_list.clear();
@@ -3341,11 +3342,11 @@ yyreduce:
 	current_func_name="";
 	current_func_si=nullptr;
 	lvl_name.pop();}
-#line 3345 "src/grammar.tab.c"
+#line 3346 "src/grammar.tab.c"
     break;
 
 
-#line 3349 "src/grammar.tab.c"
+#line 3350 "src/grammar.tab.c"
 
       default: break;
     }
@@ -3538,7 +3539,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1014 "src/grammar.y"
+#line 1015 "src/grammar.y"
 
 #include <stdio.h>
 #include <bits/stdc++.h>

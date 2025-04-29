@@ -17,12 +17,15 @@ sum:
 main:
 	push	ebp
 	mov	ebp, esp
-	sub	esp, 16
-	push	7
-	push	5
-	call	sum
-	add	esp, 8
+	sub	esp, 32
+	mov	DWORD PTR [ebp-20], 1
+	mov	DWORD PTR [ebp-16], 2
+	mov	DWORD PTR [ebp-12], 3
+	mov	DWORD PTR [ebp-8], 4
+	mov	eax, DWORD PTR [ebp-16]
+	add	eax, eax
 	mov	DWORD PTR [ebp-4], eax
+	mov	DWORD PTR [ebp-20], 3
 	mov	eax, 0
 	leave
 	ret

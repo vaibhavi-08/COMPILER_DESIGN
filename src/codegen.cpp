@@ -16,6 +16,8 @@ bool iserror = false;
 vector<pair<string, int>> error;
 unordered_map<string, string> symtab;
 vector<string> program;
+std::map<double, std::string> fpConstants;
+int lcCounter = 0;
 vector<string> x86_regs = {
     // General purpose registers (64-bit)
     // "rax", "rbx", "rcx", "rdx", "rsi", "rdi", "rbp", "rsp",
@@ -147,6 +149,8 @@ void getOperandsCAssign(const std::string& instruction, std::string& operand1,
     iss >> op;              // The operator
     iss >> operand3;        // Third operand
 }
+
+
 bool isAssignWithOp(const std::string& instruction) {
     // Check if string is empty
     if (instruction.empty()) {
@@ -324,6 +328,8 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 asmcode.push_back(label + ":");
                 asmcode.push_back("push ebp");
                 asmcode.push_back("mov ebp , esp");
+                asmcode.push_back("and esp, -8");  // Align stack to 8-byte boundary
+                asmcode.push_back("sub esp, 16");  // Allocate stack space
             }
             //if it is an assignment statement simple
             else if(isSimpleAssignment(instr)) {
@@ -362,8 +368,38 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 //handle spilling if register
                 if(!op2.empty() && op2[0] == 't')
                     asmcode.push_back("mov " + op1l + " , " + z[op2].location);
-                else
-                    asmcode.push_back("mov " + op1l + " , " + op2);
+                    else {
+                        // Add this check to convert character literals to ASCII values
+                        if (op2.size() == 3 && op2[0] == '\'' && op2[2] == '\'') {
+                            // This is a character literal (e.g., 'a')
+                            char c = op2[1];
+                            int ascii_value = (int)c;
+                            asmcode.push_back("mov " + op1l + " , " + to_string(ascii_value));
+                        }// Handle floating-point literals
+                        // Handle floating-point literals
+    else if (op2.find('.') != string::npos) {
+        // This is a floating-point literal
+        double value = stod(op2);
+        std::string label;
+        
+        // Create or reuse a label for this constant
+        if (fpConstants.find(value) == fpConstants.end()) {
+            label = ".LC" + std::to_string(lcCounter++);
+            fpConstants[value] = label;
+        } else {
+            label = fpConstants[value];
+        }
+        
+        // Use FPU instructions for loading float
+        asmcode.push_back("fld DWORD PTR " + label);
+        asmcode.push_back("fstp DWORD PTR [ebp-8]");  // Temporary location
+        asmcode.push_back("mov eax, DWORD PTR [ebp-8]");
+        asmcode.push_back("mov " + op1l + " , eax");
+    } else {
+        // Original line for other literals
+        asmcode.push_back("mov " + op1l + " , " + op2);
+    }
+                    }
             }
             // if it is a= b op c type
             else if(isAssignWithOp(instr)) {
@@ -385,7 +421,7 @@ void dfs(BasicBlock* curb, RegisterAllocator& allocator) {
                 cout << "add variables done " << endl;
                 
                 
-                //asmcode.push_back("mov "+z["xx"].location+" , "+z[op1].location);
+                
                 if(opr!="/"&&opr!="%"){
                     cout << " reached correct if" << endl;
                     vector<pair<string, bool>> tr;
@@ -807,36 +843,55 @@ int main(int argc, char* argv[]) {
     }
 
     // Write the assembly preamble
-    fout << ".intel_syntax noprefix\n";
-    fout << ".text\n";
-    fout << ".globl main\n";
-    for(auto mainblock:mainblocks){
-        if(mainblock)cout << "mainblock id: " << mainblock->id << endl;
-        RegisterAllocator allocator(x86_regs);
+    // Add header before the loop
+fout << ".file\t\"do_while.c\"\n";  // Instead of using fout directly
+fout << ".intel_syntax noprefix\n";
+fout << ".text\n";
+fout << ".globl main\n";
+fout << ".type\tmain, @function\n";  // Add function type declaration
 
-        dfs(mainblock, allocator);  // This fills asmcode
-        string s = ".end :";
-        asmcode.push_back(s);
-        asmcode.push_back("mov eax , 0");
-        asmcode.push_back("leave");
-        asmcode.push_back("ret");
+for(auto mainblock:mainblocks){
+    if(mainblock)cout << "mainblock id: " << mainblock->id << endl;
+    RegisterAllocator allocator(x86_regs);
+    
+    dfs(mainblock, allocator);  // This fills asmcode
+    
+    string s = ".end :";
+    asmcode.push_back(s);
+    asmcode.push_back("mov eax , 0");
+    asmcode.push_back("leave");
+    asmcode.push_back("ret");
+}
+
+// Add footer after the loop
+asmcode.push_back(".size\tmain, .-main");
+
+// Generate rodata section for floating point constants
+if (!fpConstants.empty()) {
+    asmcode.push_back(".section\t.rodata");
+    asmcode.push_back(".align 8");
+    
+    for (const auto& [value, label] : fpConstants) {
+        asmcode.push_back(label + ":");
+        // We need to decompose the double into its binary representation
+        uint64_t bits;
+        memcpy(&bits, &value, sizeof(double));
+        uint32_t low = bits & 0xFFFFFFFF;
+        uint32_t high = bits >> 32;
+        
+        asmcode.push_back("\t.long\t" + std::to_string(static_cast<int32_t>(low)));
+        asmcode.push_back("\t.long\t" + std::to_string(static_cast<int32_t>(high)));
     }
-    // Write generated assembly to output file
-    for (const string& line : asmcode) {
-        fout << line << '\n';
-    }
+}
 
-    fout.close();
-    //first three lines
-    //dfs for basic block
-    //in each
-    //generate label with name of block 
-    //if it is label instruction (eg: t1:, main:) simply print it as it is as that is a function name. also  generate this two instr, push rbp and mov rbp,rsp.
-    //if it is assignment statement get rhs and lhs. select instruction based on imm, mem or reg by looking at temp and type
-    // if it is a (t13 = t4 op t5) kind of instruction first evaluate rhs and then mov the result to lhs see for all operands
-    //if it is a unary operator (++ or --) 
-    // if it is a if statement then cmp,jump if zero and and an unconditional jump
-    // if it is unconditional statement then just a jmp statement
+asmcode.push_back(".section\t.note.GNU-stack,\"\",@progbits");
 
-    return 0;
+// Write generated assembly to output file
+for (const string& line : asmcode) {
+    fout << line << '\n';
+}
+
+fout.close();
+
+return 0;
 }

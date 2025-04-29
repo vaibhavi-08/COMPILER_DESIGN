@@ -1,4 +1,4 @@
-	.file	"verybasic.c"
+	.file	"do_while.c"
 	.intel_syntax noprefix
 	.text
 	.globl	main
@@ -6,26 +6,17 @@
 main:
 	push	ebp
 	mov	ebp, esp
+	and	esp, -8
 	sub	esp, 16
-	mov	DWORD PTR [ebp-4], 5
-	mov	DWORD PTR [ebp-8], 6
-	mov	DWORD PTR [ebp-12], 3
-	mov	eax, DWORD PTR [ebp-4]
-	imul	eax, DWORD PTR [ebp-8]
-	mov	DWORD PTR [ebp-12], eax
-	mov	eax, DWORD PTR [ebp-4]
-	cdq
-	idiv	DWORD PTR [ebp-8]
-	mov	DWORD PTR [ebp-12], eax
-	mov	edx, DWORD PTR [ebp-4]
-	mov	eax, DWORD PTR [ebp-8]
-	add	eax, edx
-	mov	DWORD PTR [ebp-12], eax
-	mov	eax, DWORD PTR [ebp-4]
-	sub	eax, DWORD PTR [ebp-8]
-	mov	DWORD PTR [ebp-12], eax
+	fld	QWORD PTR .LC0
+	fstp	QWORD PTR [esp+8]
 	mov	eax, 0
 	leave
 	ret
 	.size	main, .-main
+	.section	.rodata
+	.align 8
+.LC0:
+	.long	-1717986918
+	.long	1075812761
 	.section	.note.GNU-stack,"",@progbits

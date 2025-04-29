@@ -1,19 +1,9 @@
 ======== BASIC BLOCKS WITH NEXT USE INFO ========
-Block B0 (Lines 0-6):
-  0: t1 :
-  1: arg t2
-  2: arg t3
-  3: t4 = t2 + t3 [Next Use: t4:false]
-  6: return t4
-Successors: EOC
-
-Block B1 (Lines 7-19):
-  7: main :
-  8: t5 = 5 [Next Use: t5:false]
-  11: t6 = 7 [Next Use: t6:false]
-  14: param t5
-  15: param t6
-  16: t7 = call t1 [Next Use: t7:false]
-  19: t8 = t7 [Next Use: t8:false]
+Block B0 (Lines 0-8):
+  0: main :
+  1: t1 = 7.9 [Next Use: t1:false]
+  4: t2 = t1 [Next Use: t2:false]
+  5: t3 = 6.9 [Next Use: t3:false]
+  8: t4 = t3 [Next Use: t4:false]
 Successors: EOC
 

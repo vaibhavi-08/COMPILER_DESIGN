@@ -224,5 +224,5 @@ void RegisterAllocator::spillRegister(const std::string& reg) {
     }
     
     // Clear register descriptor entry
-    registerDescriptor[reg].clear();
+
 }

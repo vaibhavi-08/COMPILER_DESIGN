@@ -1,20 +1,9 @@
-   0: t1 : 
-   1: arg t2
-   2: arg t3
-   3: t4 = t2 + t3
-   4: if t4 goto 6
-   5: goto 6
-   6: return t4
-   7: main : 
-   8: t5 = 5  
-   9: if t5 goto 11
-  10: goto 11
-  11: t6 = 7  
-  12: if t6 goto 14
-  13: goto 14
-  14: param t5
-  15: param t6
-  16: t7 = call t1
-  17: if t7 goto 19
-  18: goto 19
-  19: t8 = t7  
+   0: main : 
+   1: t1 = 7.9  
+   2: if t1 goto 4
+   3: goto 4
+   4: t2 = t1  
+   5: t3 = 6.9  
+   6: if t3 goto 8
+   7: goto 8
+   8: t4 = t3  

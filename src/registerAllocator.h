@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <vector>
 #include <string>
+
 struct RegAllocResult {
     std::string location;  // Register or memory location
     bool isRegister;       // Whether location is a register
@@ -24,7 +25,6 @@ public:
     };
     int crbp;
     std::unordered_map<std::string, LocationInfo> addressDescriptor;
-    
     // List of available registers
     std::vector<std::string> registers;
     
